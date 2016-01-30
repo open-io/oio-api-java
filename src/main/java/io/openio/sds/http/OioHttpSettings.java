@@ -1,20 +1,20 @@
 package io.openio.sds.http;
 
-public class HttpSettings {
+public class OioHttpSettings {
 
     private Integer sendBufferSize = 8192;
     private Integer receiveBufferSize = 8192;
     private Integer connectTimeout = 30000;
     private Integer readTimeout = 60000;
 
-    public HttpSettings() {
+    public OioHttpSettings() {
     }
 
     public Integer sendBufferSize() {
         return sendBufferSize;
     }
 
-    public HttpSettings sendBufferSize(Integer sendBufferSize) {
+    public OioHttpSettings sendBufferSize(Integer sendBufferSize) {
         this.sendBufferSize = sendBufferSize;
         return this;
     }
@@ -23,7 +23,7 @@ public class HttpSettings {
         return receiveBufferSize;
     }
 
-    public HttpSettings receiveBufferSize(Integer receiveBufferSize) {
+    public OioHttpSettings receiveBufferSize(Integer receiveBufferSize) {
         this.receiveBufferSize = receiveBufferSize;
         return this;
     }
@@ -32,7 +32,7 @@ public class HttpSettings {
         return connectTimeout;
     }
 
-    public HttpSettings connectTimeout(Integer connectTimeout) {
+    public OioHttpSettings connectTimeout(Integer connectTimeout) {
         this.connectTimeout = connectTimeout;
         return this;
     }
@@ -41,7 +41,7 @@ public class HttpSettings {
         return readTimeout;
     }
 
-    public HttpSettings readTimeout(Integer readTimeout) {
+    public OioHttpSettings readTimeout(Integer readTimeout) {
         this.readTimeout = readTimeout;
         return this;
     }

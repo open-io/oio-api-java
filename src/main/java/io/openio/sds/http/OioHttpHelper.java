@@ -2,10 +2,10 @@ package io.openio.sds.http;
 
 import io.openio.sds.log.SdsLogger;
 
-public class HttpHelper {
+public class OioHttpHelper {
     
     private static final SdsLogger logger = SdsLogger
-            .getLogger(HttpHelper.class);
+            .getLogger(OioHttpHelper.class);
 
     public static Long longHeader(OioHttpResponse r, String header) {
         try {

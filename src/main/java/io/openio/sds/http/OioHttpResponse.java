@@ -11,8 +11,6 @@ import java.io.StringReader;
 import java.net.Socket;
 import java.util.HashMap;
 
-import io.openio.sds.common.Strings;
-
 public class OioHttpResponse {
 
     private static final int R = 1;
@@ -54,6 +52,26 @@ public class OioHttpResponse {
         return head.msg();
     }
 
+    public InputStream body() {
+        return sis;
+    }
+
+    public Long length() {
+        String str = header("Content-Length");
+        return null == str ? 0L : Long.valueOf(str);
+    }
+
+    public void close() {
+        try {
+            sock.close();
+            if (null != sis)
+                sis.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+            // TODO
+        }
+    }
+
     private OioHttpResponse responseHead() throws IOException {
         this.sis = sock.getInputStream();
         this.head = ResponseHead.parse(readHeaders());
@@ -71,11 +89,8 @@ public class OioHttpResponse {
     private int next(InputStream sis, ByteArrayOutputStream bos,
             int state) throws IOException {
         int b = sis.read();
-        System.out.println(b);
-        if (-1 == b) {
-            System.err.println("Unexpected end of stream");
+        if (-1 == b)
             throw new IOException("Unexpected end of stream");
-        }
         bos.write(b);
         switch (state) {
         case R:
@@ -160,7 +175,7 @@ public class OioHttpResponse {
             return new StatusLine(tok[0], Integer.valueOf(tok[1].trim()),
                     tok[2].trim());
         }
-        
+
         public String proto() {
             return this.proto;
         }
