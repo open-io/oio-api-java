@@ -1,0 +1,29 @@
+apply plugin: 'java'
+apply plugin: 'maven'
+
+sourceCompatibility = 1.6
+targetCompatibility = 1.6
+
+repositories {
+    jcenter()
+}
+
+task wrapper(type: Wrapper) {
+  gradleVersion = '2.10'
+}
+
+group = 'io.openio.sds'
+version = '0.1'
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}
+
+jar {
+  baseName='openio-api'
+}
+
+task javadocJar(type: Jar) {
+  classifier = 'javadoc'
+  from javadoc
+}
