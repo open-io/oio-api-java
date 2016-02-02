@@ -43,6 +43,9 @@ public class OioConstants {
     public static final String CHUNK_META_CONTENT_CHUNKSNB = "x-oio-chunk-meta-content-chunksnb";
     public static final String CHUNK_META_CONTENT_SIZE = "X-oio-chunk-meta-content-size";
     public static final String CHUNK_META_CONTENT_PATH = "X-oio-chunk-meta-content-path";
+    public static final String CHUNK_META_CONTENT_POLICY = "X-oio-chunk-meta-content-storage-policy";
+    public static final String CHUNK_META_CONTENT_CHUNK_METHOD = "X-oio-chunk-meta-content-chunk-method";
+    public static final String CHUNK_META_CONTENT_MIME_TYPE = "X-oio-chunk-meta-content-mime-type";
     public static final String CHUNK_META_CHUNK_ID = "X-oio-chunk-meta-chunk-id";
     public static final String CHUNK_META_CHUNK_POS = "X-oio-chunk-meta-chunk-pos";
     public static final String CHUNK_META_CHUNK_HASH = "X-oio-chunk-meta-chunk-hash";

@@ -4,7 +4,7 @@ import io.openio.sds.common.MoreObjects;
 
 public class ListOptions {
 
-    private int limit = 0;
+    private int limit = -1;
     private String delimiter;
     private String prefix;
     private String marker;

@@ -11,8 +11,13 @@ import java.io.StringReader;
 import java.net.Socket;
 import java.util.HashMap;
 
+import io.openio.sds.logging.SdsLogger;
+import io.openio.sds.logging.SdsLoggerFactory;
+
 public class OioHttpResponse {
 
+    private static final SdsLogger logger = SdsLoggerFactory.getLogger(OioHttpResponse.class);
+    
     private static final int R = 1;
     private static final int RN = 2;
     private static final int RNR = 3;
@@ -61,15 +66,15 @@ public class OioHttpResponse {
         return null == str ? 0L : Long.valueOf(str);
     }
 
-    public void close() {
+    public OioHttpResponse close() {
         try {
             sock.close();
             if (null != sis)
                 sis.close();
         } catch (Exception e) {
-            e.printStackTrace();
-            // TODO
+           logger.warn("Close failure, possible leak", e);
         }
+        return this;
     }
 
     private OioHttpResponse responseHead() throws IOException {

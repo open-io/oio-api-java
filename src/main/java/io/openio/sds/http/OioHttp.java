@@ -3,7 +3,9 @@ package io.openio.sds.http;
 import static io.openio.sds.common.JsonUtils.gson;
 import static io.openio.sds.common.Strings.nullOrEmpty;
 
+import java.io.EOFException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
@@ -42,6 +44,11 @@ public class OioHttp {
         Check.checkArgument(!nullOrEmpty(uri));
         return new RequestBuilder().post(uri);
     }
+    
+    public RequestBuilder put(String uri) {
+        Check.checkArgument(!nullOrEmpty(uri));
+        return new RequestBuilder().put(uri);
+    }
 
     public RequestBuilder get(String uri) {
         Check.checkArgument(!nullOrEmpty(uri));
@@ -54,6 +61,8 @@ public class OioHttp {
         private HashMap<String, String> headers = new HashMap<String, String>();
         private HashMap<String, String> query = new HashMap<String, String>();
         private String body;
+        private InputStream data;
+        private Long len;
         private URI uri;
         private OioHttpResponseVerifier verifier = null;
 
@@ -99,6 +108,16 @@ public class OioHttp {
             this.body = body;
             return this;
         }
+        
+        public RequestBuilder body(InputStream data, Long size) {
+            if (nullOrEmpty(body))
+                return this;
+            headers.put("Content-Length", String.valueOf(size));
+            headers.put("Content-Type", "application/octet-stream");
+            this.data = data;
+            this.len = size;
+            return this;
+        }
 
         public RequestBuilder verifier(OioHttpResponseVerifier verifier) {
             this.verifier = verifier;
@@ -114,8 +133,16 @@ public class OioHttp {
                         new InetSocketAddress(uri.getHost(), uri.getPort()),
                         settings.connectTimeout());
                 sendRequest(sock);
-                return readResponse(sock);
-            } catch (Exception e) {
+                OioHttpResponse resp = readResponse(sock);
+                try {
+                    if (null != verifier)
+                        verifier.verify(resp);
+                    return resp;
+                } catch (SdsException e) {
+                    resp.close();
+                    throw e;
+                }
+            } catch (IOException e) {
                 throw new SdsException("Http request execution error", e);
             }
         }
@@ -123,8 +150,6 @@ public class OioHttp {
         public <T> T execute(Class<T> c) {
             OioHttpResponse resp = execute();
             try {
-                if (null != verifier)
-                    verifier.verify(resp);
                 return gson().fromJson(
                         new JsonReader(new InputStreamReader(resp.body())), c);
             } finally {
@@ -148,13 +173,31 @@ public class OioHttp {
                 headers.put("Content-Length", "0");
             OutputStream sos = sock.getOutputStream();
             sos.write(requestHead());
-            if (null != body)
+            if(null != data) {
+                stream(sos);
+            } else if (null != body) {
                 sos.write(body.getBytes(Charset.defaultCharset()));
+            }
             sos.flush();
         }
 
+        private void stream(OutputStream sos) throws IOException {
+            byte[] b = new byte[settings.sendBufferSize()];
+            int remaining = len.intValue();
+            
+            while(remaining > 0) {
+                int read = data.read(b, 0, Math.min(remaining, b.length));
+                if(-1 == read)
+                    throw new EOFException("Unexpected end of source stream");
+                remaining -= read;
+                sos.write(b);
+            }
+            data.read(b);
+        }
+
         private byte[] requestHead() {
-            StringBuilder qbuilder = new StringBuilder(uri.getQuery());
+            StringBuilder qbuilder = new StringBuilder(
+                    null == uri.getQuery() ? "" : uri.getQuery());
             boolean removeTrailindAnd = 0 == qbuilder.length();
             for (Entry<String, String> h : query.entrySet()) {
                 qbuilder.append("&")
