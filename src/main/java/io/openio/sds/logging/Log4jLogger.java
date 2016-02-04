@@ -58,7 +58,6 @@ public class Log4jLogger implements SdsLogger {
     @Override
     public void warn(String message, Throwable thrown) {
         logger.warn(message, thrown);
-        ;
     }
 
     @Override

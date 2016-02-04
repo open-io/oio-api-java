@@ -1,6 +1,13 @@
 package io.openio.sds.http;
 
 import static io.openio.sds.common.JsonUtils.gson;
+import static io.openio.sds.common.OioConstants.CONTENT_LENGTH_HEADER;
+import static io.openio.sds.common.OioConstants.CONTENT_TYPE_HEADER;
+import static io.openio.sds.common.OioConstants.DELETE_METHOD;
+import static io.openio.sds.common.OioConstants.GET_METHOD;
+import static io.openio.sds.common.OioConstants.OIO_CHARSET;
+import static io.openio.sds.common.OioConstants.POST_METHOD;
+import static io.openio.sds.common.OioConstants.PUT_METHOD;
 import static io.openio.sds.common.Strings.nullOrEmpty;
 
 import java.io.EOFException;
@@ -11,7 +18,6 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.URI;
-import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
@@ -44,7 +50,7 @@ public class OioHttp {
         Check.checkArgument(!nullOrEmpty(uri));
         return new RequestBuilder().post(uri);
     }
-    
+
     public RequestBuilder put(String uri) {
         Check.checkArgument(!nullOrEmpty(uri));
         return new RequestBuilder().put(uri);
@@ -67,19 +73,19 @@ public class OioHttp {
         private OioHttpResponseVerifier verifier = null;
 
         public RequestBuilder post(String url) {
-            return req("POST", url);
+            return req(POST_METHOD, url);
         }
 
         public RequestBuilder put(String url) {
-            return req("PUT", url);
+            return req(PUT_METHOD, url);
         }
 
         public RequestBuilder get(String url) {
-            return req("GET", url);
+            return req(GET_METHOD, url);
         }
 
         public RequestBuilder delete(String url) {
-            return req("DELETE", url);
+            return req(DELETE_METHOD, url);
         }
 
         public RequestBuilder req(String method, String url) {
@@ -103,17 +109,17 @@ public class OioHttp {
         public RequestBuilder body(String body) {
             if (nullOrEmpty(body))
                 return this;
-            headers.put("Content-Length", String.valueOf(body.length()));
-            headers.put("Content-Type", "application/json");
+            headers.put(CONTENT_LENGTH_HEADER, String.valueOf(body.length()));
+            headers.put(CONTENT_TYPE_HEADER, "application/json");
             this.body = body;
             return this;
         }
-        
+
         public RequestBuilder body(InputStream data, Long size) {
-            if (nullOrEmpty(body))
+            if (null == data)
                 return this;
-            headers.put("Content-Length", String.valueOf(size));
-            headers.put("Content-Type", "application/octet-stream");
+            headers.put(CONTENT_LENGTH_HEADER, String.valueOf(size));
+            headers.put(CONTENT_TYPE_HEADER, "application/octet-stream");
             this.data = data;
             this.len = size;
             return this;
@@ -151,7 +157,9 @@ public class OioHttp {
             OioHttpResponse resp = execute();
             try {
                 return gson().fromJson(
-                        new JsonReader(new InputStreamReader(resp.body())), c);
+                        new JsonReader(new InputStreamReader(resp.body(),
+                                OIO_CHARSET)),
+                        c);
             } finally {
                 resp.close();
             }
@@ -170,13 +178,13 @@ public class OioHttp {
             headers.put("User-Agent", "oio-http");
 
             if (!headers.containsKey("Content-Length"))
-                headers.put("Content-Length", "0");
+                headers.put(CONTENT_LENGTH_HEADER, "0");
             OutputStream sos = sock.getOutputStream();
             sos.write(requestHead());
-            if(null != data) {
+            if (null != data) {
                 stream(sos);
             } else if (null != body) {
-                sos.write(body.getBytes(Charset.defaultCharset()));
+                sos.write(body.getBytes(OIO_CHARSET));
             }
             sos.flush();
         }
@@ -184,15 +192,14 @@ public class OioHttp {
         private void stream(OutputStream sos) throws IOException {
             byte[] b = new byte[settings.sendBufferSize()];
             int remaining = len.intValue();
-            
-            while(remaining > 0) {
+
+            while (remaining > 0) {
                 int read = data.read(b, 0, Math.min(remaining, b.length));
-                if(-1 == read)
+                if (-1 == read)
                     throw new EOFException("Unexpected end of source stream");
                 remaining -= read;
-                sos.write(b);
+                sos.write(b, 0, read);
             }
-            data.read(b);
         }
 
         private byte[] requestHead() {
@@ -219,8 +226,7 @@ public class OioHttp {
             }
             byte[] res = req.append(EOL)
                     .toString()
-                    .getBytes(Charset.defaultCharset());
-            System.out.println(new String(res));
+                    .getBytes(OIO_CHARSET);
             return res;
         }
     }

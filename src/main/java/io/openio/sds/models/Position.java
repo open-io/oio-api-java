@@ -30,9 +30,9 @@ public class Position {
         checkArgument(m.matches(),
                 String.format("Invalid position %s", pos));
         if (null == m.group(2))
-            return simple(Integer.valueOf(m.group(1)));
-        return composed(Integer.valueOf(m.group(1)),
-                Integer.valueOf(m.group(3)), null != m.group(4));
+            return simple(Integer.parseInt(m.group(1)));
+        return composed(Integer.parseInt(m.group(1)),
+                Integer.parseInt(m.group(3)), null != m.group(4));
     }
 
     public static Position simple(int meta) {

@@ -9,6 +9,7 @@ import io.openio.sds.http.OioHttp;
 import io.openio.sds.http.OioHttpResponse;
 import io.openio.sds.logging.SdsLogger;
 import io.openio.sds.logging.SdsLoggerFactory;
+import io.openio.sds.models.ChunkInfo;
 import io.openio.sds.models.ObjectInfo;
 
 /**
@@ -19,8 +20,9 @@ import io.openio.sds.models.ObjectInfo;
  */
 public class ObjectInputStream extends InputStream {
 
-    private static final SdsLogger logger = SdsLoggerFactory.getLogger(ObjectInputStream.class);
-    
+    private static final SdsLogger logger = SdsLoggerFactory
+            .getLogger(ObjectInputStream.class);
+
     private OioHttp http;
     private ObjectInfo oinf;
     private int pos = 0;
@@ -30,6 +32,13 @@ public class ObjectInputStream extends InputStream {
     public ObjectInputStream(ObjectInfo oinf, OioHttp http) {
         this.oinf = oinf;
         this.http = http;
+    }
+
+    @Override
+    public void close() {
+        if (null != current)
+            current.close();
+        pos = oinf.nbchunks() + 1;
     }
 
     @Override
@@ -48,7 +57,7 @@ public class ObjectInputStream extends InputStream {
     public int read(byte[] buf, int offset, int length) throws IOException {
         if (0 >= length)
             return 0;
-        if (null == current) {
+        if (null == current || 0 >= currentRemaining) {
             if (pos >= oinf.nbchunks())
                 return -1;
             next(0);
@@ -69,16 +78,20 @@ public class ObjectInputStream extends InputStream {
     }
 
     private void next(int offset) {
-            String url = oinf.sortedChunks().get(pos).get(offset).url();
+        ChunkInfo ci = oinf.sortedChunks().get(pos).get(offset);
+        if(logger.isDebugEnabled())
+                logger.debug("dl from " + ci.url());
         try {
-            current = http.get(url)
+            current = http.get(ci.url())
                     .verifier(RawxClient.RAWX_VERIFIER)
                     .execute();
+            currentRemaining = ci.size().intValue();
             pos++;
-        } catch(SdsException e){
-            if(offset + 1 >= oinf.sortedChunks().get(pos).size())
-                throw new SdsException("Definitly fail to download chunk at pos " + pos, e);
-            logger.warn("Error while trying to download " + url, e);
+        } catch (SdsException e) {
+            if (offset + 1 >= oinf.sortedChunks().get(pos).size())
+                throw new SdsException(
+                        "Definitly fail to download chunk at pos " + pos, e);
+            logger.warn("Error while trying to download " + ci.url(), e);
             next(offset + 1);
         }
     }

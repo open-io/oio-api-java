@@ -8,7 +8,7 @@ public class ChunkInfo {
     }
 
     private String url;
-    private long size;
+    private Long size;
     private String hash;
     private Position pos;
 
@@ -24,7 +24,7 @@ public class ChunkInfo {
         return pos;
     }
 
-    public long size() {
+    public Long size() {
         return size;
     }
 
@@ -33,7 +33,7 @@ public class ChunkInfo {
         return this;
     }
 
-    public ChunkInfo size(long size) {
+    public ChunkInfo size(Long size) {
         this.size = size;
         return this;
     }

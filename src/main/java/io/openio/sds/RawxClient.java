@@ -28,7 +28,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -61,7 +61,6 @@ public class RawxClient {
     private static final int MIN_WORKERS = 1;
     private static final int MAX_WORKERS = 100;
     private static final int IDLE_THREAD_KEEP_ALIVE = 30; // in seconds
-    private static final int BACKLOG_MAX_SIZE = 10 * MAX_WORKERS;
 
     private final OioHttp http;
     private final ExecutorService executors;
@@ -74,7 +73,7 @@ public class RawxClient {
                 MAX_WORKERS,
                 IDLE_THREAD_KEEP_ALIVE,
                 TimeUnit.SECONDS,
-                new LinkedBlockingQueue<Runnable>(BACKLOG_MAX_SIZE),
+                new SynchronousQueue<Runnable>(),
                 new ThreadFactory() {
 
                     @Override
@@ -127,8 +126,18 @@ public class RawxClient {
      * @return a ListenableFuture which handles the updated {@code ObjectInfo}
      */
     public ObjectInfo uploadChunks(ObjectInfo oinf, File data) {
+
         try {
-            return uploadChunks(oinf, new FileInputStream(data));
+            FileInputStream fin = new FileInputStream(data);
+            try {
+                return uploadChunks(oinf, fin);
+            } finally {
+                try {
+                    fin.close();
+                } catch (IOException e) {
+                    logger.warn("Fail to close Inputstream, possible leak", e);
+                }
+            }
         } catch (FileNotFoundException e) {
             throw new IllegalArgumentException("File not found", e);
         }
@@ -151,60 +160,70 @@ public class RawxClient {
         List<ChunkInfo> cil = oinf.sortedChunks().get(pos);
         final List<FeedableInputStream> gens = size == 0 ? null
                 : feedableBodys(cil.size(), size);
-        Future<OioHttpResponse>[] futures = new Future[cil.size()];
+        List<Future<SdsException>> futures = new ArrayList<Future<SdsException>>();
         for (int i = 0; i < cil.size(); i++) {
             final ChunkInfo ci = cil.get(i);
             final FeedableInputStream in = null == gens ? null : gens.get(i);
-            futures[i] = executors.submit(new Callable<OioHttpResponse>() {
+
+            futures.add(executors.submit(new Callable<SdsException>() {
 
                 @Override
-                public OioHttpResponse call() throws Exception {
-                    RequestBuilder builder = http.put(ci.url())
-                            .header(CHUNK_META_CONTAINER_ID, oinf.url().cid())
-                            .header(CHUNK_META_CONTENT_ID, oinf.oid())
-                            .header(CHUNK_META_CONTENT_POLICY, oinf.policy())
-                            .header(CHUNK_META_CONTENT_MIME_TYPE, oinf.mtype())
-                            .header(CHUNK_META_CONTENT_CHUNK_METHOD,
-                                    oinf.chunkMethod())
-                            .header(CHUNK_META_CONTENT_CHUNKSNB,
-                                    String.valueOf(oinf.nbchunks()))
-                            .header(CHUNK_META_CONTENT_SIZE,
-                                    String.valueOf(oinf.size()))
-                            .header(CHUNK_META_CONTENT_PATH,
-                                    oinf.url().object())
-                            .header(CHUNK_META_CHUNK_ID, ci.id())
-                            .header(CHUNK_META_CHUNK_POS, ci.pos().toString())
-                            .verifier(RAWX_VERIFIER);
-                    if (null == gens)
-                        builder.body("");
-                    else
-                        builder.body(in, size);
-                    return builder.execute();
+                public SdsException call() {
+                    try {
+                        RequestBuilder builder = http.put(ci.url())
+                                .header(CHUNK_META_CONTAINER_ID,
+                                        oinf.url().cid())
+                                .header(CHUNK_META_CONTENT_ID, oinf.oid())
+                                .header(CHUNK_META_CONTENT_POLICY,
+                                        oinf.policy())
+                                .header(CHUNK_META_CONTENT_MIME_TYPE,
+                                        oinf.mtype())
+                                .header(CHUNK_META_CONTENT_CHUNK_METHOD,
+                                        oinf.chunkMethod())
+                                .header(CHUNK_META_CONTENT_CHUNKSNB,
+                                        String.valueOf(oinf.nbchunks()))
+                                .header(CHUNK_META_CONTENT_SIZE,
+                                        String.valueOf(oinf.size()))
+                                .header(CHUNK_META_CONTENT_PATH,
+                                        oinf.url().object())
+                                .header(CHUNK_META_CHUNK_ID, ci.id())
+                                .header(CHUNK_META_CHUNK_POS,
+                                        ci.pos().toString())
+                                .verifier(RAWX_VERIFIER);
+                        if (null == gens)
+                            builder.body("");
+                        else
+                            builder.body(in, size);
+                        ci.size(size);
+                        ci.hash(builder.execute()
+                                .close()
+                                .header(CHUNK_META_CHUNK_HASH));
+                    } catch (SdsException e) {
+                        return e;
+                    }
+                    return null;
                 }
-
-            });
+            }));
         }
-
         consume(data, size, gens, futures);
-
-        for (int i = 0; i < futures.length; i++) {
-            try {
-                OioHttpResponse resp = futures[i].get().close();
-                cil.get(i).hash(resp.header(CHUNK_META_CHUNK_HASH));
-            } catch (InterruptedException e) {
-                throw new SdsException("get interrupted", e);
-            } catch (ExecutionException e) {
-                throw new SdsException("Execution exception", e.getCause());
+        try {
+            for (Future<SdsException> f : futures) {
+                SdsException e = f.get();
+                // TODO improve, we should cry only in case of all copy fails
+                if (null != e)
+                    throw e;
             }
-
+        } catch (InterruptedException e) {
+            throw new SdsException("get interrupted", e);
+        } catch (ExecutionException e) {
+            throw new SdsException("Execution exception", e.getCause());
         }
-
         return oinf;
     }
 
     private void consume(InputStream data, Long size,
             List<FeedableInputStream> gens,
-            Future<OioHttpResponse>[] futures) {
+            List<Future<SdsException>> futures) {
         int done = 0;
         while (done < size) {
             byte[] b = new byte[Math.min(size.intValue() - done,
@@ -216,12 +235,11 @@ public class RawxClient {
                 }
             } catch (IOException e) {
                 logger.error(e);
-                for (Future<OioHttpResponse> f : futures)
+                for (Future<SdsException> f : futures)
                     f.cancel(true);
                 throw new SdsException("Stream consumption error", e);
             }
         }
-
     }
 
     private int fill(byte[] b, InputStream data) throws IOException {

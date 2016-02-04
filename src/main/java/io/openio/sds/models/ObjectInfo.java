@@ -1,5 +1,7 @@
 package io.openio.sds.models;
 
+import static io.openio.sds.common.OioConstants.OIO_CHARSET;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -37,7 +39,9 @@ public class ObjectInfo {
 
     public ObjectInfo() {
         // TODO: content hash
-        this.hash = Hash.md5().hashBytes("".getBytes()).toString();
+        this.hash = Hash.md5()
+                .hashBytes("".getBytes(OIO_CHARSET))
+                .toString();
     }
 
     public List<ChunkInfo> chunks() {

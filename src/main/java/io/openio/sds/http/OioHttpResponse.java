@@ -1,5 +1,6 @@
 package io.openio.sds.http;
 
+import static io.openio.sds.common.OioConstants.OIO_CHARSET;
 import static io.openio.sds.common.Strings.nullOrEmpty;
 import static java.lang.String.format;
 
@@ -16,8 +17,9 @@ import io.openio.sds.logging.SdsLoggerFactory;
 
 public class OioHttpResponse {
 
-    private static final SdsLogger logger = SdsLoggerFactory.getLogger(OioHttpResponse.class);
-    
+    private static final SdsLogger logger = SdsLoggerFactory
+            .getLogger(OioHttpResponse.class);
+
     private static final int R = 1;
     private static final int RN = 2;
     private static final int RNR = 3;
@@ -63,7 +65,7 @@ public class OioHttpResponse {
 
     public Long length() {
         String str = header("Content-Length");
-        return null == str ? 0L : Long.valueOf(str);
+        return null == str ? 0L : Long.parseLong(str);
     }
 
     public OioHttpResponse close() {
@@ -72,7 +74,7 @@ public class OioHttpResponse {
             if (null != sis)
                 sis.close();
         } catch (Exception e) {
-           logger.warn("Close failure, possible leak", e);
+            logger.warn("Close failure, possible leak", e);
         }
         return this;
     }
@@ -87,15 +89,14 @@ public class OioHttpResponse {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         int state = 0;
         while (state < RNRN)
-            state = next(sis, bos, state);
-        return new String(bos.toByteArray());
+            state = next(bos, state);
+        read();   //read trailing \r
+        return new String(bos.toByteArray(), OIO_CHARSET);
     }
 
-    private int next(InputStream sis, ByteArrayOutputStream bos,
+    private int next(ByteArrayOutputStream bos,
             int state) throws IOException {
-        int b = sis.read();
-        if (-1 == b)
-            throw new IOException("Unexpected end of stream");
+        int b = read();
         bos.write(b);
         switch (state) {
         case R:
@@ -107,6 +108,13 @@ public class OioHttpResponse {
         default:
             return b == BS_R ? R : 0;
         }
+    }
+
+    private int read() throws IOException {
+        int b = sis.read();
+        if (-1 == b)
+            throw new IOException("Unexpected end of stream");
+        return b;
     }
 
     public static class ResponseHead {
@@ -168,16 +176,16 @@ public class OioHttpResponse {
         private String msg;
 
         private StatusLine(String proto, int code, String msg) {
+            this.proto = proto;
             this.code = code;
             this.msg = msg;
         }
 
         public static StatusLine parse(String line) throws IOException {
-            System.out.println(line);
             String[] tok = line.trim().split(" ", 3);
             if (3 != tok.length)
                 throw new IOException(format("Invalid status line (%s)", line));
-            return new StatusLine(tok[0], Integer.valueOf(tok[1].trim()),
+            return new StatusLine(tok[0], Integer.parseInt(tok[1].trim()),
                     tok[2].trim());
         }
 

@@ -1,6 +1,7 @@
 package io.openio.sds;
 
 import static io.openio.sds.common.JsonUtils.gson;
+import static io.openio.sds.common.OioConstants.*;
 import static io.openio.sds.common.OioConstants.ACCOUNT_HEADER;
 import static io.openio.sds.common.OioConstants.CONTAINER_SYS_NAME_HEADER;
 import static io.openio.sds.common.OioConstants.CONTENT_META_CHUNK_METHOD_HEADER;
@@ -18,6 +19,7 @@ import static io.openio.sds.common.OioConstants.M2_USAGE_HEADER;
 import static io.openio.sds.common.OioConstants.M2_VERSION_HEADER;
 import static io.openio.sds.common.OioConstants.NS_HEADER;
 import static io.openio.sds.common.OioConstants.OIO_ACTION_MODE_HEADER;
+import static io.openio.sds.common.OioConstants.OIO_CHARSET;
 import static io.openio.sds.common.OioConstants.SCHEMA_VERSION_HEADER;
 import static io.openio.sds.common.OioConstants.TYPE_HEADER;
 import static io.openio.sds.common.OioConstants.USER_NAME_HEADER;
@@ -37,6 +39,7 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 
 import io.openio.sds.exceptions.BadRequestException;
+import io.openio.sds.exceptions.ContainerExistException;
 import io.openio.sds.exceptions.ContainerNotFoundException;
 import io.openio.sds.exceptions.ObjectNotFoundException;
 import io.openio.sds.exceptions.SdsException;
@@ -56,6 +59,7 @@ import io.openio.sds.settings.ProxySettings;
 
 public class ProxyClient {
 
+   
     private OioHttp http;
     private ProxySettings settings;
 
@@ -65,33 +69,34 @@ public class ProxyClient {
     }
 
     public NamespaceInfo getNamespaceInfo() {
-        return http.get(format("%s/v3.0/%s/conscience/info",
+        return http.get(format(NSINFO_FORMAT,
                 settings.url(), settings.ns()))
                 .verifier(STANDALONE_VERIFIER)
                 .execute(NamespaceInfo.class);
     }
-    
-    public List<ServiceInfo> getServices(String type){
-        OioHttpResponse resp =  http.get(format("%s/v3.0/%s/conscience/list?type=%s",
-                settings.url(), settings.ns(), type))
+
+    public List<ServiceInfo> getServices(String type) {
+        OioHttpResponse resp = http
+                .get(format(GETSRV_FORMAT,
+                        settings.url(), settings.ns(), type))
                 .verifier(STANDALONE_VERIFIER)
                 .execute();
         return serviceListAndClose(resp);
     }
-    
-    public void registerService(String type, ServiceInfo si){
-        http.get(format("%s/v3.0/%s/conscience/list?type=%s",
+
+    public void registerService(String type, ServiceInfo si) {
+        http.get(format(REGISTER_FORMAT,
                 settings.url(), settings.ns(), type))
                 .body(gson().toJson(si))
                 .verifier(STANDALONE_VERIFIER)
                 .execute()
                 .close();
     }
-    
+
     public void linkService(OioUrl url, String type) {
-        //TODO
+        // TODO
     }
-    
+
     /**
      * Creates a container using the specified {@code OioUrl}
      * 
@@ -100,12 +105,14 @@ public class ProxyClient {
      * @return {@code ContainerInfo}
      */
     public ContainerInfo createContainer(OioUrl url) {
-        http.post(format("%s/v3.0/NS/container/create?acct=%s&ref=%s",
+        OioHttpResponse resp = http.post(format(CREATE_CONTAINER_FORMAT,
                 settings.url(), url.account(), url.container()))
                 .header(OIO_ACTION_MODE_HEADER, "autocreate")
                 .verifier(CONTAINER_VERIFIER)
                 .execute()
                 .close();
+        if(201 == resp.code())
+            throw new ContainerExistException("Container alreay present");
 
         return new ContainerInfo(url.container());
     }
@@ -119,7 +126,7 @@ public class ProxyClient {
      */
     public ContainerInfo getContainerInfo(OioUrl url) {
         OioHttpResponse r = http.get(
-                format("%s/v3.0/%s/container/show?acct=%s&ref=%s",
+                format(GET_CONTAINER_INFO_FORMAT,
                         settings.url(), settings.ns(), url.account(),
                         url.container()))
                 .verifier(CONTAINER_VERIFIER)
@@ -147,20 +154,20 @@ public class ProxyClient {
 
     public ObjectList listContainer(OioUrl url, ListOptions options) {
         return http.get(
-                format("%s/v3.0/%s/container/list?acct=%s&ref=%s",
+                format(LIST_OBJECTS_FORMAT,
                         settings.url(), settings.ns(), url.account(),
                         url.container()))
-                .query("max", options.limit() > 0
+                .query(MAX_PARAM, options.limit() > 0
                         ? String.valueOf(options.limit()) : null)
-                .query("prefix", options.prefix())
-                .query("marker", options.marker())
-                .query("delimiter", options.delimiter())
+                .query(PREFIX_PARAM, options.prefix())
+                .query(MARKER_PARAM, options.marker())
+                .query(DELIMITER_PARAM, options.delimiter())
                 .verifier(CONTAINER_VERIFIER)
                 .execute(ObjectList.class);
     }
 
     public void deleteContainer(OioUrl url) {
-        http.post(format("%s/v3.0/%s/container/destroy?acct=%s&ref=%s",
+        http.post(format(DELETE_CONTAINER_FORMAT,
                 settings.url(), settings.ns(), url.account(),
                 url.container()))
                 .verifier(CONTAINER_VERIFIER)
@@ -171,7 +178,7 @@ public class ProxyClient {
     public ObjectInfo getBeans(OioUrl url, long size)
             throws JsonSyntaxException {
         OioHttpResponse resp = http.post(
-                format("%s/v3.0/%s/content/prepare?acct=%s&ref=%s&path=%s",
+                format(GET_BEANS_FORMAT,
                         settings.url(), settings.ns(), url.account(),
                         url.container(), url.object()))
                 .body(gson().toJson(new BeansRequest().size(size)))
@@ -181,8 +188,7 @@ public class ProxyClient {
     }
 
     public ObjectInfo putObject(ObjectInfo oinf) {
-        OioHttpResponse resp = http.post(String.format(
-                "%s/v3.0/%s/content/create?acct=%s&ref=%s&path=%s",
+        http.post(format(PUT_OBJECT_FORMAT,
                 settings.url(), settings.ns(),
                 oinf.url().account(),
                 oinf.url().container(),
@@ -192,13 +198,14 @@ public class ProxyClient {
                 .header(CONTENT_META_HASH_HEADER, oinf.hash())
                 .body(gson().toJson(oinf.chunks()))
                 .verifier(OBJECT_VERIFIER)
-                .execute();
-        return objectInfoAndClose(oinf.url(), resp);
+                .execute()
+                .close();
+        return oinf;
     }
 
     public ObjectInfo getObjectInfo(OioUrl url) {
         OioHttpResponse resp = http.get(
-                format("%s/v3.0/%s/content/show?acct=%s&ref=%s&path=%s",
+                format(GET_OBJECT_FORMAT,
                         settings.url(), settings.ns(), url.account(),
                         url.container(), url.object()))
                 .verifier(OBJECT_VERIFIER)
@@ -208,7 +215,7 @@ public class ProxyClient {
 
     public void deleteObject(OioUrl url) {
         http.post(
-                format("%s/v3.0/%s/content/delete?acct=%s&ref=%s&path=%s",
+                format(DELETE_OBJECT_FORMAT,
                         settings.url(), settings.ns(), url.account(),
                         url.container(), url.object()))
                 .verifier(OBJECT_VERIFIER)
@@ -242,19 +249,20 @@ public class ProxyClient {
             throws SdsException {
         try {
             return gson().fromJson(
-                    new JsonReader(new InputStreamReader(resp.body())),
+                    new JsonReader(
+                            new InputStreamReader(resp.body(), OIO_CHARSET)),
                     new TypeToken<List<ChunkInfo>>() {
                     }.getType());
         } catch (Exception e) {
             throw new SdsException("Body extraction error", e);
         }
     }
-    
 
     private List<ServiceInfo> serviceListAndClose(OioHttpResponse resp) {
         try {
             return gson().fromJson(
-                    new JsonReader(new InputStreamReader(resp.body())),
+                    new JsonReader(
+                            new InputStreamReader(resp.body(), OIO_CHARSET)),
                     new TypeToken<List<ServiceInfo>>() {
                     }.getType());
         } catch (Exception e) {
@@ -263,7 +271,6 @@ public class ProxyClient {
             resp.close();
         }
     }
-
 
     private static final OioHttpResponseVerifier CONTAINER_VERIFIER = new OioHttpResponseVerifier() {
 
@@ -280,11 +287,11 @@ public class ProxyClient {
                 throw new ContainerNotFoundException(resp.msg());
             case 500:
                 throw new SdsException(
-                        format("Internal error (%d %s)", resp.code(),
+                        format(INTERNAL_ERROR_FORMAT, resp.code(),
                                 resp.msg()));
             default:
                 throw new SdsException(
-                        format("Unmanaged response code (%d %s)", resp.code(),
+                        format(UNMANAGED_ERROR_FORMAT, resp.code(),
                                 resp.msg()));
             }
         }
@@ -305,16 +312,16 @@ public class ProxyClient {
                 throw new ObjectNotFoundException(resp.msg());
             case 500:
                 throw new SdsException(
-                        format("Internal error (%d %s)", resp.code(),
+                        format(INTERNAL_ERROR_FORMAT, resp.code(),
                                 resp.msg()));
             default:
                 throw new SdsException(
-                        format("Unmanaged response code (%d %s)", resp.code(),
+                        format(UNMANAGED_ERROR_FORMAT, resp.code(),
                                 resp.msg()));
             }
         }
     };
-    
+
     private static final OioHttpResponseVerifier STANDALONE_VERIFIER = new OioHttpResponseVerifier() {
 
         @Override
@@ -330,11 +337,11 @@ public class ProxyClient {
                 throw new SdsException(resp.msg());
             case 500:
                 throw new SdsException(
-                        format("Internal error (%d %s)", resp.code(),
+                        format(INTERNAL_ERROR_FORMAT, resp.code(),
                                 resp.msg()));
             default:
                 throw new SdsException(
-                        format("Unmanaged response code (%d %s)", resp.code(),
+                        format(UNMANAGED_ERROR_FORMAT, resp.code(),
                                 resp.msg()));
             }
         }

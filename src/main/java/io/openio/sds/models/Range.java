@@ -2,6 +2,7 @@ package io.openio.sds.models;
 
 import static io.openio.sds.common.Check.checkArgument;
 import static java.lang.Integer.parseInt;
+import static java.lang.String.format;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -27,26 +28,19 @@ public class Range {
     }
 
     public static Range upTo(int to) {
+        checkArgument(0 < to);
         return new Range(0, to);
     }
 
     public static Range from(int from) {
+        checkArgument(0 <= from);
         return new Range(from, -1);
     }
 
     public static Range between(int from, int to) {
-        from = Math.max(from, 0);
-        if (to > 0 && to <= from)
-            throw new IllegalArgumentException("Invalid range");
+        checkArgument(from >= 0 && to > 0 && to >= from,
+                "Invalid range");
         return new Range(from, to);
-    }
-
-    public int from() {
-        return from;
-    }
-
-    public int to() {
-        return to;
     }
 
     public static Range parse(String str) {
@@ -60,16 +54,24 @@ public class Range {
                 : between(parseInt(m.group(1)), parseInt(m.group(2)));
     }
 
+    public int from() {
+        return from;
+    }
+
+    public int to() {
+        return to;
+    }
+
     public String headerValue() {
-        return (to < 0)
-                ? String.format("bytes=%d-", from)
-                : String.format("bytes=%d-%d", from, to);
+        return to < 0
+                ? format("bytes=%d-", from)
+                : format("bytes=%d-%d", from, to);
     }
 
     public String rangeValue() {
-        return (to < 0)
-                ? String.format("%d-", from)
-                : String.format("%d-%d", from, to);
+        return to < 0
+                ? format("%d-", from)
+                : format("%d-%d", from, to);
     }
 
     @Override

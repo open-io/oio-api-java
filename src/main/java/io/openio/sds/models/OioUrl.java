@@ -1,6 +1,7 @@
 package io.openio.sds.models;
 
 import static io.openio.sds.common.Check.checkArgument;
+import static io.openio.sds.common.OioConstants.OIO_CHARSET;
 import static io.openio.sds.common.Strings.nullOrEmpty;
 
 import io.openio.sds.common.Hash;
@@ -96,9 +97,9 @@ public class OioUrl {
      */
     public static String cid(String account, String container) {
         return Hash.sha256()
-                .putBytes(account.getBytes())
+                .putBytes(account.getBytes(OIO_CHARSET))
                 .putBytes(BACK_ZERO)
-                .putBytes(container.getBytes())
+                .putBytes(container.getBytes(OIO_CHARSET))
                 .hash().toString();
     }
 

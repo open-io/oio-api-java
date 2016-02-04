@@ -1,5 +1,7 @@
 package io.openio.sds.common;
 
+import java.util.Arrays;
+
 public class Hex {
 
     private static final char[] hexArray = "0123456789ABCDEF".toCharArray();
@@ -28,11 +30,11 @@ public class Hex {
     }
 
     public byte[] bytes() {
-        return wrapped;
+        return Arrays.copyOf(wrapped, wrapped.length);
     }
 
     public String hexString(boolean upperCase) {
-        return (upperCase) ? str
+        return upperCase ? str
                 : str.toLowerCase();
     }
 
