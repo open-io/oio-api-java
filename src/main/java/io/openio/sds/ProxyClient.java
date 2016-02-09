@@ -106,7 +106,7 @@ public class ProxyClient {
      */
     public ContainerInfo createContainer(OioUrl url) {
         OioHttpResponse resp = http.post(format(CREATE_CONTAINER_FORMAT,
-                settings.url(), url.account(), url.container()))
+                settings.url(), settings.ns(), url.account(), url.container()))
                 .header(OIO_ACTION_MODE_HEADER, "autocreate")
                 .verifier(CONTAINER_VERIFIER)
                 .execute()

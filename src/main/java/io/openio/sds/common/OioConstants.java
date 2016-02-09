@@ -77,7 +77,7 @@ public class OioConstants {
     public static final String NSINFO_FORMAT = "%s/v3.0/%s/conscience/info";
     public static final String GETSRV_FORMAT = "%s/v3.0/%s/conscience/list?type=%s";
     public static final String REGISTER_FORMAT = "%s/v3.0/%s/conscience/list?type=%s";
-    public static final String CREATE_CONTAINER_FORMAT = "%s/v3.0/NS/container/create?acct=%s&ref=%s";
+    public static final String CREATE_CONTAINER_FORMAT = "%s/v3.0/%s/container/create?acct=%s&ref=%s";
     public static final String GET_CONTAINER_INFO_FORMAT = "%s/v3.0/%s/container/show?acct=%s&ref=%s";
     public static final String LIST_OBJECTS_FORMAT = "%s/v3.0/%s/container/list?acct=%s&ref=%s";
     public static final String DELETE_CONTAINER_FORMAT = "%s/v3.0/%s/container/destroy?acct=%s&ref=%s";
