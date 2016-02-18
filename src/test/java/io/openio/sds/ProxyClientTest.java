@@ -9,14 +9,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import io.openio.sds.exceptions.ContainerNotFoundException;
+import io.openio.sds.exceptions.ReferenceNotFoundException;
 import io.openio.sds.exceptions.SdsException;
 import io.openio.sds.http.OioHttp;
 import io.openio.sds.http.OioHttpSettings;
 import io.openio.sds.models.ContainerInfo;
+import io.openio.sds.models.LinkedServiceInfo;
 import io.openio.sds.models.ListOptions;
 import io.openio.sds.models.NamespaceInfo;
 import io.openio.sds.models.ObjectInfo;
@@ -34,40 +37,40 @@ public class ProxyClientTest {
     }
 
     @Test
-    public void namespaceInfo () {
+    public void namespaceInfo() {
         NamespaceInfo ni = proxy.getNamespaceInfo();
         assertNotNull(ni);
         assertNotNull(ni.ns());
         assertNotNull(ni.options());
         assertNotNull(ni.storagePolicies());
     }
-    
+
     @Test
-    public void listServicesWithType(){
+    public void listServicesWithType() {
         List<ServiceInfo> rawx = proxy.getServices("rawx");
         assertNotNull(rawx);
-        for(ServiceInfo si : rawx)
+        for (ServiceInfo si : rawx)
             System.out.println(si);
     }
-    
-    @Test(expected=SdsException.class)
-    public void listServicesWithUnknownType(){
+
+    @Test(expected = SdsException.class)
+    public void listServicesWithUnknownType() {
         List<ServiceInfo> rawx = proxy.getServices("unknown");
         assertNotNull(rawx);
-        for(ServiceInfo si : rawx)
+        for (ServiceInfo si : rawx)
             System.out.println(si);
     }
-    
-    @Test(expected=SdsException.class)
-    public void listServicesWithNullType(){
+
+    @Test(expected = SdsException.class)
+    public void listServicesWithNullType() {
         List<ServiceInfo> rawx = proxy.getServices(null);
         assertNotNull(rawx);
-        for(ServiceInfo si : rawx)
+        for (ServiceInfo si : rawx)
             System.out.println(si);
     }
-    
+
     @Test
-    public void registerService(){
+    public void registerService() {
         Map<String, String> tags = new HashMap<String, String>();
         tags.put("tag.up", "true");
         tags.put("tag.vol", "/home/cde/fakevol");
@@ -115,5 +118,31 @@ public class ProxyClientTest {
         } finally {
             proxy.deleteContainer(url);
         }
+    }
+
+    @Test
+    public void handleReference() {
+        OioUrl url = url("TEST", UUID.randomUUID().toString());
+        proxy.createReference(url);
+        proxy.showReference(url);
+        proxy.deleteReference(url);
+        try {
+            proxy.showReference(url);
+            Assert.fail("ref should be destroyed");
+        } catch (ReferenceNotFoundException e) {
+            //ok
+        }
+    }
+
+    @Test
+    public void link() {
+        OioUrl url = url("TEST", UUID.randomUUID().toString());
+        System.out.println(url);
+        proxy.createReference(url);
+        System.out.println(proxy.linkService(url, "rawx"));
+        List<LinkedServiceInfo> ref = proxy.listServices(url, "rawx");
+        assertNotNull(ref);
+        assertEquals(1, ref.size());
+        System.out.println(ref);
     }
 }

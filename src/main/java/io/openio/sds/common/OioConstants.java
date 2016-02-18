@@ -74,9 +74,22 @@ public class OioConstants {
     
     /* -- URL String format -- */
     
-    public static final String NSINFO_FORMAT = "%s/v3.0/%s/conscience/info";
-    public static final String GETSRV_FORMAT = "%s/v3.0/%s/conscience/list?type=%s";
-    public static final String REGISTER_FORMAT = "%s/v3.0/%s/conscience/list?type=%s";
+    /* -- CS -- */
+    public static final String CS_NSINFO_FORMAT = "%s/v3.0/%s/conscience/info";
+    public static final String CS_GETSRV_FORMAT = "%s/v3.0/%s/conscience/list?type=%s";
+    public static final String CS_REGISTER_FORMAT = "%s/v3.0/%s/conscience/list?type=%s";
+    
+    /* -- DIR -- */
+    public static final String DIR_REF_CREATE_FORMAT = "%s/v3.0/%s/reference/create?acct=%s&ref=%s";
+    public static final String DIR_REF_DELETE_FORMAT = "%s/v3.0/%s/reference/destroy?acct=%s&ref=%s";
+    public static final String DIR_REF_SHOW_FORMAT = "%s/v3.0/%s/reference/show?acct=%s&ref=%s";
+    public static final String DIR_LINK_SRV_FORMAT = "%s/v3.0/%s/reference/link?acct=%s&ref=%s&type=%s";
+    public static final String DIR_LIST_SRV_FORMAT = "%s/v3.0/%s/reference/show?acct=%s&ref=%s&type=%s";
+    public static final String DIR_UNLINK_SRV_FORMAT = "%s/v3.0/%s/reference/unlink?acct=%s&ref=%s&type=%s";
+    public static final String DIR_FORCE_SRV_FORMAT = "%s/v3.0/%s/reference/link?acct=%s&ref=%s";
+    public static final String DIR_RENEW_SRV_FORMAT = "%s/v3.0/%s/reference/renew?acct=%s&ref=%s";
+    
+    /* -- STG -- */
     public static final String CREATE_CONTAINER_FORMAT = "%s/v3.0/NS/container/create?acct=%s&ref=%s";
     public static final String GET_CONTAINER_INFO_FORMAT = "%s/v3.0/%s/container/show?acct=%s&ref=%s";
     public static final String LIST_OBJECTS_FORMAT = "%s/v3.0/%s/container/list?acct=%s&ref=%s";
@@ -89,4 +102,6 @@ public class OioConstants {
     /* -- Common String format -- */
     public static final String INTERNAL_ERROR_FORMAT = "Internal error (%d %s)";
     public static final String UNMANAGED_ERROR_FORMAT = "Unmanaged response code (%d %s)";
+
+    
 }
