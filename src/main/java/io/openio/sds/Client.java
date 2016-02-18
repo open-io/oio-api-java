@@ -16,9 +16,7 @@ import io.openio.sds.models.OioUrl;
  * </p>
  * <p>
  * Instances of {@code Client} implementations are built with
- * {@link ClientBuilder} class. You could create a basic client by calling
- * {@link ClientBuilder#newClient(String)} method, specifying the OpenIO proxyd
- * service url as argument. The built client is ready to use.
+ * {@link ClientBuilder}.
  * </p>
  * <p>
  * Simple example:
@@ -28,23 +26,6 @@ import io.openio.sds.models.OioUrl;
  * </code>
  * 
  * </p>
- * <p>
- * To enable more tunable client instance, you should specify some directives to
- * your {@link ClientBuilder} For example if you want to provide your own
- * AsyncHttpClient instance, you have to proceed as follow:
- * 
- * <code>
- * AsyncHttpClient http = Dsl.asyncHttpClient(
- *       new DefaultAsyncHttpClientConfig.Builder()
- *             .setRequestTimeout(10000)
- *             .setHttpClientCodecMaxChunkSize(8192 * 4));
- * Client client = ClientBuilder.prepareClient()
- *       .proxydUrl("http://127.0.0.1:6002")
- *       .http(http)
- *       .build();
- * </code>
- * </p>
- * 
  * 
  * @author Christopher Dedeurwaerder
  *
@@ -100,7 +81,11 @@ public interface Client {
     /**
      * Push an object into the oio namespace
      * 
+<<<<<<< HEAD
      * @param OioUrl
+=======
+     * @param url
+>>>>>>> jka-change
      *            the url of the object to create
      * @param size
      *            the size of the object
@@ -114,7 +99,11 @@ public interface Client {
     /**
      * Push an object into the oio namespace
      * 
+<<<<<<< HEAD
      * @param OioUrl
+=======
+     * @param url
+>>>>>>> jka-change
      *            the url of the object to create
      * @param size
      *            the size of the object

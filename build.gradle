@@ -1,5 +1,6 @@
 apply plugin: 'java'
 apply plugin: 'maven'
+apply plugin: 'signing'
 apply plugin: 'jacoco'
 apply plugin: 'findbugs'
 apply plugin: 'pmd'
@@ -16,7 +17,7 @@ task wrapper(type: Wrapper) {
 }
 
 group = 'io.openio.sds'
-version = '0.1'
+version = '0.2.1-SNAPSHOT'
 
 dependencies {
 	compile group: 'log4j', name: 'log4j', version: '1.2.17'
@@ -66,4 +67,62 @@ jar {
 task javadocJar(type: Jar) {
   classifier = 'javadoc'
   from javadoc
+}
+
+task sourcesJar(type: Jar) {
+  classifier = 'sources'
+  from sourceSets.main.allJava
+}
+
+artifacts {
+  archives javadocJar, sourcesJar
+}
+
+signing {
+  required { gradle.taskGraph.hasTask("uploadArchives") }
+  sign configurations.archives
+}
+
+def ossrhUsername = properties['ossrhUsername']
+
+def ossrhPassword = properties['ossrhPassword']
+
+uploadArchives {
+  repositories {
+    mavenDeployer {
+
+      beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+      repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+        authentication(userName: ossrhUsername, password: ossrhPassword)
+      }
+
+      snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshosts/") {
+        authentication(userName: ossrhUsername, password: ossrhPassword)
+      }
+
+      pom.project {
+        name 'OpenIO SDS API'
+        packaging 'jar'
+        description 'OpenIO SDS API'
+        url 'http://openio.io'
+
+        scm {
+          url 'https://github.com/open-io/oio-api-java'
+        }
+        licenses {
+          license {
+            name 'GNU Lesser General Public License v3'
+            url 'https://www.gnu.org/licenses/lgpl.txt'
+          }
+        }
+        developers {
+          developer {
+            id 'jkasarherou'
+            name 'Julien Kasarherou'
+            email 'julien@openio.io'
+          }
+        }
+      }
+    }
+  }
 }

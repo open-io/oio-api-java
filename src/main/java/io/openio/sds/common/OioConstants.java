@@ -73,7 +73,7 @@ public class OioConstants {
     public static final String MARKER_PARAM = "marker";
     
     /* -- URL String format -- */
-    
+
     /* -- CS -- */
     public static final String CS_NSINFO_FORMAT = "%s/v3.0/%s/conscience/info";
     public static final String CS_GETSRV_FORMAT = "%s/v3.0/%s/conscience/list?type=%s";
@@ -90,7 +90,7 @@ public class OioConstants {
     public static final String DIR_RENEW_SRV_FORMAT = "%s/v3.0/%s/reference/renew?acct=%s&ref=%s";
     
     /* -- STG -- */
-    public static final String CREATE_CONTAINER_FORMAT = "%s/v3.0/NS/container/create?acct=%s&ref=%s";
+    public static final String CREATE_CONTAINER_FORMAT = "%s/v3.0/%s/container/create?acct=%s&ref=%s";
     public static final String GET_CONTAINER_INFO_FORMAT = "%s/v3.0/%s/container/show?acct=%s&ref=%s";
     public static final String LIST_OBJECTS_FORMAT = "%s/v3.0/%s/container/list?acct=%s&ref=%s";
     public static final String DELETE_CONTAINER_FORMAT = "%s/v3.0/%s/container/destroy?acct=%s&ref=%s";
@@ -102,6 +102,4 @@ public class OioConstants {
     /* -- Common String format -- */
     public static final String INTERNAL_ERROR_FORMAT = "Internal error (%d %s)";
     public static final String UNMANAGED_ERROR_FORMAT = "Unmanaged response code (%d %s)";
-
-    
 }

@@ -37,7 +37,6 @@ import static io.openio.sds.common.OioConstants.M2_VERSION_HEADER;
 import static io.openio.sds.common.OioConstants.MARKER_PARAM;
 import static io.openio.sds.common.OioConstants.MAX_PARAM;
 import static io.openio.sds.common.OioConstants.NS_HEADER;
-import static io.openio.sds.common.OioConstants.OIO_ACTION_MODE_HEADER;
 import static io.openio.sds.common.OioConstants.OIO_CHARSET;
 import static io.openio.sds.common.OioConstants.PREFIX_PARAM;
 import static io.openio.sds.common.OioConstants.PUT_OBJECT_FORMAT;
@@ -61,6 +60,7 @@ import java.util.List;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 
+import io.openio.sds.common.OioConstants;
 import io.openio.sds.exceptions.BadRequestException;
 import io.openio.sds.exceptions.ContainerExistException;
 import io.openio.sds.exceptions.ContainerNotFoundException;
@@ -92,7 +92,6 @@ import io.openio.sds.settings.ProxySettings;
  *
  */
 public class ProxyClient {
-
     private OioHttp http;
     private ProxySettings settings;
 
@@ -266,7 +265,7 @@ public class ProxyClient {
     public ContainerInfo createContainer(OioUrl url) throws SdsException {
         OioHttpResponse resp = http.post(format(CREATE_CONTAINER_FORMAT,
                 settings.url(), url.account(), url.container()))
-                .header(OIO_ACTION_MODE_HEADER, "autocreate")
+                .header(OioConstants.OIO_ACTION_MODE_HEADER, "autocreate")
                 .verifier(CONTAINER_VERIFIER)
                 .execute()
                 .close();
@@ -506,8 +505,7 @@ public class ProxyClient {
             resp.close();
         }
     }
-    
-    
+
     private static final OioHttpResponseVerifier REFERENCE_VERIFIER = new OioHttpResponseVerifier() {
 
         @Override

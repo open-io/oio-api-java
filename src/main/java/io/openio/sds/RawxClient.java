@@ -99,9 +99,13 @@ public class RawxClient {
      *            the ObjectInfo to deal with
      * @param data
      *            the data to upload
+<<<<<<< HEAD
      * @param listener
      *            the {@link UploadListener} to check progression
      * @return a ListenableFuture which handles the updated {@code ObjectInfo}
+=======
+     * @return oinf
+>>>>>>> jka-change
      */
     public ObjectInfo uploadChunks(ObjectInfo oinf,
             InputStream data) {
@@ -121,9 +125,13 @@ public class RawxClient {
      *            the ObjectInfo to deal with
      * @param data
      *            the data to upload
+<<<<<<< HEAD
      * @param listener
      *            the {@link UploadListener} to check progression
      * @return a ListenableFuture which handles the updated {@code ObjectInfo}
+=======
+     * @return oinf
+>>>>>>> jka-change
      */
     public ObjectInfo uploadChunks(ObjectInfo oinf, File data) {
 

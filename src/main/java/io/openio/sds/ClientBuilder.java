@@ -48,11 +48,19 @@ public class ClientBuilder {
     }
 
     /**
+<<<<<<< HEAD
      * Set a specific {@link AsyncHttpClient} instance to be used by the built
      * clients
      * 
      * @param http
      *            the AsyncHttpClient instance to set
+=======
+     * Set a specific {@link OioHttp} instance to be used by the built
+     * clients
+     * 
+     * @param http
+     *            the OioHttp instance to set
+>>>>>>> jka-change
      * @return this
      */
     public ClientBuilder http(OioHttp http) {
