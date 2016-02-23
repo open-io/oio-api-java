@@ -102,14 +102,17 @@ public class OioConstants {
     /* -- PROPS -- */
     public static final String CONTAINER_SET_PROP = "%s/v3.0/%s/container/set_properties?acct=%s&ref=%s";
     public static final String CONTAINER_GET_PROP = "%s/v3.0/%s/container/get_properties?acct=%s&ref=%s";
-    public static final String CONTAINER_DEL_PROP = "%s/v3.0/%s/container/delr_properties?acct=%s&ref=%s";
+    public static final String CONTAINER_DEL_PROP = "%s/v3.0/%s/container/del_properties?acct=%s&ref=%s";
     public static final String OBJECT_SET_PROP = "%s/v3.0/%s/content/set_properties?acct=%s&ref=%s&path=%s";
-    public static final String OBJECT_GET_PROP = "%s/v3.0/%s/content/get_properties?acct=%s&ref=%s";
+    public static final String OBJECT_GET_PROP = "%s/v3.0/%s/content/get_properties?acct=%s&ref=%s&path=%s";
     public static final String OBJECT_DEL_PROP = "%s/v3.0/%s/content/del_properties?acct=%s&ref=%s&path=%s";
     
     /* -- Common String format -- */
     public static final String INTERNAL_ERROR_FORMAT = "Internal error (%d %s)";
     public static final String UNMANAGED_ERROR_FORMAT = "Unmanaged response code (%d %s)";
+    
+    /* -- Common error messages -- */
+    public static final String INVALID_URL_MSG = "Invalid url";
 
     public static final String USER_PROP_PREFIX = "user.";
 }
