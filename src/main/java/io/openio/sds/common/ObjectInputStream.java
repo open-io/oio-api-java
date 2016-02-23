@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import io.openio.sds.RawxClient;
-import io.openio.sds.exceptions.SdsException;
+import io.openio.sds.exceptions.OioException;
 import io.openio.sds.http.OioHttp;
 import io.openio.sds.http.OioHttpResponse;
 import io.openio.sds.logging.SdsLogger;
@@ -79,17 +79,17 @@ public class ObjectInputStream extends InputStream {
 
     private void next(int offset) {
         ChunkInfo ci = oinf.sortedChunks().get(pos).get(offset);
-        if(logger.isDebugEnabled())
-                logger.debug("dl from " + ci.url());
+        if (logger.isDebugEnabled())
+            logger.debug("dl from " + ci.url());
         try {
             current = http.get(ci.url())
                     .verifier(RawxClient.RAWX_VERIFIER)
                     .execute();
             currentRemaining = ci.size().intValue();
             pos++;
-        } catch (SdsException e) {
+        } catch (OioException e) {
             if (offset + 1 >= oinf.sortedChunks().get(pos).size())
-                throw new SdsException(
+                throw new OioException(
                         "Definitly fail to download chunk at pos " + pos, e);
             logger.warn("Error while trying to download " + ci.url(), e);
             next(offset + 1);

@@ -1,5 +1,9 @@
 package io.openio.sds.exceptions;
 
+/**
+ * This exception is deprecated and will be drop in a future release. Please catch {@link OioException} directly instead.
+ */
+@Deprecated
 public class SdsException extends RuntimeException {
 
     /**

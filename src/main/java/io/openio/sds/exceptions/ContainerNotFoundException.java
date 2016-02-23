@@ -1,6 +1,6 @@
 package io.openio.sds.exceptions;
 
-public class ContainerNotFoundException extends SdsException {
+public class ContainerNotFoundException extends OioException {
 
     /**
      * 

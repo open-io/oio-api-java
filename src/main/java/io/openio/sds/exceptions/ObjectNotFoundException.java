@@ -1,6 +1,6 @@
 package io.openio.sds.exceptions;
 
-public class ObjectNotFoundException extends SdsException {
+public class ObjectNotFoundException extends OioException {
 
     /**
      * 

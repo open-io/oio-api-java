@@ -24,9 +24,11 @@ import java.util.Map.Entry;
 import com.google.gson.stream.JsonReader;
 
 import io.openio.sds.common.Check;
-import io.openio.sds.exceptions.SdsException;
+import io.openio.sds.exceptions.OioException;
+import io.openio.sds.exceptions.OioSystemException;
 
 /**
+ * Simple HTTP client
  * 
  * @author Christopher Dedeurwaerder
  *
@@ -130,7 +132,7 @@ public class OioHttp {
             return this;
         }
 
-        public OioHttpResponse execute() throws SdsException {
+        public OioHttpResponse execute() throws OioException {
             try {
                 Socket sock = new Socket();
                 sock.setSendBufferSize(settings.sendBufferSize());
@@ -144,12 +146,12 @@ public class OioHttp {
                     if (null != verifier)
                         verifier.verify(resp);
                     return resp;
-                } catch (SdsException e) {
+                } catch (OioException e) {
                     resp.close();
                     throw e;
                 }
             } catch (IOException e) {
-                throw new SdsException("Http request execution error", e);
+                throw new OioSystemException("Http request execution error", e);
             }
         }
 

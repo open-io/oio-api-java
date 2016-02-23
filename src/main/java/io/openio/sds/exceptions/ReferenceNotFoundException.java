@@ -5,7 +5,7 @@ package io.openio.sds.exceptions;
  * @author Christopher Dedeurwaerder
  *
  */
-public class ReferenceNotFoundException extends SdsException {
+public class ReferenceNotFoundException extends OioException {
 
     /**
      * 

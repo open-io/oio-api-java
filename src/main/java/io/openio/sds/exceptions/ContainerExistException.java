@@ -5,7 +5,7 @@ package io.openio.sds.exceptions;
  * @author Christopher Dedeurwaerder
  *
  */
-public class ContainerExistException extends SdsException {
+public class ContainerExistException extends OioException {
 
     /**
      * 

@@ -37,6 +37,5 @@ public class JsonUtils {
                 JsonSerializationContext context) {
             return new JsonPrimitive(src.toString());
         }
-
     }
 }

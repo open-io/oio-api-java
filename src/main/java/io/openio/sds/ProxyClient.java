@@ -3,6 +3,8 @@ package io.openio.sds;
 import static io.openio.sds.common.Check.checkArgument;
 import static io.openio.sds.common.JsonUtils.gson;
 import static io.openio.sds.common.OioConstants.ACCOUNT_HEADER;
+import static io.openio.sds.common.OioConstants.CONTAINER_GET_PROP;
+import static io.openio.sds.common.OioConstants.CONTAINER_SET_PROP;
 import static io.openio.sds.common.OioConstants.CONTAINER_SYS_NAME_HEADER;
 import static io.openio.sds.common.OioConstants.CONTENT_META_CHUNK_METHOD_HEADER;
 import static io.openio.sds.common.OioConstants.CONTENT_META_CTIME_HEADER;
@@ -16,7 +18,6 @@ import static io.openio.sds.common.OioConstants.CONTENT_META_VERSION_HEADER;
 import static io.openio.sds.common.OioConstants.CREATE_CONTAINER_FORMAT;
 import static io.openio.sds.common.OioConstants.CS_GETSRV_FORMAT;
 import static io.openio.sds.common.OioConstants.CS_NSINFO_FORMAT;
-import static io.openio.sds.common.OioConstants.CS_REGISTER_FORMAT;
 import static io.openio.sds.common.OioConstants.DELETE_CONTAINER_FORMAT;
 import static io.openio.sds.common.OioConstants.DELETE_OBJECT_FORMAT;
 import static io.openio.sds.common.OioConstants.DELIMITER_PARAM;
@@ -25,10 +26,10 @@ import static io.openio.sds.common.OioConstants.DIR_LIST_SRV_FORMAT;
 import static io.openio.sds.common.OioConstants.DIR_REF_CREATE_FORMAT;
 import static io.openio.sds.common.OioConstants.DIR_REF_DELETE_FORMAT;
 import static io.openio.sds.common.OioConstants.DIR_REF_SHOW_FORMAT;
+import static io.openio.sds.common.OioConstants.DIR_UNLINK_SRV_FORMAT;
 import static io.openio.sds.common.OioConstants.GET_BEANS_FORMAT;
 import static io.openio.sds.common.OioConstants.GET_CONTAINER_INFO_FORMAT;
 import static io.openio.sds.common.OioConstants.GET_OBJECT_FORMAT;
-import static io.openio.sds.common.OioConstants.INTERNAL_ERROR_FORMAT;
 import static io.openio.sds.common.OioConstants.LIST_OBJECTS_FORMAT;
 import static io.openio.sds.common.OioConstants.M2_CTIME_HEADER;
 import static io.openio.sds.common.OioConstants.M2_INIT_HEADER;
@@ -37,13 +38,15 @@ import static io.openio.sds.common.OioConstants.M2_VERSION_HEADER;
 import static io.openio.sds.common.OioConstants.MARKER_PARAM;
 import static io.openio.sds.common.OioConstants.MAX_PARAM;
 import static io.openio.sds.common.OioConstants.NS_HEADER;
+import static io.openio.sds.common.OioConstants.OBJECT_DEL_PROP;
+import static io.openio.sds.common.OioConstants.OBJECT_GET_PROP;
 import static io.openio.sds.common.OioConstants.OIO_CHARSET;
 import static io.openio.sds.common.OioConstants.PREFIX_PARAM;
 import static io.openio.sds.common.OioConstants.PUT_OBJECT_FORMAT;
 import static io.openio.sds.common.OioConstants.SCHEMA_VERSION_HEADER;
 import static io.openio.sds.common.OioConstants.TYPE_HEADER;
-import static io.openio.sds.common.OioConstants.UNMANAGED_ERROR_FORMAT;
 import static io.openio.sds.common.OioConstants.USER_NAME_HEADER;
+import static io.openio.sds.common.OioConstants.USER_PROP_PREFIX;
 import static io.openio.sds.common.OioConstants.VERSION_MAIN_ADMIN_HEADER;
 import static io.openio.sds.common.OioConstants.VERSION_MAIN_ALIASES_HEADER;
 import static io.openio.sds.common.OioConstants.VERSION_MAIN_CHUNKS_HEADER;
@@ -51,26 +54,30 @@ import static io.openio.sds.common.OioConstants.VERSION_MAIN_CONTENTS_HEADER;
 import static io.openio.sds.common.OioConstants.VERSION_MAIN_PROPERTIES_HEADER;
 import static io.openio.sds.common.Strings.nullOrEmpty;
 import static io.openio.sds.http.OioHttpHelper.longHeader;
+import static io.openio.sds.http.Verifiers.CONTAINER_VERIFIER;
+import static io.openio.sds.http.Verifiers.OBJECT_VERIFIER;
+import static io.openio.sds.http.Verifiers.REFERENCE_VERIFIER;
+import static io.openio.sds.http.Verifiers.STANDALONE_VERIFIER;
 import static java.lang.String.format;
 
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 
 import io.openio.sds.common.OioConstants;
-import io.openio.sds.exceptions.BadRequestException;
 import io.openio.sds.exceptions.ContainerExistException;
 import io.openio.sds.exceptions.ContainerNotFoundException;
 import io.openio.sds.exceptions.ObjectNotFoundException;
-import io.openio.sds.exceptions.ReferenceAlreadyExistException;
-import io.openio.sds.exceptions.ReferenceNotFoundException;
-import io.openio.sds.exceptions.SdsException;
+import io.openio.sds.exceptions.OioException;
+import io.openio.sds.exceptions.OioSystemException;
 import io.openio.sds.http.OioHttp;
 import io.openio.sds.http.OioHttpResponse;
-import io.openio.sds.http.OioHttpResponseVerifier;
 import io.openio.sds.models.BeansRequest;
 import io.openio.sds.models.ChunkInfo;
 import io.openio.sds.models.ContainerInfo;
@@ -107,29 +114,20 @@ public class ProxyClient {
      * 
      * @return the matching {@code NamespaceInfo}
      */
-    public NamespaceInfo getNamespaceInfo() {
+    public NamespaceInfo getNamespaceInfo() throws OioException {
         return http.get(format(CS_NSINFO_FORMAT,
                 settings.url(), settings.ns()))
                 .verifier(STANDALONE_VERIFIER)
                 .execute(NamespaceInfo.class);
     }
 
-    public List<ServiceInfo> getServices(String type) {
+    public List<ServiceInfo> getServices(String type) throws OioException {
         OioHttpResponse resp = http
                 .get(format(CS_GETSRV_FORMAT,
                         settings.url(), settings.ns(), type))
                 .verifier(STANDALONE_VERIFIER)
                 .execute();
         return serviceInfoListAndClose(resp);
-    }
-
-    public void registerService(String type, ServiceInfo si) {
-        http.get(format(CS_REGISTER_FORMAT,
-                settings.url(), settings.ns(), type))
-                .body(gson().toJson(si))
-                .verifier(STANDALONE_VERIFIER)
-                .execute()
-                .close();
     }
 
     /* -- DIRECTORY -- */
@@ -141,7 +139,7 @@ public class ProxyClient {
      *            the url of the reference
      * 
      */
-    public void createReference(OioUrl url) {
+    public void createReference(OioUrl url) throws OioException {
         checkArgument(null != url, "Missing url");
         http.post(format(DIR_REF_CREATE_FORMAT,
                 settings.url(), settings.ns(),
@@ -156,11 +154,11 @@ public class ProxyClient {
      * 
      * @param url
      *            the url of the reference to look for.
-     * @throws SdsException
+     * @throws OioException
      *             if any error occurs during request execution
      */
     public ReferenceInfo showReference(OioUrl url)
-            throws SdsException {
+            throws OioException {
         checkArgument(null != url);
         return http.get(format(DIR_REF_SHOW_FORMAT,
                 settings.url(), settings.ns(),
@@ -175,11 +173,11 @@ public class ProxyClient {
      * 
      * @param url
      *            the url of the reference
-     * @throws SdsException
+     * @throws OioException
      *             if any error occurs during request execution
      * 
      */
-    public void deleteReference(OioUrl url) {
+    public void deleteReference(OioUrl url) throws OioException {
         checkArgument(null != url, "Missing url");
         http.post(format(DIR_REF_DELETE_FORMAT,
                 settings.url(), settings.ns(),
@@ -196,7 +194,8 @@ public class ProxyClient {
      * @param type
      * @return
      */
-    public List<LinkedServiceInfo> linkService(OioUrl url, String type) {
+    public List<LinkedServiceInfo> linkService(OioUrl url, String type)
+            throws OioException {
         checkArgument(!nullOrEmpty(type), "Missing type");
         OioHttpResponse resp = http.post(format(DIR_LINK_SRV_FORMAT,
                 settings.url(), settings.ns(),
@@ -212,11 +211,11 @@ public class ProxyClient {
      * 
      * @param url
      *            the url of the reference to look for.
-     * @throws SdsException
+     * @throws OioException
      *             if any error occurs during request execution
      */
     public List<LinkedServiceInfo> listServices(OioUrl url, String type)
-            throws SdsException {
+            throws OioException {
         checkArgument(null != url);
         checkArgument(!nullOrEmpty(type));
         return http.get(format(DIR_LIST_SRV_FORMAT,
@@ -232,26 +231,38 @@ public class ProxyClient {
      * 
      * @param url
      */
-    public void unlinkService(OioUrl url) {
-        // TODO
+    public void unlinkService(OioUrl url, String type)
+            throws OioException {
+        checkArgument(null != url);
+        checkArgument(!nullOrEmpty(type));
+        http.post(format(DIR_UNLINK_SRV_FORMAT,
+                settings.url(), settings.ns(),
+                url.account(), url.container(), type))
+                .verifier(REFERENCE_VERIFIER)
+                .execute()
+                .close();
+
     }
 
     /**
      * 
      * @param url
      */
-    public void forceService(OioUrl url) {
-        // TODO
+    public void forceService(OioUrl url) throws OioException {
+        checkArgument(null != url);
+
     }
 
     /**
      * 
      * @return
      */
-    public LinkedServiceInfo renewService(OioUrl url) {
+    public LinkedServiceInfo renewService(OioUrl url) throws OioException {
         // TODO
         return null;
     }
+
+    /* -- STORAGE -- */
 
     /**
      * Creates a container using the specified {@code OioUrl}
@@ -259,12 +270,12 @@ public class ProxyClient {
      * @param url
      *            the url of the container to create
      * @return {@code ContainerInfo}
-     * @throws SdsException
+     * @throws OioException
      *             if any error occurs during request execution
      */
-    public ContainerInfo createContainer(OioUrl url) throws SdsException {
+    public ContainerInfo createContainer(OioUrl url) throws OioException {
         OioHttpResponse resp = http.post(format(CREATE_CONTAINER_FORMAT,
-                settings.url(), url.account(), url.container()))
+                settings.url(), settings.ns(), url.account(), url.container()))
                 .header(OioConstants.OIO_ACTION_MODE_HEADER, "autocreate")
                 .verifier(CONTAINER_VERIFIER)
                 .execute()
@@ -281,10 +292,10 @@ public class ProxyClient {
      * @param url
      * @param listener
      * @return the container informations
-     * @throws SdsException
+     * @throws OioException
      *             if any error occurs during request execution
      */
-    public ContainerInfo getContainerInfo(OioUrl url) throws SdsException {
+    public ContainerInfo getContainerInfo(OioUrl url) throws OioException {
         OioHttpResponse r = http.get(
                 format(GET_CONTAINER_INFO_FORMAT,
                         settings.url(), settings.ns(), url.account(),
@@ -321,11 +332,11 @@ public class ProxyClient {
      *            the options to specified to the list request. See
      *            {@linkplain ListOptions} documentation
      * @return an {@link ObjectList} matching the specified parameters.
-     * @throws SdsException
+     * @throws OioException
      *             if any error occurs during request execution
      */
     public ObjectList listContainer(OioUrl url, ListOptions options)
-            throws SdsException {
+            throws OioException {
         return http.get(
                 format(LIST_OBJECTS_FORMAT,
                         settings.url(), settings.ns(), url.account(),
@@ -345,10 +356,10 @@ public class ProxyClient {
      * 
      * @param url
      *            the {@code url} of the container to destroy
-     * @throws SdsException
+     * @throws OioException
      *             if any error occurs during request execution
      */
-    public void deleteContainer(OioUrl url) throws SdsException {
+    public void deleteContainer(OioUrl url) throws OioException {
         http.post(format(DELETE_CONTAINER_FORMAT,
                 settings.url(), settings.ns(), url.account(),
                 url.container()))
@@ -366,10 +377,10 @@ public class ProxyClient {
      *            the size of the future object
      * @return an {@link ObjectInfo} which contains all informations to upload
      *         the object
-     * @throws SdsException
+     * @throws OioException
      *             if any error occurs during request execution
      */
-    public ObjectInfo getBeans(OioUrl url, long size) throws SdsException {
+    public ObjectInfo getBeans(OioUrl url, long size) throws OioException {
         OioHttpResponse resp = http.post(
                 format(GET_BEANS_FORMAT,
                         settings.url(), settings.ns(), url.account(),
@@ -387,10 +398,10 @@ public class ProxyClient {
      *            the {@link ObjectInfo} containing informations about the
      *            uploaded object
      * @return the validated object.
-     * @throws SdsException
+     * @throws OioException
      *             if any error occurs during request execution
      */
-    public ObjectInfo putObject(ObjectInfo oinf) throws SdsException {
+    public ObjectInfo putObject(ObjectInfo oinf) throws OioException {
         http.post(format(PUT_OBJECT_FORMAT,
                 settings.url(), settings.ns(),
                 oinf.url().account(),
@@ -412,10 +423,8 @@ public class ProxyClient {
      * @param url
      *            the url of the object to look for
      * @return an {@link ObjectInfo} containing informations about the object
-     * @throws SdsException
-     *             if any error occurs during request execution
      */
-    public ObjectInfo getObjectInfo(OioUrl url) throws SdsException {
+    public ObjectInfo getObjectInfo(OioUrl url) throws OioException {
         OioHttpResponse resp = http.get(
                 format(GET_OBJECT_FORMAT,
                         settings.url(), settings.ns(), url.account(),
@@ -430,15 +439,232 @@ public class ProxyClient {
      * 
      * @param url
      *            the url of the object to delete
-     * @throws SdsException
+     * @throws OioException
      *             if any error occurs during request execution
      */
-    public void deleteObject(OioUrl url) throws SdsException {
-        http.post(
-                format(DELETE_OBJECT_FORMAT,
-                        settings.url(), settings.ns(), url.account(),
-                        url.container(), url.object()))
+    public void deleteObject(OioUrl url) throws OioException {
+        http.post(format(DELETE_OBJECT_FORMAT,
+                settings.url(), settings.ns(), url.account(),
+                url.container(), url.object()))
                 .verifier(OBJECT_VERIFIER)
+                .execute()
+                .close();
+    }
+
+    /* -- PROPERTIES -- */
+
+    /**
+     * Add properties to the specified container. The properties must be
+     * prefixed with "user." and this prefix will be stored, and finally used to
+     * query the parameters later
+     * 
+     * @param url
+     *            the url of the container to add properties
+     * @param props
+     *            the properties to add
+     * 
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public void setContainerProperties(OioUrl url,
+            Map<String, String> properties) {
+        checkArgument(null != url, "Invalid url");
+        checkArgument(null != properties && properties.size() > 0,
+                "Invalid properties");
+        String props = gson().toJson(properties);
+        System.out.println(props);
+        http.post(format(CONTAINER_SET_PROP, settings.url(), settings.ns(),
+                url.account(), url.container()))
+                .verifier(CONTAINER_VERIFIER)
+                .body(props)
+                .execute()
+                .close();
+    }
+
+    /**
+     * Retrieves user properties of the specified container
+     * 
+     * @param url
+     *            the url of the object
+     * @return the user properties (i.e. prefixed with "user.") found on the
+     *         object
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public Map<String, String> getContainerProperties(OioUrl url) {
+        checkArgument(null != url, "Invalid url");
+        OioHttpResponse resp = http.post(format(CONTAINER_GET_PROP,
+                settings.url(), settings.ns(),
+                url.account(), url.container()))
+                .verifier(CONTAINER_VERIFIER)
+                .execute()
+                .close();
+        HashMap<String, String> res = new HashMap<String, String>();
+        for (Entry<String, String> e : resp.headers().entrySet()) {
+            System.out.println(e.getKey() + " " + e.getValue());
+            if (e.getKey().startsWith(USER_PROP_PREFIX))
+                res.put(e.getKey(), e.getValue());
+        }
+        return res;
+    }
+
+    /**
+     * Deletes user properties from the specified container
+     * 
+     * @param url
+     *            the url of the container
+     * @param keys
+     *            the property keys to drop
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public void deleteContainerProperties(OioUrl url, String... keys) {
+        checkArgument(null != url, "Invalid url");
+        http.post(format(CONTAINER_GET_PROP,
+                settings.url(), settings.ns(),
+                url.account(), url.container()))
+                .verifier(CONTAINER_VERIFIER)
+                .execute()
+                .close();
+    }
+
+    /**
+     * Deletes user properties from the specified container
+     * 
+     * @param url
+     *            the url of the container
+     * @param keys
+     *            the property keys to drop
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public void deleteContainerProperties(OioUrl url, List<String> keys) {
+        checkArgument(null != url, "Invalid url");
+        http.post(format(CONTAINER_GET_PROP,
+                settings.url(), settings.ns(),
+                url.account(), url.container()))
+                .verifier(CONTAINER_VERIFIER)
+                .execute()
+                .close();
+    }
+
+    /**
+     * Add properties to the specified object. The properties must be prefixed
+     * with "user." and this prefix will be stored, and finally used to query
+     * the parameters later.
+     * 
+     * @param url
+     *            the url of the object
+     * @param props
+     *            the properties to set
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws ObjectNotFoundException
+     *             if the specified object doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public void setObjectProperties(OioUrl url,
+            Map<String, String> properties) {
+        checkArgument(null != url && null != url.object(), "Invalid url");
+        checkArgument(null != properties && properties.size() > 0,
+                "Invalid properties");
+        http.post(format(CONTAINER_SET_PROP, settings.url(), settings.ns(),
+                url.account(),
+                url.container(),
+                url.object()))
+                .verifier(OBJECT_VERIFIER)
+                .body(gson().toJson(properties))
+                .execute()
+                .close();
+    }
+
+    /**
+     * Retrieves user properties of the specified object
+     * 
+     * @param url
+     *            the url of the object
+     * @return the user properties (i.e. prefixed with "user.") found on the
+     *         object
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws ObjectNotFoundException
+     *             if the specified object doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public Map<String, String> getObjectProperties(OioUrl url) {
+        checkArgument(null != url && null != url.object(), "Invalid url");
+        OioHttpResponse resp = http.post(format(OBJECT_GET_PROP,
+                settings.url(), settings.ns(),
+                url.account(), url.container(),
+                url.object()))
+                .verifier(OBJECT_VERIFIER)
+                .execute()
+                .close();
+        HashMap<String, String> res = new HashMap<String, String>();
+        for (Entry<String, String> e : resp.headers().entrySet())
+            if (e.getKey().startsWith(USER_PROP_PREFIX))
+                res.put(e.getKey(), e.getValue());
+        return res;
+    }
+
+    /**
+     * Deletes the specified properties from the object
+     * 
+     * @param url
+     *            the url of the object
+     * @param keys
+     *            the property keys to drop
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws ObjectNotFoundException
+     *             if the specified object doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public void deleteObjectProperties(OioUrl url, String... keys) {
+        // TODO: body?
+        checkArgument(null != url && null != url.object(), "Invalid url");
+        http.post(format(OBJECT_DEL_PROP,
+                settings.url(), settings.ns(),
+                url.account(), url.container(),
+                url.object()))
+                .verifier(CONTAINER_VERIFIER)
+                .execute()
+                .close();
+    }
+
+    /**
+     * Deletes the specified properties from the object
+     * 
+     * @param url
+     *            the url of the object
+     * @param keys
+     *            the property keys to drop
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws ObjectNotFoundException
+     *             if the specified object doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public void deleteObjectProperties(OioUrl url, List<String> keys) {
+        // TODO: body?
+        checkArgument(null != url && null != url.object(), "Invalid url");
+        http.post(format(OBJECT_DEL_PROP,
+                settings.url(), settings.ns(),
+                url.account(), url.container(),
+                url.object()))
+                .verifier(CONTAINER_VERIFIER)
                 .execute()
                 .close();
     }
@@ -468,7 +694,7 @@ public class ProxyClient {
     }
 
     private List<ChunkInfo> bodyChunk(OioHttpResponse resp)
-            throws SdsException {
+            throws OioException {
         try {
             return gson().fromJson(
                     new JsonReader(
@@ -476,7 +702,7 @@ public class ProxyClient {
                     new TypeToken<List<ChunkInfo>>() {
                     }.getType());
         } catch (Exception e) {
-            throw new SdsException("Body extraction error", e);
+            throw new OioException("Body extraction error", e);
         }
     }
 
@@ -487,12 +713,12 @@ public class ProxyClient {
             return gson().fromJson(new JsonReader(
                     new InputStreamReader(resp.body(), OIO_CHARSET)), t);
         } catch (Exception e) {
-            throw new SdsException("Body extraction error", e);
+            throw new OioException("Body extraction error", e);
         } finally {
             resp.close();
         }
     }
-    
+
     private List<ServiceInfo> serviceInfoListAndClose(OioHttpResponse resp) {
         try {
             Type t = new TypeToken<List<ServiceInfo>>() {
@@ -500,111 +726,10 @@ public class ProxyClient {
             return gson().fromJson(new JsonReader(
                     new InputStreamReader(resp.body(), OIO_CHARSET)), t);
         } catch (Exception e) {
-            throw new SdsException("Body extraction error", e);
+            throw new OioException("Body extraction error", e);
         } finally {
             resp.close();
         }
     }
 
-    private static final OioHttpResponseVerifier REFERENCE_VERIFIER = new OioHttpResponseVerifier() {
-
-        @Override
-        public void verify(OioHttpResponse resp) throws SdsException {
-            switch (resp.code()) {
-            case 200:
-            case 201:
-            case 204:
-                return;
-            case 202:
-                throw new ReferenceAlreadyExistException(resp.msg());
-            case 400:
-                throw new BadRequestException(resp.msg());
-            case 404:
-                throw new ReferenceNotFoundException(resp.msg());
-            case 500:
-                throw new SdsException(
-                        format(INTERNAL_ERROR_FORMAT, resp.code(),
-                                resp.msg()));
-            default:
-                throw new SdsException(
-                        format(UNMANAGED_ERROR_FORMAT, resp.code(),
-                                resp.msg()));
-            }
-        }
-    };
-
-    private static final OioHttpResponseVerifier CONTAINER_VERIFIER = new OioHttpResponseVerifier() {
-
-        @Override
-        public void verify(OioHttpResponse resp) throws SdsException {
-            switch (resp.code()) {
-            case 200:
-            case 201:
-            case 204:
-                return;
-            case 400:
-                throw new BadRequestException(resp.msg());
-            case 404:
-                throw new ContainerNotFoundException(resp.msg());
-            case 500:
-                throw new SdsException(
-                        format(INTERNAL_ERROR_FORMAT, resp.code(),
-                                resp.msg()));
-            default:
-                throw new SdsException(
-                        format(UNMANAGED_ERROR_FORMAT, resp.code(),
-                                resp.msg()));
-            }
-        }
-    };
-
-    private static final OioHttpResponseVerifier OBJECT_VERIFIER = new OioHttpResponseVerifier() {
-
-        @Override
-        public void verify(OioHttpResponse resp) throws SdsException {
-            switch (resp.code()) {
-            case 200:
-            case 201:
-            case 204:
-                return;
-            case 400:
-                throw new BadRequestException(resp.msg());
-            case 404:
-                throw new ObjectNotFoundException(resp.msg());
-            case 500:
-                throw new SdsException(
-                        format(INTERNAL_ERROR_FORMAT, resp.code(),
-                                resp.msg()));
-            default:
-                throw new SdsException(
-                        format(UNMANAGED_ERROR_FORMAT, resp.code(),
-                                resp.msg()));
-            }
-        }
-    };
-
-    private static final OioHttpResponseVerifier STANDALONE_VERIFIER = new OioHttpResponseVerifier() {
-
-        @Override
-        public void verify(OioHttpResponse resp) throws SdsException {
-            switch (resp.code()) {
-            case 200:
-            case 201:
-            case 204:
-                return;
-            case 400:
-                throw new BadRequestException(resp.msg());
-            case 404:
-                throw new SdsException(resp.msg());
-            case 500:
-                throw new SdsException(
-                        format(INTERNAL_ERROR_FORMAT, resp.code(),
-                                resp.msg()));
-            default:
-                throw new SdsException(
-                        format(UNMANAGED_ERROR_FORMAT, resp.code(),
-                                resp.msg()));
-            }
-        }
-    };
 }

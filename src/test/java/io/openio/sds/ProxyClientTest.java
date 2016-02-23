@@ -3,10 +3,12 @@ package io.openio.sds;
 import static io.openio.sds.models.OioUrl.url;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.UUID;
 
 import org.junit.Assert;
@@ -14,8 +16,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import io.openio.sds.exceptions.ContainerNotFoundException;
+import io.openio.sds.exceptions.OioException;
 import io.openio.sds.exceptions.ReferenceNotFoundException;
-import io.openio.sds.exceptions.SdsException;
 import io.openio.sds.http.OioHttp;
 import io.openio.sds.http.OioHttpSettings;
 import io.openio.sds.models.ContainerInfo;
@@ -53,7 +55,7 @@ public class ProxyClientTest {
             System.out.println(si);
     }
 
-    @Test(expected = SdsException.class)
+    @Test(expected = OioException.class)
     public void listServicesWithUnknownType() {
         List<ServiceInfo> rawx = proxy.getServices("unknown");
         assertNotNull(rawx);
@@ -61,24 +63,12 @@ public class ProxyClientTest {
             System.out.println(si);
     }
 
-    @Test(expected = SdsException.class)
+    @Test(expected = OioException.class)
     public void listServicesWithNullType() {
         List<ServiceInfo> rawx = proxy.getServices(null);
         assertNotNull(rawx);
         for (ServiceInfo si : rawx)
             System.out.println(si);
-    }
-
-    @Test
-    public void registerService() {
-        Map<String, String> tags = new HashMap<String, String>();
-        tags.put("tag.up", "true");
-        tags.put("tag.vol", "/home/cde/fakevol");
-        ServiceInfo si = new ServiceInfo()
-                .addr("127.0.0.1:6987")
-                .score(96)
-                .tags(tags);
-        proxy.registerService("rawx", si);
     }
 
     @Test
@@ -130,7 +120,7 @@ public class ProxyClientTest {
             proxy.showReference(url);
             Assert.fail("ref should be destroyed");
         } catch (ReferenceNotFoundException e) {
-            //ok
+            // ok
         }
     }
 
@@ -139,10 +129,33 @@ public class ProxyClientTest {
         OioUrl url = url("TEST", UUID.randomUUID().toString());
         System.out.println(url);
         proxy.createReference(url);
-        System.out.println(proxy.linkService(url, "rawx"));
+        List<LinkedServiceInfo> l = proxy.linkService(url, "rawx");
+        assertNotNull(l);
+        assertTrue(0 < l.size());
         List<LinkedServiceInfo> ref = proxy.listServices(url, "rawx");
         assertNotNull(ref);
-        assertEquals(1, ref.size());
-        System.out.println(ref);
+        assertTrue(0 < ref.size());
+    }
+
+    @Test
+    public void containerProperties() {
+        OioUrl url = url("TEST", UUID.randomUUID().toString());
+        Map<String, String> props = new HashMap<String, String>();
+        props.put("user.key1", "value1");
+        props.put("user.key2", "value2");
+        props.put("user.key3", "value3");
+        proxy.createContainer(url);
+        try {
+            proxy.setContainerProperties(url, props);
+            Map<String, String> res = proxy.getContainerProperties(url);
+            assertNotNull(res);
+            assertEquals(3, res.size());
+            for (Entry<String, String> e : props.entrySet()) {
+                assertTrue(res.containsKey(e.getKey()));
+                assertEquals(e.getValue(), res.get(e.getKey()));
+            }
+        } finally {
+            proxy.deleteContainer(url);
+        }
     }
 }

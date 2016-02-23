@@ -8,6 +8,13 @@ import io.openio.sds.settings.ProxySettings;
 import io.openio.sds.settings.RawxSettings;
 import io.openio.sds.settings.Settings;
 
+
+/**
+ * Builder for @link {@link Client} implementations
+ * 
+ * @author Christopher Dedeurwaerder
+ *
+ */
 public class ClientBuilder {
 
     private String ns;
@@ -48,19 +55,11 @@ public class ClientBuilder {
     }
 
     /**
-<<<<<<< HEAD
-     * Set a specific {@link AsyncHttpClient} instance to be used by the built
-     * clients
-     * 
-     * @param http
-     *            the AsyncHttpClient instance to set
-=======
      * Set a specific {@link OioHttp} instance to be used by the built
      * clients
      * 
      * @param http
      *            the OioHttp instance to set
->>>>>>> jka-change
      * @return this
      */
     public ClientBuilder http(OioHttp http) {

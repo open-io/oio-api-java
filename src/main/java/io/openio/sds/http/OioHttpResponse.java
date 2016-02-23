@@ -15,6 +15,9 @@ import java.util.HashMap;
 import io.openio.sds.logging.SdsLogger;
 import io.openio.sds.logging.SdsLoggerFactory;
 
+/**
+ *
+ */
 public class OioHttpResponse {
 
     private static final SdsLogger logger = SdsLoggerFactory

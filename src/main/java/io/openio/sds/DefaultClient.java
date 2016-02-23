@@ -4,7 +4,10 @@ import static io.openio.sds.common.Check.checkArgument;
 
 import java.io.File;
 import java.io.InputStream;
+import java.util.List;
+import java.util.Map;
 
+import io.openio.sds.exceptions.OioException;
 import io.openio.sds.http.OioHttp;
 import io.openio.sds.models.ContainerInfo;
 import io.openio.sds.models.ListOptions;
@@ -13,6 +16,12 @@ import io.openio.sds.models.ObjectList;
 import io.openio.sds.models.OioUrl;
 import io.openio.sds.settings.Settings;
 
+/**
+ * Basis implementation of {@link Client} interface based on {@link OioHttp}
+ * 
+ * @author Christopher Dedeurwaerder
+ *
+ */
 public class DefaultClient implements Client {
 
     private final ProxyClient proxy;
@@ -90,5 +99,53 @@ public class DefaultClient implements Client {
         checkArgument(null != url, "url cannot be null");
         checkArgument(null != url.object(), "url object cannot be null");
         proxy.deleteObject(url);
+    }
+
+    @Override
+    public void setContainerProperties(OioUrl url, Map<String, String> props)
+            throws OioException {
+        proxy.setContainerProperties(url, props);        
+    }
+
+    @Override
+    public Map<String, String> getContainerProperties(OioUrl url)
+            throws OioException {
+        return proxy.getContainerProperties(url);
+    }
+
+    @Override
+    public void deleteContainerProperties(OioUrl url, String... keys)
+            throws OioException {
+        proxy.deleteContainerProperties(url, keys);
+    }
+
+    @Override
+    public void deleteContainerProperties(OioUrl url, List<String> keys)
+            throws OioException {
+        proxy.deleteContainerProperties(url, keys);
+    }
+
+    @Override
+    public void setObjectProperties(OioUrl url, Map<String, String> props)
+            throws OioException {
+        proxy.setObjectProperties(url, props);
+    }
+
+    @Override
+    public Map<String, String> getObjectProperties(OioUrl url)
+            throws OioException {
+        return proxy.getObjectProperties(url);
+    }
+
+    @Override
+    public void deleteObjectProperties(OioUrl url, String... keys)
+            throws OioException {
+        proxy.deleteObjectProperties(url, keys);
+    }
+
+    @Override
+    public void deleteObjectProperties(OioUrl url, List<String> keys)
+            throws OioException {
+        proxy.deleteObjectProperties(url, keys);
     }
 }

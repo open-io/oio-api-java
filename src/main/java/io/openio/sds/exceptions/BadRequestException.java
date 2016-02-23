@@ -5,7 +5,7 @@ package io.openio.sds.exceptions;
  * @author Christopher Dedeurwaerder
  *
  */
-public class BadRequestException extends SdsException {
+public class BadRequestException extends OioException {
 
 
     /**

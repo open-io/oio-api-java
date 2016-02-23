@@ -5,7 +5,7 @@ package io.openio.sds.exceptions;
  * @author Christopher Dedeurwaerder
  *
  */
-public class ReferenceAlreadyExistException extends SdsException {
+public class ReferenceAlreadyExistException extends OioException {
 
     /**
      * 
