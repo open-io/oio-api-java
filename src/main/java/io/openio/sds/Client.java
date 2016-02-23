@@ -2,7 +2,15 @@ package io.openio.sds;
 
 import java.io.File;
 import java.io.InputStream;
+import java.util.List;
+import java.util.Map;
 
+import io.openio.sds.exceptions.ContainerExistException;
+import io.openio.sds.exceptions.ContainerNotFoundException;
+import io.openio.sds.exceptions.ObjectExistException;
+import io.openio.sds.exceptions.ObjectNotFoundException;
+import io.openio.sds.exceptions.OioException;
+import io.openio.sds.exceptions.OioSystemException;
 import io.openio.sds.models.ContainerInfo;
 import io.openio.sds.models.ListOptions;
 import io.openio.sds.models.ObjectInfo;
@@ -44,8 +52,12 @@ public interface Client {
      *            the url of the container
      * @return a {@code ContainerInfo} with informations about the created
      *         container
+     * @throws ContainerExistException
+     *             if the specified container is alreay present
+     * @throws OioSystemException
+     *             if any error occurs during request execution
      */
-    public ContainerInfo createContainer(OioUrl url);
+    public ContainerInfo createContainer(OioUrl url) throws OioException;
 
     /**
      * Returns informations about the specified container
@@ -54,8 +66,13 @@ public interface Client {
      *            the url of the container
      * @return a {@code ContainerInfo} with informations about the created
      *         container
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * 
+     * @throws OioSystemException
+     *             if any error occurs during request execution
      */
-    public ContainerInfo getContainerInfo(OioUrl url);
+    public ContainerInfo getContainerInfo(OioUrl url) throws OioException;
 
     /**
      * List object available in the specified container
@@ -66,21 +83,94 @@ public interface Client {
      *            the listing option
      * 
      * @return the ObjectList
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
      */
     public ObjectList listContainer(OioUrl url,
-            final ListOptions listOptions);
+            final ListOptions listOptions) throws OioException;
 
     /**
      * Deletes the specified container
      * 
      * @param url
      *            the url of the container
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * 
+     * @throws OioSystemException
+     *             if any error occurs during request execution
      */
-    public void deleteContainer(OioUrl url);
+    public void deleteContainer(OioUrl url) throws OioException;
+
+    /**
+     * Add properties to the specified container. The properties must be
+     * prefixed with "user." and this prefix will be stored, and finally used to
+     * query the parameters later
+     * 
+     * @param url
+     *            the url of the container to add properties
+     * @param props
+     *            the properties to add
+     * 
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public void setContainerProperties(OioUrl url, Map<String, String> props)
+            throws OioException;
+
+    /**
+     * Retrieves user properties of the specified container
+     * 
+     * @param url
+     *            the url of the object
+     * @return the user properties (i.e. prefixed with "user.") found on the
+     *         object
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public Map<String, String> getContainerProperties(OioUrl url)
+            throws OioException;
+
+    /**
+     * Deletes user properties from the specified container
+     * 
+     * @param url
+     *            the url of the container
+     * @param keys
+     *            the property keys to drop
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public void deleteContainerProperties(OioUrl url, String... keys)
+            throws OioException;
+
+    /**
+     * Deletes user properties from the specified container
+     * 
+     * @param url
+     *            the url of the container
+     * @param keys
+     *            the property keys to drop
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public void deleteContainerProperties(OioUrl url, List<String> keys)
+            throws OioException;
 
     /**
      * Push an object into the oio namespace
      * 
+     * @param OioUrl
      * @param url
      *            the url of the object to create
      * @param size
@@ -88,9 +178,13 @@ public interface Client {
      * @param data
      *            the file to read the data from
      * @return informations about the uploaded object
-     * 
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
      */
-    public ObjectInfo putObject(OioUrl url, long size, File data);
+    public ObjectInfo putObject(OioUrl url, long size, File data)
+            throws OioException;
 
     /**
      * Push an object into the oio namespace
@@ -102,9 +196,15 @@ public interface Client {
      * @param data
      *            the InputStream to read the data from
      * @return informations about the uploaded object
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws ObjectExistException
+     *             if the specified object alreadeay exist in the container
+     * @throws OioSystemException
+     *             if any error occurs during request execution
      */
     public ObjectInfo putObject(OioUrl url, long size,
-            InputStream data);
+            InputStream data) throws OioException;
 
     /**
      * Returns informations about the specified object
@@ -112,8 +212,15 @@ public interface Client {
      * @param url
      *            the url of the object
      * @return an {@code ObjectInfo}
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws ObjectNotFoundException
+     *             if the specified object doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
      */
-    public ObjectInfo getObjectInfo(OioUrl url);
+    public ObjectInfo getObjectInfo(OioUrl url)
+            throws OioException;
 
     /**
      * Returns the data of the specified object
@@ -121,15 +228,95 @@ public interface Client {
      * @param oinf
      *            the informations about object to download
      * @return the data in InputStream format
+     * 
+     * @throws OioSystemException
+     *             if any error occurs during request execution
      */
-    public InputStream downloadObject(ObjectInfo oinf);
+    public InputStream downloadObject(ObjectInfo oinf)
+            throws OioException;
 
     /**
      * Deletes the specified object
      * 
      * @param url
      *            the url of the object to delete
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws ObjectNotFoundException
+     *             if the specified object doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
      * 
      */
-    public void deleteObject(OioUrl url);
+    public void deleteObject(OioUrl url) throws OioException;
+
+    /**
+     * Add properties to the specified object. The properties must be prefixed
+     * with "user." and this prefix will be stored, and finally used to query
+     * the parameters later.
+     * 
+     * @param url
+     *            the url of the object
+     * @param props
+     *            the properties to set
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws ObjectNotFoundException
+     *             if the specified object doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public void setObjectProperties(OioUrl url, Map<String, String> props)
+            throws OioException;
+
+    /**
+     * Retrieves user properties of the specified object
+     * 
+     * @param url
+     *            the url of the object
+     * @return the user properties (i.e. prefixed with "user.") found on the
+     *         object
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws ObjectNotFoundException
+     *             if the specified object doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public Map<String, String> getObjectProperties(OioUrl url)
+            throws OioException;
+
+    /**
+     * Deletes the specified properties from the object
+     * 
+     * @param url
+     *            the url of the object
+     * @param keys
+     *            the property keys to drop
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws ObjectNotFoundException
+     *             if the specified object doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public void deleteObjectProperties(OioUrl url, String... keys)
+            throws OioException;
+
+    /**
+     * Deletes the specified properties from the object
+     * 
+     * @param url
+     *            the url of the object
+     * @param keys
+     *            the property keys to drop
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws ObjectNotFoundException
+     *             if the specified object doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public void deleteObjectProperties(OioUrl url, List<String> keys)
+            throws OioException;
 }

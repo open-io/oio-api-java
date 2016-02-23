@@ -1,14 +1,7 @@
 package io.openio.sds;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Random;
-import java.util.concurrent.ExecutionException;
 
-import org.junit.Assert;
-
-import io.openio.sds.models.ObjectInfo;
 import io.openio.sds.settings.ProxySettings;
 
 public class TestHelper {

@@ -5,7 +5,7 @@ package io.openio.sds.exceptions;
  * @author Christopher Dedeurwaerder
  *
  */
-public class ChunkNotFoundException extends SdsException {
+public class ChunkNotFoundException extends OioException {
 
 
     /**

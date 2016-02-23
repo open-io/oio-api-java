@@ -1,6 +1,6 @@
 package io.openio.sds.exceptions;
 
-public class AccountNotFoundException extends SdsException {
+public class AccountNotFoundException extends OioException {
 
     /**
      * 

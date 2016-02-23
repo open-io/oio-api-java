@@ -75,6 +75,7 @@ public class Position {
      * 
      * @param pos
      *            the position to compare to
+     * @return
      * @return int
      */
     public int compare(Position pos) {

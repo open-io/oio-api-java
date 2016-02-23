@@ -5,14 +5,15 @@ package io.openio.sds.exceptions;
  * @author Christopher Dedeurwaerder
  *
  */
-public class ContainerExistException extends OioException {
+public class ReferenceNotFoundException extends OioException {
 
     /**
      * 
      */
     private static final long serialVersionUID = 1L;
 
-    public ContainerExistException(String message) {
+    public ReferenceNotFoundException(String message) {
         super(message);
     }
+
 }

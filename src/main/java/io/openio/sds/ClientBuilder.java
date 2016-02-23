@@ -8,6 +8,13 @@ import io.openio.sds.settings.ProxySettings;
 import io.openio.sds.settings.RawxSettings;
 import io.openio.sds.settings.Settings;
 
+
+/**
+ * Builder for @link {@link Client} implementations
+ * 
+ * @author Christopher Dedeurwaerder
+ *
+ */
 public class ClientBuilder {
 
     private String ns;

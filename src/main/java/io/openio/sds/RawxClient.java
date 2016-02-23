@@ -37,7 +37,7 @@ import io.openio.sds.common.FeedableInputStream;
 import io.openio.sds.common.ObjectInputStream;
 import io.openio.sds.exceptions.BadRequestException;
 import io.openio.sds.exceptions.ChunkNotFoundException;
-import io.openio.sds.exceptions.SdsException;
+import io.openio.sds.exceptions.OioException;
 import io.openio.sds.http.OioHttp;
 import io.openio.sds.http.OioHttp.RequestBuilder;
 import io.openio.sds.http.OioHttpResponse;
@@ -156,15 +156,15 @@ public class RawxClient {
         List<ChunkInfo> cil = oinf.sortedChunks().get(pos);
         final List<FeedableInputStream> gens = size == 0 ? null
                 : feedableBodys(cil.size(), size);
-        List<Future<SdsException>> futures = new ArrayList<Future<SdsException>>();
+        List<Future<OioException>> futures = new ArrayList<Future<OioException>>();
         for (int i = 0; i < cil.size(); i++) {
             final ChunkInfo ci = cil.get(i);
             final FeedableInputStream in = null == gens ? null : gens.get(i);
 
-            futures.add(executors.submit(new Callable<SdsException>() {
+            futures.add(executors.submit(new Callable<OioException>() {
 
                 @Override
-                public SdsException call() {
+                public OioException call() {
                     try {
                         RequestBuilder builder = http.put(ci.url())
                                 .header(CHUNK_META_CONTAINER_ID,
@@ -194,7 +194,7 @@ public class RawxClient {
                         ci.hash(builder.execute()
                                 .close()
                                 .header(CHUNK_META_CHUNK_HASH));
-                    } catch (SdsException e) {
+                    } catch (OioException e) {
                         return e;
                     }
                     return null;
@@ -203,23 +203,23 @@ public class RawxClient {
         }
         consume(data, size, gens, futures);
         try {
-            for (Future<SdsException> f : futures) {
-                SdsException e = f.get();
+            for (Future<OioException> f : futures) {
+                OioException e = f.get();
                 // TODO improve, we should cry only in case of all copy fails
                 if (null != e)
                     throw e;
             }
         } catch (InterruptedException e) {
-            throw new SdsException("get interrupted", e);
+            throw new OioException("get interrupted", e);
         } catch (ExecutionException e) {
-            throw new SdsException("Execution exception", e.getCause());
+            throw new OioException("Execution exception", e.getCause());
         }
         return oinf;
     }
 
     private void consume(InputStream data, Long size,
             List<FeedableInputStream> gens,
-            List<Future<SdsException>> futures) {
+            List<Future<OioException>> futures) {
         int done = 0;
         while (done < size) {
             byte[] b = new byte[Math.min(size.intValue() - done,
@@ -231,9 +231,9 @@ public class RawxClient {
                 }
             } catch (IOException e) {
                 logger.error(e);
-                for (Future<SdsException> f : futures)
+                for (Future<OioException> f : futures)
                     f.cancel(true);
-                throw new SdsException("Stream consumption error", e);
+                throw new OioException("Stream consumption error", e);
             }
         }
     }
@@ -261,7 +261,7 @@ public class RawxClient {
     public static final OioHttpResponseVerifier RAWX_VERIFIER = new OioHttpResponseVerifier() {
 
         @Override
-        public void verify(OioHttpResponse resp) throws SdsException {
+        public void verify(OioHttpResponse resp) throws OioException {
             switch (resp.code()) {
             case 200:
             case 201:
@@ -272,10 +272,10 @@ public class RawxClient {
             case 404:
                 throw new ChunkNotFoundException(resp.msg());
             case 500:
-                throw new SdsException(format("Internal error (%d %s)",
+                throw new OioException(format("Internal error (%d %s)",
                         resp.code(), resp.msg()));
             default:
-                throw new SdsException(format("Unmanaged response code (%d %s)",
+                throw new OioException(format("Unmanaged response code (%d %s)",
                         resp.code(), resp.msg()));
             }
         }
