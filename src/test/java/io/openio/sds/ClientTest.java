@@ -2,12 +2,17 @@ package io.openio.sds;
 
 import static io.openio.sds.common.OioConstants.OIO_CHARSET;
 import static io.openio.sds.models.OioUrl.url;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.UUID;
 
 import org.junit.AfterClass;
@@ -125,7 +130,7 @@ public class ClientTest {
         }
 
     }
-    
+
     @Test
     public void handleMultiChunkObject() throws IOException {
         byte[] src = TestHelper.bytes(1090000L);
@@ -157,6 +162,57 @@ public class ClientTest {
         client.createContainer(url);
         try {
             client.deleteObject(url);
+        } finally {
+            client.deleteContainer(url);
+        }
+    }
+
+    @Test
+    public void containerProperties() {
+        OioUrl url = url("TEST", UUID.randomUUID().toString());
+        Map<String, String> props = new HashMap<String, String>();
+        props.put("user.key1", "value1");
+        props.put("user.key2", "value2");
+        props.put("user.key3", "value3");
+        client.createContainer(url);
+        try {
+            client.setContainerProperties(url, props);
+            Map<String, String> res = client.getContainerProperties(url);
+            assertNotNull(res);
+            assertEquals(3, res.size());
+            for (Entry<String, String> e : props.entrySet()) {
+                assertTrue(res.containsKey(e.getKey()));
+                assertEquals(e.getValue(), res.get(e.getKey()));
+            }
+        } finally {
+            client.deleteContainer(url);
+        }
+    }
+
+    @Test
+    public void objectProperties() {
+        OioUrl url = url("TEST", UUID.randomUUID().toString(),
+                UUID.randomUUID().toString());
+        Map<String, String> props = new HashMap<String, String>();
+        props.put("user.key1", "value1");
+        props.put("user.key2", "value2");
+        props.put("user.key3", "value3");
+        client.createContainer(url);
+        try {
+            client.putObject(url, 10L, new ByteArrayInputStream(
+                    "0123456789".getBytes(OIO_CHARSET)));
+            try {
+                client.setObjectProperties(url, props);
+                Map<String, String> res = client.getObjectProperties(url);
+                assertNotNull(res);
+                assertEquals(3, res.size());
+                for (Entry<String, String> e : props.entrySet()) {
+                    assertTrue(res.containsKey(e.getKey()));
+                    assertEquals(e.getValue(), res.get(e.getKey()));
+                }
+            } finally {
+                client.deleteObject(url);
+            }
         } finally {
             client.deleteContainer(url);
         }

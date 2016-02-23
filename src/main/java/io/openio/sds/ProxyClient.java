@@ -40,6 +40,7 @@ import static io.openio.sds.common.OioConstants.MAX_PARAM;
 import static io.openio.sds.common.OioConstants.NS_HEADER;
 import static io.openio.sds.common.OioConstants.OBJECT_DEL_PROP;
 import static io.openio.sds.common.OioConstants.OBJECT_GET_PROP;
+import static io.openio.sds.common.OioConstants.OBJECT_SET_PROP;
 import static io.openio.sds.common.OioConstants.OIO_CHARSET;
 import static io.openio.sds.common.OioConstants.PREFIX_PARAM;
 import static io.openio.sds.common.OioConstants.PUT_OBJECT_FORMAT;
@@ -60,9 +61,11 @@ import static io.openio.sds.http.Verifiers.REFERENCE_VERIFIER;
 import static io.openio.sds.http.Verifiers.STANDALONE_VERIFIER;
 import static java.lang.String.format;
 
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -70,6 +73,7 @@ import java.util.Map.Entry;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 
+import io.openio.sds.common.JsonUtils;
 import io.openio.sds.common.OioConstants;
 import io.openio.sds.exceptions.ContainerExistException;
 import io.openio.sds.exceptions.ContainerNotFoundException;
@@ -501,14 +505,12 @@ public class ProxyClient {
                 settings.url(), settings.ns(),
                 url.account(), url.container()))
                 .verifier(CONTAINER_VERIFIER)
-                .execute()
-                .close();
-        HashMap<String, String> res = new HashMap<String, String>();
-        for (Entry<String, String> e : resp.headers().entrySet()) {
-            System.out.println(e.getKey() + " " + e.getValue());
-            if (e.getKey().startsWith(USER_PROP_PREFIX))
-                res.put(e.getKey(), e.getValue());
-        }
+                .execute();
+        Map<String, String> res = JsonUtils.jsonToMap(resp.body());
+        Iterator<Entry<String, String>> it  = res.entrySet().iterator();
+        while(it.hasNext())
+            if(!it.next().getKey().startsWith(USER_PROP_PREFIX))
+                it.remove();
         return res;
     }
 
@@ -577,7 +579,7 @@ public class ProxyClient {
         checkArgument(null != url && null != url.object(), "Invalid url");
         checkArgument(null != properties && properties.size() > 0,
                 "Invalid properties");
-        http.post(format(CONTAINER_SET_PROP, settings.url(), settings.ns(),
+        http.post(format(OBJECT_SET_PROP, settings.url(), settings.ns(),
                 url.account(),
                 url.container(),
                 url.object()))
@@ -610,10 +612,11 @@ public class ProxyClient {
                 .verifier(OBJECT_VERIFIER)
                 .execute()
                 .close();
-        HashMap<String, String> res = new HashMap<String, String>();
-        for (Entry<String, String> e : resp.headers().entrySet())
-            if (e.getKey().startsWith(USER_PROP_PREFIX))
-                res.put(e.getKey(), e.getValue());
+        Map<String, String> res = JsonUtils.jsonToMap(resp.body());
+        Iterator<Entry<String, String>> it  = res.entrySet().iterator();
+        while(it.hasNext())
+            if(!it.next().getKey().startsWith(USER_PROP_PREFIX))
+                it.remove();
         return res;
     }
 

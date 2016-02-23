@@ -136,26 +136,4 @@ public class ProxyClientTest {
         assertNotNull(ref);
         assertTrue(0 < ref.size());
     }
-
-    @Test
-    public void containerProperties() {
-        OioUrl url = url("TEST", UUID.randomUUID().toString());
-        Map<String, String> props = new HashMap<String, String>();
-        props.put("user.key1", "value1");
-        props.put("user.key2", "value2");
-        props.put("user.key3", "value3");
-        proxy.createContainer(url);
-        try {
-            proxy.setContainerProperties(url, props);
-            Map<String, String> res = proxy.getContainerProperties(url);
-            assertNotNull(res);
-            assertEquals(3, res.size());
-            for (Entry<String, String> e : props.entrySet()) {
-                assertTrue(res.containsKey(e.getKey()));
-                assertEquals(e.getValue(), res.get(e.getKey()));
-            }
-        } finally {
-            proxy.deleteContainer(url);
-        }
-    }
 }
