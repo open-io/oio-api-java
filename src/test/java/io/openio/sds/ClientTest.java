@@ -184,6 +184,10 @@ public class ClientTest {
                 assertTrue(res.containsKey(e.getKey()));
                 assertEquals(e.getValue(), res.get(e.getKey()));
             }
+            client.deleteContainerProperties(url, "user.key1");
+            res = client.getContainerProperties(url);
+            assertNotNull(res);
+            assertEquals(2, res.size());
         } finally {
             client.deleteContainer(url);
         }
@@ -210,6 +214,13 @@ public class ClientTest {
                     assertTrue(res.containsKey(e.getKey()));
                     assertEquals(e.getValue(), res.get(e.getKey()));
                 }
+                client.deleteObjectProperties(url, "user.key1");
+                res = client.getObjectProperties(url);
+                assertNotNull(res);
+                assertEquals(2, res.size());
+                // check props are set on object as expected and not on
+                // container
+                assertEquals(0, client.getContainerProperties(url).size());
             } finally {
                 client.deleteObject(url);
             }

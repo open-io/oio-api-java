@@ -3,6 +3,7 @@ package io.openio.sds;
 import static io.openio.sds.common.Check.checkArgument;
 import static io.openio.sds.common.JsonUtils.gson;
 import static io.openio.sds.common.OioConstants.ACCOUNT_HEADER;
+import static io.openio.sds.common.OioConstants.CONTAINER_DEL_PROP;
 import static io.openio.sds.common.OioConstants.CONTAINER_GET_PROP;
 import static io.openio.sds.common.OioConstants.CONTAINER_SET_PROP;
 import static io.openio.sds.common.OioConstants.CONTAINER_SYS_NAME_HEADER;
@@ -30,6 +31,7 @@ import static io.openio.sds.common.OioConstants.DIR_UNLINK_SRV_FORMAT;
 import static io.openio.sds.common.OioConstants.GET_BEANS_FORMAT;
 import static io.openio.sds.common.OioConstants.GET_CONTAINER_INFO_FORMAT;
 import static io.openio.sds.common.OioConstants.GET_OBJECT_FORMAT;
+import static io.openio.sds.common.OioConstants.INVALID_URL_MSG;
 import static io.openio.sds.common.OioConstants.LIST_OBJECTS_FORMAT;
 import static io.openio.sds.common.OioConstants.M2_CTIME_HEADER;
 import static io.openio.sds.common.OioConstants.M2_INIT_HEADER;
@@ -61,10 +63,8 @@ import static io.openio.sds.http.Verifiers.REFERENCE_VERIFIER;
 import static io.openio.sds.http.Verifiers.STANDALONE_VERIFIER;
 import static java.lang.String.format;
 
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -144,7 +144,7 @@ public class ProxyClient {
      * 
      */
     public void createReference(OioUrl url) throws OioException {
-        checkArgument(null != url, "Missing url");
+        checkArgument(null != url, INVALID_URL_MSG);
         http.post(format(DIR_REF_CREATE_FORMAT,
                 settings.url(), settings.ns(),
                 url.account(), url.container()))
@@ -163,7 +163,7 @@ public class ProxyClient {
      */
     public ReferenceInfo showReference(OioUrl url)
             throws OioException {
-        checkArgument(null != url);
+        checkArgument(null != url, INVALID_URL_MSG);
         return http.get(format(DIR_REF_SHOW_FORMAT,
                 settings.url(), settings.ns(),
                 url.account(), url.container()))
@@ -182,7 +182,7 @@ public class ProxyClient {
      * 
      */
     public void deleteReference(OioUrl url) throws OioException {
-        checkArgument(null != url, "Missing url");
+        checkArgument(null != url, INVALID_URL_MSG);
         http.post(format(DIR_REF_DELETE_FORMAT,
                 settings.url(), settings.ns(),
                 url.account(), url.container()))
@@ -220,7 +220,7 @@ public class ProxyClient {
      */
     public List<LinkedServiceInfo> listServices(OioUrl url, String type)
             throws OioException {
-        checkArgument(null != url);
+        checkArgument(null != url, INVALID_URL_MSG);
         checkArgument(!nullOrEmpty(type));
         return http.get(format(DIR_LIST_SRV_FORMAT,
                 settings.url(), settings.ns(),
@@ -237,7 +237,7 @@ public class ProxyClient {
      */
     public void unlinkService(OioUrl url, String type)
             throws OioException {
-        checkArgument(null != url);
+        checkArgument(null != url, INVALID_URL_MSG);
         checkArgument(!nullOrEmpty(type));
         http.post(format(DIR_UNLINK_SRV_FORMAT,
                 settings.url(), settings.ns(),
@@ -278,6 +278,7 @@ public class ProxyClient {
      *             if any error occurs during request execution
      */
     public ContainerInfo createContainer(OioUrl url) throws OioException {
+        checkArgument(null != url, INVALID_URL_MSG);
         OioHttpResponse resp = http.post(format(CREATE_CONTAINER_FORMAT,
                 settings.url(), settings.ns(), url.account(), url.container()))
                 .header(OioConstants.OIO_ACTION_MODE_HEADER, "autocreate")
@@ -300,6 +301,7 @@ public class ProxyClient {
      *             if any error occurs during request execution
      */
     public ContainerInfo getContainerInfo(OioUrl url) throws OioException {
+        checkArgument(null != url, INVALID_URL_MSG);
         OioHttpResponse r = http.get(
                 format(GET_CONTAINER_INFO_FORMAT,
                         settings.url(), settings.ns(), url.account(),
@@ -341,6 +343,7 @@ public class ProxyClient {
      */
     public ObjectList listContainer(OioUrl url, ListOptions options)
             throws OioException {
+        checkArgument(null != url, INVALID_URL_MSG);
         return http.get(
                 format(LIST_OBJECTS_FORMAT,
                         settings.url(), settings.ns(), url.account(),
@@ -364,6 +367,7 @@ public class ProxyClient {
      *             if any error occurs during request execution
      */
     public void deleteContainer(OioUrl url) throws OioException {
+        checkArgument(null != url, INVALID_URL_MSG);
         http.post(format(DELETE_CONTAINER_FORMAT,
                 settings.url(), settings.ns(), url.account(),
                 url.container()))
@@ -385,6 +389,7 @@ public class ProxyClient {
      *             if any error occurs during request execution
      */
     public ObjectInfo getBeans(OioUrl url, long size) throws OioException {
+        checkArgument(null != url, INVALID_URL_MSG);
         OioHttpResponse resp = http.post(
                 format(GET_BEANS_FORMAT,
                         settings.url(), settings.ns(), url.account(),
@@ -406,6 +411,7 @@ public class ProxyClient {
      *             if any error occurs during request execution
      */
     public ObjectInfo putObject(ObjectInfo oinf) throws OioException {
+        checkArgument(null != oinf, "Invalid objectInfo");
         http.post(format(PUT_OBJECT_FORMAT,
                 settings.url(), settings.ns(),
                 oinf.url().account(),
@@ -429,6 +435,7 @@ public class ProxyClient {
      * @return an {@link ObjectInfo} containing informations about the object
      */
     public ObjectInfo getObjectInfo(OioUrl url) throws OioException {
+        checkArgument(null != url, INVALID_URL_MSG);
         OioHttpResponse resp = http.get(
                 format(GET_OBJECT_FORMAT,
                         settings.url(), settings.ns(), url.account(),
@@ -447,6 +454,7 @@ public class ProxyClient {
      *             if any error occurs during request execution
      */
     public void deleteObject(OioUrl url) throws OioException {
+        checkArgument(null != url, INVALID_URL_MSG);
         http.post(format(DELETE_OBJECT_FORMAT,
                 settings.url(), settings.ns(), url.account(),
                 url.container(), url.object()))
@@ -474,7 +482,7 @@ public class ProxyClient {
      */
     public void setContainerProperties(OioUrl url,
             Map<String, String> properties) {
-        checkArgument(null != url, "Invalid url");
+        checkArgument(null != url, INVALID_URL_MSG);
         checkArgument(null != properties && properties.size() > 0,
                 "Invalid properties");
         String props = gson().toJson(properties);
@@ -500,18 +508,23 @@ public class ProxyClient {
      *             if any error occurs during request execution
      */
     public Map<String, String> getContainerProperties(OioUrl url) {
-        checkArgument(null != url, "Invalid url");
+        checkArgument(null != url, INVALID_URL_MSG);
         OioHttpResponse resp = http.post(format(CONTAINER_GET_PROP,
                 settings.url(), settings.ns(),
                 url.account(), url.container()))
                 .verifier(CONTAINER_VERIFIER)
                 .execute();
-        Map<String, String> res = JsonUtils.jsonToMap(resp.body());
-        Iterator<Entry<String, String>> it  = res.entrySet().iterator();
-        while(it.hasNext())
-            if(!it.next().getKey().startsWith(USER_PROP_PREFIX))
-                it.remove();
-        return res;
+        try {
+            Map<String, String> res = JsonUtils.jsonToMap(resp.body());
+            Iterator<Entry<String, String>> it = res.entrySet().iterator();
+            while (it.hasNext())
+                if (!it.next().getKey().startsWith(USER_PROP_PREFIX))
+                    it.remove();
+            return res;
+        } finally {
+            resp.close();
+        }
+
     }
 
     /**
@@ -527,10 +540,12 @@ public class ProxyClient {
      *             if any error occurs during request execution
      */
     public void deleteContainerProperties(OioUrl url, String... keys) {
-        checkArgument(null != url, "Invalid url");
-        http.post(format(CONTAINER_GET_PROP,
+        checkArgument(null != url, INVALID_URL_MSG);
+        checkArgument(null != keys && 0 < keys.length);
+        http.post(format(CONTAINER_DEL_PROP,
                 settings.url(), settings.ns(),
                 url.account(), url.container()))
+                .body(gson().toJson(keys))
                 .verifier(CONTAINER_VERIFIER)
                 .execute()
                 .close();
@@ -549,10 +564,12 @@ public class ProxyClient {
      *             if any error occurs during request execution
      */
     public void deleteContainerProperties(OioUrl url, List<String> keys) {
-        checkArgument(null != url, "Invalid url");
-        http.post(format(CONTAINER_GET_PROP,
+        checkArgument(null != url, INVALID_URL_MSG);
+        checkArgument(null != keys && 0 < keys.size());
+        http.post(format(CONTAINER_DEL_PROP,
                 settings.url(), settings.ns(),
                 url.account(), url.container()))
+                .body(gson().toJson(keys))
                 .verifier(CONTAINER_VERIFIER)
                 .execute()
                 .close();
@@ -576,7 +593,7 @@ public class ProxyClient {
      */
     public void setObjectProperties(OioUrl url,
             Map<String, String> properties) {
-        checkArgument(null != url && null != url.object(), "Invalid url");
+        checkArgument(null != url && null != url.object(), INVALID_URL_MSG);
         checkArgument(null != properties && properties.size() > 0,
                 "Invalid properties");
         http.post(format(OBJECT_SET_PROP, settings.url(), settings.ns(),
@@ -604,20 +621,24 @@ public class ProxyClient {
      *             if any error occurs during request execution
      */
     public Map<String, String> getObjectProperties(OioUrl url) {
-        checkArgument(null != url && null != url.object(), "Invalid url");
+        checkArgument(null != url && null != url.object(), INVALID_URL_MSG);
         OioHttpResponse resp = http.post(format(OBJECT_GET_PROP,
                 settings.url(), settings.ns(),
                 url.account(), url.container(),
                 url.object()))
                 .verifier(OBJECT_VERIFIER)
-                .execute()
-                .close();
-        Map<String, String> res = JsonUtils.jsonToMap(resp.body());
-        Iterator<Entry<String, String>> it  = res.entrySet().iterator();
-        while(it.hasNext())
-            if(!it.next().getKey().startsWith(USER_PROP_PREFIX))
-                it.remove();
-        return res;
+                .execute();
+        try {
+            Map<String, String> res = JsonUtils.jsonToMap(resp.body());
+            Iterator<Entry<String, String>> it = res.entrySet().iterator();
+            while (it.hasNext())
+                if (!it.next().getKey().startsWith(USER_PROP_PREFIX))
+                    it.remove();
+            return res;
+        } finally {
+            resp.close();
+        }
+
     }
 
     /**
@@ -635,12 +656,13 @@ public class ProxyClient {
      *             if any error occurs during request execution
      */
     public void deleteObjectProperties(OioUrl url, String... keys) {
-        // TODO: body?
-        checkArgument(null != url && null != url.object(), "Invalid url");
+        checkArgument(null != url && null != url.object(), INVALID_URL_MSG);
+        checkArgument(null != keys && 0 < keys.length);
         http.post(format(OBJECT_DEL_PROP,
                 settings.url(), settings.ns(),
                 url.account(), url.container(),
                 url.object()))
+                .body(gson().toJson(keys))
                 .verifier(CONTAINER_VERIFIER)
                 .execute()
                 .close();
@@ -661,12 +683,13 @@ public class ProxyClient {
      *             if any error occurs during request execution
      */
     public void deleteObjectProperties(OioUrl url, List<String> keys) {
-        // TODO: body?
-        checkArgument(null != url && null != url.object(), "Invalid url");
+        checkArgument(null != url && null != url.object(), INVALID_URL_MSG);
+        checkArgument(null != keys && 0 < keys.size());
         http.post(format(OBJECT_DEL_PROP,
                 settings.url(), settings.ns(),
                 url.account(), url.container(),
                 url.object()))
+                .body(gson().toJson(keys))
                 .verifier(CONTAINER_VERIFIER)
                 .execute()
                 .close();
