@@ -26,6 +26,8 @@ import com.google.gson.stream.JsonReader;
 import io.openio.sds.common.Check;
 import io.openio.sds.exceptions.OioException;
 import io.openio.sds.exceptions.OioSystemException;
+import io.openio.sds.logging.SdsLogger;
+import io.openio.sds.logging.SdsLoggerFactory;
 
 /**
  * Simple HTTP client
@@ -34,6 +36,9 @@ import io.openio.sds.exceptions.OioSystemException;
  *
  */
 public class OioHttp {
+
+    private static final SdsLogger logger = SdsLoggerFactory
+            .getLogger(SdsLogger.class);
 
     private static final String EOL = "\r\n";
 
@@ -133,9 +138,11 @@ public class OioHttp {
         }
 
         public OioHttpResponse execute() throws OioException {
+            Socket sock = null;
             try {
-                Socket sock = new Socket();
+                sock = new Socket();
                 sock.setSendBufferSize(settings.sendBufferSize());
+                sock.setReuseAddress(true);
                 sock.setReceiveBufferSize(settings.receiveBufferSize());
                 sock.connect(
                         new InetSocketAddress(uri.getHost(), uri.getPort()),
@@ -151,6 +158,12 @@ public class OioHttp {
                     throw e;
                 }
             } catch (IOException e) {
+                if (null != sock && !sock.isClosed())
+                    try {
+                        sock.close();
+                    } catch (IOException ioe) {
+                        logger.warn("Unable to close socket, possible leak", ioe);
+                    }
                 throw new OioSystemException("Http request execution error", e);
             }
         }
@@ -174,7 +187,7 @@ public class OioHttp {
         private void sendRequest(Socket sock) throws IOException {
             headers.put("Host", sock.getLocalAddress().toString().substring(1)
                     + ":" + sock.getLocalPort());
-            headers.put("Connection", "keep-alive");
+            headers.put("Connection", "close");
             headers.put("Accept", "*/*");
             headers.put("Accept-Encoding", "gzip, deflate");
             headers.put("User-Agent", "oio-http");

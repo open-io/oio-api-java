@@ -12,6 +12,7 @@ import static io.openio.sds.common.OioConstants.CHUNK_META_CONTENT_MIME_TYPE;
 import static io.openio.sds.common.OioConstants.CHUNK_META_CONTENT_PATH;
 import static io.openio.sds.common.OioConstants.CHUNK_META_CONTENT_POLICY;
 import static io.openio.sds.common.OioConstants.CHUNK_META_CONTENT_SIZE;
+import static io.openio.sds.common.OioConstants.CHUNK_META_CONTENT_VERSION;
 import static java.lang.String.format;
 import static java.nio.ByteBuffer.wrap;
 
@@ -170,6 +171,8 @@ public class RawxClient {
                                 .header(CHUNK_META_CONTAINER_ID,
                                         oinf.url().cid())
                                 .header(CHUNK_META_CONTENT_ID, oinf.oid())
+                                .header(CHUNK_META_CONTENT_VERSION,
+                                        String.valueOf(oinf.version()))
                                 .header(CHUNK_META_CONTENT_POLICY,
                                         oinf.policy())
                                 .header(CHUNK_META_CONTENT_MIME_TYPE,

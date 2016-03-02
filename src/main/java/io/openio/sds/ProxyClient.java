@@ -307,8 +307,8 @@ public class ProxyClient {
                         settings.url(), settings.ns(), url.account(),
                         url.container()))
                 .verifier(CONTAINER_VERIFIER)
-                .execute();
-        r.close();
+                .execute()
+                .close();
         return new ContainerInfo(url.container())
                 .account(r.header(ACCOUNT_HEADER))
                 .ctime(longHeader(r, M2_CTIME_HEADER))

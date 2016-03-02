@@ -53,8 +53,9 @@ public class OioConstants {
 
     /* -- RAWX common headers -- */
     
-    public static final String CHUNK_META_CONTENT_ID = "X-oio-chunk-meta-content-id";
     public static final String CHUNK_META_CONTAINER_ID = "X-oio-chunk-meta-container-id";
+    public static final String CHUNK_META_CONTENT_ID = "X-oio-chunk-meta-content-id";
+    public static final String CHUNK_META_CONTENT_VERSION ="X-oio-chunk-meta-content-version";
     public static final String CHUNK_META_CONTENT_CHUNKSNB = "x-oio-chunk-meta-content-chunksnb";
     public static final String CHUNK_META_CONTENT_SIZE = "X-oio-chunk-meta-content-size";
     public static final String CHUNK_META_CONTENT_PATH = "X-oio-chunk-meta-content-path";
