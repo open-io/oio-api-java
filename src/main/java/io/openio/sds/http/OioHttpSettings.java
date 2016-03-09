@@ -6,6 +6,8 @@ public class OioHttpSettings {
     private Integer receiveBufferSize = 8192;
     private Integer connectTimeout = 30000;
     private Integer readTimeout = 60000;
+    private Boolean pooling = true;
+    private Integer socketIdleTimeout = 3000;
 
     public OioHttpSettings() {
     }
