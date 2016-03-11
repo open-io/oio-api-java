@@ -86,8 +86,19 @@ public class ProxyClientTest {
 
     @Test(expected = ContainerNotFoundException.class)
     public void getUnknwonContainer() {
-        proxy.getContainerInfo(
-                url("TEST", UUID.randomUUID().toString()));
+        try {
+            proxy.getContainerInfo(
+                    url("TEST", UUID.randomUUID().toString()));
+        } catch (OioException e) {
+            try {
+                proxy.deleteReference(
+                        url("TEST", UUID.randomUUID().toString()));
+            } catch (OioException e1) {
+                e1.printStackTrace();
+            }
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     @Test
@@ -107,18 +118,18 @@ public class ProxyClientTest {
         }
     }
 
-    @Test
+    @Test(expected = ReferenceNotFoundException.class)
     public void handleReference() {
         OioUrl url = url("TEST", UUID.randomUUID().toString());
-        proxy.createReference(url);
-        proxy.showReference(url);
-        proxy.deleteReference(url);
         try {
+            proxy.createReference(url);
             proxy.showReference(url);
-            Assert.fail("ref should be destroyed");
-        } catch (ReferenceNotFoundException e) {
-            // ok
+            proxy.deleteReference(url);
+        } catch (OioException e) {
+            e.printStackTrace();
+            Assert.fail();
         }
+        proxy.showReference(url);
     }
 
     @Test

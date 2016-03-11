@@ -50,6 +50,7 @@ public class OioConstants {
     public static final String LIST_TRUNCATED_HEADER = "X-oio-list-truncated";
 
     public static final String OIO_ACTION_MODE_HEADER = "X-oio-action-mode";
+    public static final String OIO_REQUEST_ID_HEADER = "X-oio-req-id";
 
     /* -- RAWX common headers -- */
     
@@ -109,8 +110,7 @@ public class OioConstants {
     public static final String OBJECT_DEL_PROP = "%s/v3.0/%s/content/del_properties?acct=%s&ref=%s&path=%s";
     
     /* -- Common String format -- */
-    public static final String INTERNAL_ERROR_FORMAT = "Internal error (%d %s)";
-    public static final String UNMANAGED_ERROR_FORMAT = "Unmanaged response code (%d %s)";
+    public static final String PROXY_ERROR_FORMAT = "(%d) %s";
     
     /* -- Common error messages -- */
     public static final String INVALID_URL_MSG = "Invalid url";

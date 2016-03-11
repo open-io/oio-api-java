@@ -1,6 +1,7 @@
 package io.openio.sds;
 
 import static io.openio.sds.common.Check.checkArgument;
+import static io.openio.sds.common.IdGen.requestId;
 
 import java.io.File;
 import java.io.InputStream;
@@ -39,113 +40,137 @@ public class DefaultClient implements Client {
     @Override
     public ContainerInfo createContainer(OioUrl url) {
         checkArgument(null != url, "url cannot be null");
-        return proxy.createContainer(url);
+        return proxy.createContainer(url, requestId());
     }
 
     @Override
     public ContainerInfo getContainerInfo(OioUrl url) {
         checkArgument(null != url, "url cannot be null");
-        return proxy.getContainerInfo(url);
+        return proxy.getContainerInfo(url, requestId());
     }
 
     @Override
     public ObjectList listContainer(OioUrl url, ListOptions listOptions) {
         checkArgument(null != url, "url cannot be null");
         checkArgument(null != listOptions, "listOptions cannot be null");
-        return proxy.listContainer(url, listOptions);
+        return proxy.listContainer(url, listOptions, requestId());
     }
 
     @Override
     public void deleteContainer(OioUrl url) {
         checkArgument(null != url, "url cannot be null");
-        proxy.deleteContainer(url);
+        proxy.deleteContainer(url, requestId());
     }
 
     @Override
-    public ObjectInfo putObject(OioUrl url, long size, File data) {
+    public ObjectInfo putObject(OioUrl url, Long size, File data) {
+        return putObject(url, size, data, null);
+    }
+
+    @Override
+    public ObjectInfo putObject(OioUrl url, Long size, File data,
+            Long version) {
         checkArgument(null != url, "url cannot be null");
         checkArgument(null != url.object(), "url object cannot be null");
-        ObjectInfo oinf = proxy.getBeans(url, size);
-        rawx.uploadChunks(oinf, data);
-        proxy.putObject(oinf);
+        String reqId = requestId();
+        ObjectInfo oinf = proxy.getBeans(url, size, version, reqId);
+        rawx.uploadChunks(oinf, data, reqId);
+        proxy.putObject(oinf, reqId);
         return oinf;
     }
 
     @Override
-    public ObjectInfo putObject(OioUrl url, long size, InputStream data) {
+    public ObjectInfo putObject(OioUrl url, Long size, InputStream data) {
+        return putObject(url, size, data, null);
+    }
+
+    @Override
+    public ObjectInfo putObject(OioUrl url, Long size, InputStream data,
+            Long version) {
         checkArgument(null != url, "url cannot be null");
         checkArgument(null != url.object(), "url object cannot be null");
-        ObjectInfo oinf = proxy.getBeans(url, size);
-        rawx.uploadChunks(oinf, data);
-        proxy.putObject(oinf);
+        String reqId = requestId();
+        ObjectInfo oinf = proxy.getBeans(url, size, version, reqId);
+        rawx.uploadChunks(oinf, data, reqId);
+        proxy.putObject(oinf, reqId);
         return oinf;
     }
 
     @Override
     public ObjectInfo getObjectInfo(OioUrl url) {
+        return getObjectInfo(url, null);
+    }
+
+    @Override
+    public ObjectInfo getObjectInfo(OioUrl url, Long version) {
         checkArgument(null != url, "url cannot be null");
         checkArgument(null != url.object(), "url object cannot be null");
-        return proxy.getObjectInfo(url);
+        return proxy.getObjectInfo(url, version, requestId());
     }
 
     @Override
     public InputStream downloadObject(ObjectInfo oinf) {
         checkArgument(null != oinf, "ObjectInfo cannot be null");
-        return rawx.downloadObject(oinf);
+        return rawx.downloadObject(oinf, requestId());
     }
 
     @Override
     public void deleteObject(OioUrl url) {
+        deleteObject(url, null);
+    }
+
+    @Override
+    public void deleteObject(OioUrl url, Long version) {
         checkArgument(null != url, "url cannot be null");
         checkArgument(null != url.object(), "url object cannot be null");
-        proxy.deleteObject(url);
+        proxy.deleteObject(url, version, requestId());
     }
 
     @Override
     public void setContainerProperties(OioUrl url, Map<String, String> props)
             throws OioException {
-        proxy.setContainerProperties(url, props);        
+        proxy.setContainerProperties(url, props, requestId());
     }
 
     @Override
     public Map<String, String> getContainerProperties(OioUrl url)
             throws OioException {
-        return proxy.getContainerProperties(url);
+        return proxy.getContainerProperties(url, requestId());
     }
 
     @Override
     public void deleteContainerProperties(OioUrl url, String... keys)
             throws OioException {
-        proxy.deleteContainerProperties(url, keys);
+        proxy.deleteContainerProperties(requestId(), url, keys);
     }
 
     @Override
     public void deleteContainerProperties(OioUrl url, List<String> keys)
             throws OioException {
-        proxy.deleteContainerProperties(url, keys);
+        proxy.deleteContainerProperties(url, keys, requestId());
     }
 
     @Override
     public void setObjectProperties(OioUrl url, Map<String, String> props)
             throws OioException {
-        proxy.setObjectProperties(url, props);
+        proxy.setObjectProperties(url, props, requestId());
     }
 
     @Override
     public Map<String, String> getObjectProperties(OioUrl url)
             throws OioException {
-        return proxy.getObjectProperties(url);
+        return proxy.getObjectProperties(url, requestId());
     }
 
     @Override
     public void deleteObjectProperties(OioUrl url, String... keys)
             throws OioException {
-        proxy.deleteObjectProperties(url, keys);
+        proxy.deleteObjectProperties(requestId(), url, keys);
     }
 
     @Override
     public void deleteObjectProperties(OioUrl url, List<String> keys)
             throws OioException {
-        proxy.deleteObjectProperties(url, keys);
+        proxy.deleteObjectProperties(url, keys, requestId());
     }
 }

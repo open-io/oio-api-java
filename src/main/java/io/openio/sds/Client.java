@@ -170,7 +170,6 @@ public interface Client {
     /**
      * Push an object into the oio namespace
      * 
-     * @param OioUrl
      * @param url
      *            the url of the object to create
      * @param size
@@ -183,8 +182,28 @@ public interface Client {
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
-    public ObjectInfo putObject(OioUrl url, long size, File data)
+    public ObjectInfo putObject(OioUrl url, Long size, File data)
             throws OioException;
+
+    /**
+     * Push an object into the oio namespace
+     * 
+     * @param url
+     *            the url of the object to create
+     * @param size
+     *            the size of the object
+     * @param data
+     *            the file to read the data from
+     * @param version
+     *            the version of content to upload
+     * @return informations about the uploaded object
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public ObjectInfo putObject(OioUrl url, Long size, File data,
+            Long version) throws OioException;
 
     /**
      * Push an object into the oio namespace
@@ -203,8 +222,30 @@ public interface Client {
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
-    public ObjectInfo putObject(OioUrl url, long size,
+    public ObjectInfo putObject(OioUrl url, Long size,
             InputStream data) throws OioException;
+    
+    /**
+     * Push an object into the oio namespace
+     * 
+     * @param url
+     *            the url of the object to create
+     * @param size
+     *            the size of the object
+     * @param data
+     *            the InputStream to read the data from
+     * @param version
+     *            the version of content to upload
+     * @return informations about the uploaded object
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws ObjectExistException
+     *             if the specified object alreadeay exist in the container
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public ObjectInfo putObject(OioUrl url, Long size,
+            InputStream data, Long version) throws OioException;
 
     /**
      * Returns informations about the specified object
@@ -220,6 +261,25 @@ public interface Client {
      *             if any error occurs during request execution
      */
     public ObjectInfo getObjectInfo(OioUrl url)
+            throws OioException;
+
+    /**
+     * Returns informations about the specified object
+     * 
+     * @param url
+     *            the url of the object
+     * @param version
+     *            the version to get (could be {@code null} to get latest
+     *            version)
+     * @return an {@code ObjectInfo}
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws ObjectNotFoundException
+     *             if the specified object doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public ObjectInfo getObjectInfo(OioUrl url, Long version)
             throws OioException;
 
     /**
@@ -249,6 +309,24 @@ public interface Client {
      * 
      */
     public void deleteObject(OioUrl url) throws OioException;
+
+    /**
+     * Deletes the specified object
+     * 
+     * @param url
+     *            the url of the object to delete
+     * @param version
+     *            the version to delete (could be {@code null} to delete latest
+     *            version)
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws ObjectNotFoundException
+     *             if the specified object doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     * 
+     */
+    public void deleteObject(OioUrl url, Long version) throws OioException;
 
     /**
      * Add properties to the specified object. The properties must be prefixed
