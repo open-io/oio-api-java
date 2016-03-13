@@ -75,8 +75,8 @@ public class Position {
      * 
      * @param pos
      *            the position to compare to
-     * @return
-     * @return int
+     * @return negative, 0 or positive int if the position is lower, equals or
+     * higher than the specified one .
      */
     public int compare(Position pos) {
         return (meta == pos.meta())
