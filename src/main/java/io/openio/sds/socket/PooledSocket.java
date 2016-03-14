@@ -2,7 +2,9 @@ package io.openio.sds.socket;
 
 import java.io.IOException;
 import java.net.Socket;
-import java.net.SocketAddress;
+
+import io.openio.sds.logging.SdsLogger;
+import io.openio.sds.logging.SdsLoggerFactory;
 
 /**
  * 
@@ -11,25 +13,16 @@ import java.net.SocketAddress;
  */
 public class PooledSocket extends Socket {
 
-    private SocketAddress target;
-    private SocketPool pool;
-    private boolean pooled = false;
+    private static final SdsLogger logger = SdsLoggerFactory
+            .getLogger(PooledSocket.class);
 
-    PooledSocket(SocketPool pool) {
+    private PoolElement pool;
+    private boolean pooled = false;
+    private long lastUsage;
+
+    PooledSocket(PoolElement pool) {
         super();
         this.pool = pool;
-    }
-
-    @Override
-    public void connect(SocketAddress address) throws IOException {
-        this.target = address;
-        super.connect(address);
-    }
-
-    @Override
-    public void connect(SocketAddress address, int timeout) throws IOException {
-        this.target = address;
-        super.connect(address, timeout);
     }
 
     @Override
@@ -37,9 +30,29 @@ public class PooledSocket extends Socket {
         if (!pooled) {
             pool.release(this);
             pooled = true;
-        } else {
+        } 
+    }
+
+    void quietClose() {
+        try {
             super.close();
+        } catch (IOException e) {
+            logger.warn("Unable to close socket, possible leak", e);
         }
+    }
+
+    PooledSocket markUnpooled() {
+        this.pooled = false;
+        return this;
+    }
+
+    long lastUsage() {
+        return lastUsage;
+    }
+
+    public PooledSocket lastUsage(long t) {
+        this.lastUsage = t;
+        return this;
     }
 
 }

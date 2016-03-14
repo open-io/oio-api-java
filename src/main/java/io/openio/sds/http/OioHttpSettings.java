@@ -1,13 +1,19 @@
 package io.openio.sds.http;
 
+import io.openio.sds.settings.PoolingSettings;
+
+/**
+ * 
+ * @author Christopher Dedeurwaerder
+ *
+ */
 public class OioHttpSettings {
 
     private Integer sendBufferSize = 8192;
     private Integer receiveBufferSize = 8192;
     private Integer connectTimeout = 30000;
     private Integer readTimeout = 60000;
-    private Boolean pooling = true;
-    private Integer socketIdleTimeout = 3000;
+    private PoolingSettings pooling = new PoolingSettings();
 
     public OioHttpSettings() {
     }
@@ -45,6 +51,15 @@ public class OioHttpSettings {
 
     public OioHttpSettings readTimeout(Integer readTimeout) {
         this.readTimeout = readTimeout;
+        return this;
+    }
+
+    public PoolingSettings pooling() {
+        return pooling;
+    }
+
+    public OioHttpSettings pooling(PoolingSettings pooling) {
+        this.pooling = pooling;
         return this;
     }
 }
