@@ -16,11 +16,11 @@ public class PooledSocket extends Socket {
     private static final SdsLogger logger = SdsLoggerFactory
             .getLogger(PooledSocket.class);
 
-    private PoolElement pool;
+    private SocketPool pool;
     private boolean pooled = false;
     private long lastUsage;
 
-    PooledSocket(PoolElement pool) {
+    PooledSocket(SocketPool pool) {
         super();
         this.pool = pool;
     }

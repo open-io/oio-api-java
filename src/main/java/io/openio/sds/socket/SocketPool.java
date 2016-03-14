@@ -4,8 +4,9 @@ import static java.lang.String.format;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.util.HashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import io.openio.sds.exceptions.OioException;
 import io.openio.sds.http.OioHttpSettings;
@@ -22,55 +23,119 @@ public class SocketPool {
     private static final SdsLogger logger = SdsLoggerFactory
             .getLogger(SocketPool.class);
 
-    private static final String KEY_FORMAT = "%s:%d";
-    private static final String CLEANER_NAME = "pool_cleaner";
-
-    private HashMap<String, PoolElement> pool;
+    private LinkedBlockingQueue<PooledSocket> q;
     private OioHttpSettings settings;
-    private Thread cleaner;
+    private AtomicInteger leased;
+    private InetSocketAddress target;
+    private Thread selfCleaner;
 
-    public SocketPool(OioHttpSettings settings) {
+    SocketPool(OioHttpSettings settings, InetSocketAddress target) {
+        this(settings, target, false);
+    }
+
+    SocketPool(OioHttpSettings settings, InetSocketAddress target,
+            boolean startCleaner) {
         this.settings = settings;
-        if (settings.pooling().enabled()) {
-            pool = new HashMap<String, ConcurrentLinkedQueue<PooledSocket>>();
-            this.cleaner = new PoolCleaner();
-            this.cleaner.start();
+        this.leased = new AtomicInteger(0);
+        this.target = target;
+        this.q = new LinkedBlockingQueue<PooledSocket>();
+        if (startCleaner) {
+            this.selfCleaner = new SelfCleaner();
+            this.selfCleaner.start();
         }
     }
-    
-    public void shutdown() {
-        this.cleaner.interrupt();
-    }
 
-    public PooledSocket lease(String host, int port) {
-        PooledSocket sock = getQueue(host, port).poll();
-        return null == sock ? create(host, port) : sock.markUnpooled();
-    }
-    
-    public int size(String host, int port) {
-        ConcurrentLinkedQueue<PooledSocket> q = pool.get(key(host, port));
-        return null == q ? 0 : q.size();
-    }
-
-  
-    public void release(PooledSocket sock) {
-        pool.get(sock.key()).offer(sock.lastUsage(System.currentTimeMillis()));
-    }
-
-    private ConcurrentLinkedQueue<PooledSocket> getQueue(String host,
-            int port) {
-        String key = key(host, port);
-        ConcurrentLinkedQueue<PooledSocket> q = pool.get(key);
-        if (null == q) {
-            q = new ConcurrentLinkedQueue<PooledSocket>();
-            pool.put(key, q);
+    public PooledSocket lease() {
+        PooledSocket sock = q.poll();
+        if (null == sock) {
+            sock = tryCreate();
+            if (null == sock) {
+                try {
+                    sock = q.poll(settings.pooling().maxConnWait(),
+                            TimeUnit.MILLISECONDS);
+                } catch (InterruptedException e) {
+                    logger.debug("connection wait interrrupted");
+                }
+                if (null == sock)
+                    throw new OioException(
+                            String.format("Unable to get connection to %s",
+                                    target.toString()));
+            }
         }
-        return q;
+        return sock;
     }
 
-    private String key(String host, int port) {
-        return format(KEY_FORMAT, host, port);
+    public SocketPool release(PooledSocket sock) {
+        q.offer(sock.lastUsage(System.currentTimeMillis()));
+        return this;
     }
 
-  
+    public int size() {
+        return q.size();
+    }
+
+    private PooledSocket tryCreate() {
+        if (canCreate())
+            return create();
+        return null;
+    }
+
+    private boolean canCreate() {
+        return 0 < settings.pooling().maxConnPerTarget() - leased.get();
+    }
+
+    private PooledSocket create() {
+        try {
+            PooledSocket sock = new PooledSocket(this);
+            sock.setSendBufferSize(settings.sendBufferSize());
+            sock.setReuseAddress(true);
+            sock.setReceiveBufferSize(settings.receiveBufferSize());
+            sock.connect(target, settings.connectTimeout());
+            return sock;
+        } catch (IOException e) {
+            throw new OioException(format(
+                    "Unable to get connection to %s", target.toString()), e);
+        }
+    }
+
+    void clean() {
+        long t = System.currentTimeMillis();
+        PooledSocket p = q.peek();
+        if (null == p)
+            return;
+        boolean stop = false;
+        if (t - p.lastUsage() > settings.pooling().socketIdleTimeout()) {
+            while (null != (p = q.poll()) && !stop) {
+                if (t - p.lastUsage() > settings.pooling()
+                        .socketIdleTimeout()) {
+                    p.quietClose();
+                } else {
+                    stop = true;
+                    q.offer(p);
+                }
+            }
+        }
+    }
+
+    private class SelfCleaner extends Thread {
+
+        SelfCleaner() {
+            super("cleaner_" + target.toString());
+            setDaemon(true);
+        }
+
+        @Override
+        public void run() {
+            try {
+                sleep(settings.pooling().cleanDelay() * 1000);
+                while (true) {
+                    sleep(settings.pooling().cleanRate() * 1000);
+                    clean();
+                }
+            } catch (InterruptedException e) {
+                logger.debug("Pool cleaner thread interrupted");
+            }
+        }
+    }
+
 }
