@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.URI;
 import java.util.HashMap;
@@ -28,6 +27,7 @@ import io.openio.sds.exceptions.OioException;
 import io.openio.sds.exceptions.OioSystemException;
 import io.openio.sds.logging.SdsLogger;
 import io.openio.sds.logging.SdsLoggerFactory;
+import io.openio.sds.socket.SocketPoolGroup;
 
 /**
  * Simple HTTP client
@@ -44,13 +44,17 @@ public class OioHttp {
 
     private OioHttpSettings settings;
 
-    private OioHttp(OioHttpSettings settings) {
+    private SocketPoolGroup pools;
+
+    private OioHttp(OioHttpSettings settings, SocketPoolGroup pools) {
         this.settings = settings;
+        this.pools = pools;
     }
 
     public static OioHttp http(OioHttpSettings settings) {
         Check.checkArgument(null != settings);
-        return new OioHttp(settings);
+        SocketPoolGroup pools = new SocketPoolGroup(settings);
+        return new OioHttp(settings, pools);
     }
 
     public RequestBuilder post(String uri) {
@@ -140,13 +144,7 @@ public class OioHttp {
         public OioHttpResponse execute() throws OioException {
             Socket sock = null;
             try {
-                sock = new Socket();
-                sock.setSendBufferSize(settings.sendBufferSize());
-                sock.setReuseAddress(true);
-                sock.setReceiveBufferSize(settings.receiveBufferSize());
-                sock.connect(
-                        new InetSocketAddress(uri.getHost(), uri.getPort()),
-                        settings.connectTimeout());
+                sock = pools.lease(uri.getHost(), uri.getPort());
                 sendRequest(sock);
                 OioHttpResponse resp = readResponse(sock);
                 try {
@@ -154,40 +152,45 @@ public class OioHttp {
                         verifier.verify(resp);
                     return resp;
                 } catch (OioException e) {
-                    resp.close();
+                    resp.close(true);
                     throw e;
                 }
             } catch (IOException e) {
-                if (null != sock && !sock.isClosed())
+                if (null != sock)
                     try {
                         sock.close();
                     } catch (IOException ioe) {
-                        logger.warn("Unable to close socket, possible leak", ioe);
+                        logger.warn("Unable to close socket, possible leak",
+                                ioe);
                     }
                 throw new OioSystemException("Http request execution error", e);
-            }
+            } 
         }
 
         public <T> T execute(Class<T> c) {
             OioHttpResponse resp = execute();
+            boolean success = false;
             try {
-                return gson().fromJson(
+                T t = gson().fromJson(
                         new JsonReader(new InputStreamReader(resp.body(),
                                 OIO_CHARSET)),
                         c);
+                success = true;
+                return t;
             } finally {
-                resp.close();
+                resp.close(success);
             }
         }
 
         private OioHttpResponse readResponse(Socket sock) throws IOException {
-            return OioHttpResponse.build(sock);
+            return OioHttpResponse.build(sock, settings.pooling().enabled());
         }
 
         private void sendRequest(Socket sock) throws IOException {
             headers.put("Host", sock.getLocalAddress().toString().substring(1)
                     + ":" + sock.getLocalPort());
-            headers.put("Connection", "close");
+            headers.put("Connection",
+                    settings.pooling().enabled() ? "keep-alive" : "close");
             headers.put("Accept", "*/*");
             headers.put("Accept-Encoding", "gzip, deflate");
             headers.put("User-Agent", "oio-http");

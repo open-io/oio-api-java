@@ -575,28 +575,7 @@ public class ProxyClient {
      *             if any error occurs during request execution
      */
     public ObjectInfo getBeans(OioUrl url, long size) throws OioException {
-        return getBeans(url, size, null, requestId());
-    }
-
-    /**
-     * Prepares an object upload by asking some chunks available location.
-     * 
-     * @param url
-     *            the url of the future object to create
-     * @param size
-     *            the size of the future object
-     * @param version
-     *            the version to create (could be {@code null} to set default
-     *            next content version)
-     * 
-     * @return an {@link ObjectInfo} which contains all informations to upload
-     *         the object
-     * @throws OioException
-     *             if any error occurs during request execution
-     */
-    public ObjectInfo getBeans(OioUrl url, long size, Long version)
-            throws OioException {
-        return getBeans(url, size, version, requestId());
+        return getBeans(url, size, requestId());
     }
 
     /**
@@ -615,29 +594,6 @@ public class ProxyClient {
      */
     public ObjectInfo getBeans(OioUrl url, long size, String reqId)
             throws OioException {
-        return getBeans(url, size, null, reqId);
-    }
-
-    /**
-     * Prepares an object upload by asking some chunks available location.
-     * 
-     * @param url
-     *            the url of the future object to create
-     * @param size
-     *            the size of the future object
-     * @param version
-     *            the version to create (could be {@code null} to set default
-     *            next content version)
-     * @param reqId
-     *            the id to use to identify the request
-     * @return an {@link ObjectInfo} which contains all informations to upload
-     *         the object
-     * @throws OioException
-     *             if any error occurs during request execution
-     */
-    public ObjectInfo getBeans(OioUrl url, long size, Long version,
-            String reqId)
-                    throws OioException {
         checkArgument(null != url, INVALID_URL_MSG);
         OioHttpResponse resp = http.post(
                 format(GET_BEANS_FORMAT,
@@ -645,8 +601,6 @@ public class ProxyClient {
                         url.container(), url.object()))
                 .body(gson().toJson(new BeansRequest().size(size)))
                 .header(OIO_REQUEST_ID_HEADER, reqId)
-                .header(CONTENT_META_VERSION_HEADER,
-                        null == version ? null : version.toString())
                 .verifier(OBJECT_VERIFIER)
                 .execute();
         return objectInfoAndClose(url, resp);
@@ -663,7 +617,7 @@ public class ProxyClient {
      *             if any error occurs during request execution
      */
     public ObjectInfo putObject(ObjectInfo oinf) throws OioException {
-        return putObject(oinf, requestId());
+        return putObject(oinf, requestId(), null);
     }
 
     /**
@@ -678,7 +632,7 @@ public class ProxyClient {
      * @throws OioException
      *             if any error occurs during request execution
      */
-    public ObjectInfo putObject(ObjectInfo oinf, String reqId)
+    public ObjectInfo putObject(ObjectInfo oinf, String reqId, Long version)
             throws OioException {
         checkArgument(null != oinf, "Invalid objectInfo");
         http.post(format(PUT_OBJECT_FORMAT,
@@ -691,7 +645,7 @@ public class ProxyClient {
                 .header(CONTENT_META_HASH_HEADER, oinf.hash())
                 .header(OIO_REQUEST_ID_HEADER, reqId)
                 .header(CONTENT_META_VERSION_HEADER,
-                        oinf.version().toString())
+                        versionHeader(oinf, version))
                 .body(gson().toJson(oinf.chunks()))
                 .verifier(OBJECT_VERIFIER)
                 .execute()
@@ -1211,11 +1165,14 @@ public class ProxyClient {
     /* -- INTERNALS -- */
 
     private ObjectInfo objectInfoAndClose(OioUrl url, OioHttpResponse resp) {
+        boolean success = false;
         try {
-            return fillObjectInfo(url, resp)
+            ObjectInfo oinf =  fillObjectInfo(url, resp)
                     .chunks(bodyChunk(resp));
+            success = true;
+            return oinf;
         } finally {
-            resp.close();
+            resp.close(success);
         }
     }
 
@@ -1246,29 +1203,43 @@ public class ProxyClient {
     }
 
     private <T> List<T> listAndClose(OioHttpResponse resp) {
+        boolean success = false;
         try {
             Type t = new TypeToken<List<T>>() {
             }.getType();
-            return gson().fromJson(new JsonReader(
+            List<T> res =  gson().fromJson(new JsonReader(
                     new InputStreamReader(resp.body(), OIO_CHARSET)), t);
+            success = true;
+            return res;
         } catch (Exception e) {
             throw new OioException("Body extraction error", e);
         } finally {
-            resp.close();
+            resp.close(success);
         }
     }
 
     private List<ServiceInfo> serviceInfoListAndClose(OioHttpResponse resp) {
+        boolean success = false;
         try {
             Type t = new TypeToken<List<ServiceInfo>>() {
             }.getType();
-            return gson().fromJson(new JsonReader(
+            List<ServiceInfo> res=  gson().fromJson(new JsonReader(
                     new InputStreamReader(resp.body(), OIO_CHARSET)), t);
+            success = true;
+            return res;
         } catch (Exception e) {
             throw new OioException("Body extraction error", e);
         } finally {
-            resp.close();
+            resp.close(success);
         }
     }
+    
+
+    private String versionHeader(ObjectInfo oinf, Long version) {
+        return null == version ? null == oinf.version() ? null
+                : oinf.version().toString()
+                : version.toString();
+    }
+
 
 }

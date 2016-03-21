@@ -1,5 +1,8 @@
 package io.openio.sds;
 
+import static io.openio.sds.TestHelper.ns;
+import static io.openio.sds.TestHelper.proxyd;
+import static io.openio.sds.TestHelper.testAccount;
 import static io.openio.sds.common.OioConstants.OIO_CHARSET;
 import static io.openio.sds.models.OioUrl.url;
 import static org.junit.Assert.assertEquals;
@@ -35,14 +38,11 @@ import io.openio.sds.models.OioUrl;
  */
 public class ClientTest {
 
-    private static final String TEST_ACCOUNT = "TEST";
-
     private static Client client;
-    private static TestHelper helper = TestHelper.instance();
 
     @BeforeClass
     public static void setup() {
-        client = ClientBuilder.newClient(helper.ns(), helper.proxyd());
+        client = ClientBuilder.newClient(ns(), proxyd());
     }
 
     @AfterClass
@@ -51,7 +51,7 @@ public class ClientTest {
 
     @Test
     public void handleContainer() {
-        OioUrl url = url(TEST_ACCOUNT, UUID.randomUUID().toString());
+        OioUrl url = url(testAccount(), UUID.randomUUID().toString());
         client.createContainer(url);
         ContainerInfo ci = client.getContainerInfo(url);
         assertNotNull(ci);
@@ -65,7 +65,7 @@ public class ClientTest {
 
     @Test(expected = ContainerExistException.class)
     public void doubleCreateContainer() {
-        OioUrl url = url(TEST_ACCOUNT, UUID.randomUUID().toString());
+        OioUrl url = url(testAccount(), UUID.randomUUID().toString());
         client.createContainer(url);
         try {
             client.createContainer(url);
@@ -76,18 +76,19 @@ public class ClientTest {
 
     @Test(expected = ContainerNotFoundException.class)
     public void deleteUnknownContainer() {
-        client.deleteContainer(url(TEST_ACCOUNT, UUID.randomUUID().toString()));
+        client.deleteContainer(
+                url(testAccount(), UUID.randomUUID().toString()));
     }
 
     @Test(expected = ContainerNotFoundException.class)
     public void unknownContainerInfo() {
         client.getContainerInfo(
-                url(TEST_ACCOUNT, UUID.randomUUID().toString()));
+                url(testAccount(), UUID.randomUUID().toString()));
     }
 
     @Test
     public void handleEmptyObject() throws IOException {
-        OioUrl url = url(TEST_ACCOUNT,
+        OioUrl url = url(testAccount(),
                 UUID.randomUUID().toString(),
                 UUID.randomUUID().toString());
         client.createContainer(url);
@@ -106,13 +107,12 @@ public class ClientTest {
         } finally {
             client.deleteContainer(url);
         }
-
     }
 
     @Test
     public void handleSizedObject() throws IOException {
         byte[] src = TestHelper.bytes(1024L);
-        OioUrl url = url(TEST_ACCOUNT,
+        OioUrl url = url(testAccount(),
                 UUID.randomUUID().toString(),
                 UUID.randomUUID().toString());
         client.createContainer(url);
@@ -127,7 +127,11 @@ public class ClientTest {
                 client.deleteObject(url);
             }
         } finally {
-            client.deleteContainer(url);
+            try {
+                client.deleteContainer(url);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
 
     }
@@ -135,7 +139,7 @@ public class ClientTest {
     @Test
     public void handleMultiChunkObject() throws IOException {
         byte[] src = TestHelper.bytes(1090000L);
-        OioUrl url = url(TEST_ACCOUNT,
+        OioUrl url = url(testAccount(),
                 UUID.randomUUID().toString(),
                 UUID.randomUUID().toString());
         client.createContainer(url);
@@ -152,12 +156,11 @@ public class ClientTest {
         } finally {
             client.deleteContainer(url);
         }
-
     }
 
     @Test(expected = ObjectNotFoundException.class)
     public void deleteUnknownObject() {
-        OioUrl url = url(TEST_ACCOUNT,
+        OioUrl url = url(testAccount(),
                 UUID.randomUUID().toString(),
                 UUID.randomUUID().toString());
         client.createContainer(url);

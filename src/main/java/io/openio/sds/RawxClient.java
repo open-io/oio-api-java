@@ -236,7 +236,7 @@ public class RawxClient {
                             builder.body(in, size);
                         ci.size(size);
                         ci.hash(builder.execute()
-                                .close()
+                                .close(false)
                                 .header(CHUNK_META_CHUNK_HASH));
                     } catch (OioException e) {
                         return e;

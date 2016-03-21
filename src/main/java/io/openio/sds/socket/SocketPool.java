@@ -4,7 +4,8 @@ import static java.lang.String.format;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.Iterator;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -23,26 +24,39 @@ public class SocketPool {
     private static final SdsLogger logger = SdsLoggerFactory
             .getLogger(SocketPool.class);
 
-    private LinkedBlockingQueue<PooledSocket> q;
+    private ArrayBlockingQueue<PooledSocket> q;
     private OioHttpSettings settings;
     private AtomicInteger leased;
     private InetSocketAddress target;
     private Thread selfCleaner;
 
-    SocketPool(OioHttpSettings settings, InetSocketAddress target) {
+    public SocketPool(OioHttpSettings settings, InetSocketAddress target) {
         this(settings, target, false);
     }
 
-    SocketPool(OioHttpSettings settings, InetSocketAddress target,
+    public SocketPool(OioHttpSettings settings, InetSocketAddress target,
             boolean startCleaner) {
         this.settings = settings;
         this.leased = new AtomicInteger(0);
         this.target = target;
-        this.q = new LinkedBlockingQueue<PooledSocket>();
+        this.q = new ArrayBlockingQueue<PooledSocket>(
+                settings.pooling().maxPerRoute());
         if (startCleaner) {
             this.selfCleaner = new SelfCleaner();
             this.selfCleaner.start();
         }
+    }
+
+    public void shutdown() {
+        if (null != selfCleaner)
+            selfCleaner.interrupt();
+        Iterator<PooledSocket> it = q.iterator();
+        while (it.hasNext())
+            try {
+                it.next().close();
+            } catch (IOException e) {
+                logger.warn("Socket close failure", e);
+            }
     }
 
     public PooledSocket lease() {
@@ -51,7 +65,7 @@ public class SocketPool {
             sock = tryCreate();
             if (null == sock) {
                 try {
-                    sock = q.poll(settings.pooling().maxConnWait(),
+                    sock = q.poll(settings.pooling().maxWait(),
                             TimeUnit.MILLISECONDS);
                 } catch (InterruptedException e) {
                     logger.debug("connection wait interrrupted");
@@ -62,16 +76,29 @@ public class SocketPool {
                                     target.toString()));
             }
         }
+        if (null != sock) {
+            sock.markUnpooled();
+            leased.incrementAndGet();
+        }
         return sock;
     }
 
     public SocketPool release(PooledSocket sock) {
-        q.offer(sock.lastUsage(System.currentTimeMillis()));
+        leased.decrementAndGet();
+        if(sock.isInputShutdown()) {
+            sock.quietClose();
+        } else {
+            q.offer(sock.lastUsage(System.currentTimeMillis()));
+        }
         return this;
     }
 
     public int size() {
         return q.size();
+    }
+    
+    public int leased() {
+        return leased.get();
     }
 
     private PooledSocket tryCreate() {
@@ -81,7 +108,7 @@ public class SocketPool {
     }
 
     private boolean canCreate() {
-        return 0 < settings.pooling().maxConnPerTarget() - leased.get();
+        return 0 < settings.pooling().maxPerRoute() - leased.get();
     }
 
     private PooledSocket create() {
@@ -137,5 +164,4 @@ public class SocketPool {
             }
         }
     }
-
 }

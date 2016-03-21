@@ -12,6 +12,7 @@ import io.openio.sds.exceptions.OioException;
 import io.openio.sds.http.OioHttp;
 import io.openio.sds.models.ContainerInfo;
 import io.openio.sds.models.ListOptions;
+import io.openio.sds.models.NamespaceInfo;
 import io.openio.sds.models.ObjectInfo;
 import io.openio.sds.models.ObjectList;
 import io.openio.sds.models.OioUrl;
@@ -35,6 +36,11 @@ public class DefaultClient implements Client {
 
     public ProxyClient proxy() {
         return proxy;
+    }
+
+    @Override
+    public NamespaceInfo getNamespaceInfo() {
+        return proxy.getNamespaceInfo();
     }
 
     @Override
@@ -73,9 +79,9 @@ public class DefaultClient implements Client {
         checkArgument(null != url, "url cannot be null");
         checkArgument(null != url.object(), "url object cannot be null");
         String reqId = requestId();
-        ObjectInfo oinf = proxy.getBeans(url, size, version, reqId);
+        ObjectInfo oinf = proxy.getBeans(url, size, reqId);
         rawx.uploadChunks(oinf, data, reqId);
-        proxy.putObject(oinf, reqId);
+        proxy.putObject(oinf, reqId, version);
         return oinf;
     }
 
@@ -90,9 +96,9 @@ public class DefaultClient implements Client {
         checkArgument(null != url, "url cannot be null");
         checkArgument(null != url.object(), "url object cannot be null");
         String reqId = requestId();
-        ObjectInfo oinf = proxy.getBeans(url, size, version, reqId);
+        ObjectInfo oinf = proxy.getBeans(url, size, reqId);
         rawx.uploadChunks(oinf, data, reqId);
-        proxy.putObject(oinf, reqId);
+        proxy.putObject(oinf, reqId, version);
         return oinf;
     }
 

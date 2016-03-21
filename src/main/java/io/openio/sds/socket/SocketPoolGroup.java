@@ -22,14 +22,14 @@ public class SocketPoolGroup {
     private static final String KEY_FORMAT = "%s:%d";
     private static final String CLEANER_NAME = "pool_cleaner";
 
-    private HashMap<String, SocketPool> pool;
+    private HashMap<String, SocketPool> pools;
     private OioHttpSettings settings;
     private Thread cleaner;
 
     public SocketPoolGroup(OioHttpSettings settings) {
         this.settings = settings;
         if (settings.pooling().enabled()) {
-            pool = new HashMap<String, SocketPool>();
+            pools = new HashMap<String, SocketPool>();
             this.cleaner = new PoolCleaner();
             this.cleaner.start();
         }
@@ -37,24 +37,25 @@ public class SocketPoolGroup {
 
     public void shutdown() {
         this.cleaner.interrupt();
+        for (SocketPool p : pools.values())
+            p.shutdown();
     }
 
     public PooledSocket lease(String host, int port) {
-        return getPoolElement(host, port).lease();
+        return pool(host, port).lease();
     }
 
     public int size(String host, int port) {
-        SocketPool p = pool.get(key(host, port));
+        SocketPool p = pools.get(key(host, port));
         return null == p ? 0 : p.size();
     }
 
-    private SocketPool getPoolElement(String host,
-            int port) {
+    private SocketPool pool(String host, int port) {
         String key = key(host, port);
-        SocketPool p = pool.get(key);
+        SocketPool p = pools.get(key);
         if (null == p) {
             p = new SocketPool(settings, new InetSocketAddress(host, port));
-            pool.put(key, p);
+            pools.put(key, p);
         }
         return p;
     }
@@ -84,7 +85,7 @@ public class SocketPoolGroup {
         }
 
         private void runOneIteration() {
-            for (SocketPool p : pool.values()) {
+            for (SocketPool p : pools.values()) {
                 p.clean();
             }
         }

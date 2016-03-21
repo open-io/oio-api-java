@@ -13,6 +13,7 @@ import io.openio.sds.exceptions.OioException;
 import io.openio.sds.exceptions.OioSystemException;
 import io.openio.sds.models.ContainerInfo;
 import io.openio.sds.models.ListOptions;
+import io.openio.sds.models.NamespaceInfo;
 import io.openio.sds.models.ObjectInfo;
 import io.openio.sds.models.ObjectList;
 import io.openio.sds.models.OioUrl;
@@ -39,6 +40,15 @@ import io.openio.sds.models.OioUrl;
  *
  */
 public interface Client {
+
+    /**
+     * Returns namespace configuration
+     * 
+     * @return the namespace configuration
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public NamespaceInfo getNamespaceInfo() throws OioException;
 
     /**
      * Creates a container using the specified {@link OioUrl}. OioUrl are built
@@ -224,7 +234,7 @@ public interface Client {
      */
     public ObjectInfo putObject(OioUrl url, Long size,
             InputStream data) throws OioException;
-    
+
     /**
      * Push an object into the oio namespace
      * 

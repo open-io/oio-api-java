@@ -5,19 +5,31 @@ import java.nio.charset.Charset;
 public class OioConstants {
 
     public static final Charset OIO_CHARSET = Charset.forName("UTF-8");
-    
+
     /* -- http methods names -- */
-    
+
     public static final String PUT_METHOD = "PUT";
     public static final String GET_METHOD = "GET";
     public static final String POST_METHOD = "POST";
     public static final String DELETE_METHOD = "DELETE";
-    
+
+    /* -- namespace info options name */
+    public static final String OPT_META2_MAX_VERSION = "meta2_max_versions";
+    public static final String OPT_META2_CHECK_PUT_DISTANCE = "meta2_check.put.DISTANCE";
+    public static final String OPT_META2_CHECK_PUT_GAPS = "meta2_check.put.GAPS";
+    public static final String OPT_META2_CHECK_PUT_SRVINFO = "meta2_check.put.SRVINFO";
+    public static final String OPT_META2_CHECK_PUT_STGCLASS = "meta2_check.put.STGCLASS";
+    public static final String OPT_AUTOMATIC_OPEN = "automatic_open";
+    public static final String OPT_NS_STATUS = "ns_status";
+    public static final String OPT_SRV_UPDATE_POLICY = "service_update_policy";
+    public static final String OPT_STORAGE_POLICY = "storage_policy";
+    public static final String OPT_WORM = "WORM";
+
     /* -- proxyd common headers -- */
 
-    public static final String CONTENT_LENGTH_HEADER ="Content-Length";
-    public static final String CONTENT_TYPE_HEADER ="Content-Type";
-    
+    public static final String CONTENT_LENGTH_HEADER = "Content-Length";
+    public static final String CONTENT_TYPE_HEADER = "Content-Type";
+
     public static final String ACCOUNT_HEADER = "X-oio-container-meta-sys-account";
     public static final String M2_CTIME_HEADER = "X-oio-container-meta-sys-m2-ctime";
     public static final String M2_INIT_HEADER = "X-oio-container-meta-sys-m2-init";
@@ -53,10 +65,10 @@ public class OioConstants {
     public static final String OIO_REQUEST_ID_HEADER = "X-oio-req-id";
 
     /* -- RAWX common headers -- */
-    
+
     public static final String CHUNK_META_CONTAINER_ID = "X-oio-chunk-meta-container-id";
     public static final String CHUNK_META_CONTENT_ID = "X-oio-chunk-meta-content-id";
-    public static final String CHUNK_META_CONTENT_VERSION ="X-oio-chunk-meta-content-version";
+    public static final String CHUNK_META_CONTENT_VERSION = "X-oio-chunk-meta-content-version";
     public static final String CHUNK_META_CONTENT_CHUNKSNB = "x-oio-chunk-meta-content-chunksnb";
     public static final String CHUNK_META_CONTENT_SIZE = "X-oio-chunk-meta-content-size";
     public static final String CHUNK_META_CONTENT_PATH = "X-oio-chunk-meta-content-path";
@@ -66,21 +78,21 @@ public class OioConstants {
     public static final String CHUNK_META_CHUNK_ID = "X-oio-chunk-meta-chunk-id";
     public static final String CHUNK_META_CHUNK_POS = "X-oio-chunk-meta-chunk-pos";
     public static final String CHUNK_META_CHUNK_HASH = "X-oio-chunk-meta-chunk-hash";
-    
+
     /* -- Common parameters names -- */
-    
+
     public static final String MAX_PARAM = "max";
     public static final String PREFIX_PARAM = "prefix";
     public static final String DELIMITER_PARAM = "delimiter";
     public static final String MARKER_PARAM = "marker";
-    
+
     /* -- URL String format -- */
 
     /* -- CS -- */
     public static final String CS_NSINFO_FORMAT = "%s/v3.0/%s/conscience/info";
     public static final String CS_GETSRV_FORMAT = "%s/v3.0/%s/conscience/list?type=%s";
     public static final String CS_REGISTER_FORMAT = "%s/v3.0/%s/conscience/list?type=%s";
-    
+
     /* -- DIR -- */
     public static final String DIR_REF_CREATE_FORMAT = "%s/v3.0/%s/reference/create?acct=%s&ref=%s";
     public static final String DIR_REF_DELETE_FORMAT = "%s/v3.0/%s/reference/destroy?acct=%s&ref=%s";
@@ -90,7 +102,7 @@ public class OioConstants {
     public static final String DIR_UNLINK_SRV_FORMAT = "%s/v3.0/%s/reference/unlink?acct=%s&ref=%s&type=%s";
     public static final String DIR_FORCE_SRV_FORMAT = "%s/v3.0/%s/reference/link?acct=%s&ref=%s";
     public static final String DIR_RENEW_SRV_FORMAT = "%s/v3.0/%s/reference/renew?acct=%s&ref=%s";
-    
+
     /* -- STG -- */
     public static final String CREATE_CONTAINER_FORMAT = "%s/v3.0/%s/container/create?acct=%s&ref=%s";
     public static final String GET_CONTAINER_INFO_FORMAT = "%s/v3.0/%s/container/show?acct=%s&ref=%s";
@@ -100,7 +112,7 @@ public class OioConstants {
     public static final String PUT_OBJECT_FORMAT = "%s/v3.0/%s/content/create?acct=%s&ref=%s&path=%s";
     public static final String GET_OBJECT_FORMAT = "%s/v3.0/%s/content/show?acct=%s&ref=%s&path=%s";
     public static final String DELETE_OBJECT_FORMAT = "%s/v3.0/%s/content/delete?acct=%s&ref=%s&path=%s";
-    
+
     /* -- PROPS -- */
     public static final String CONTAINER_SET_PROP = "%s/v3.0/%s/container/set_properties?acct=%s&ref=%s";
     public static final String CONTAINER_GET_PROP = "%s/v3.0/%s/container/get_properties?acct=%s&ref=%s";
@@ -108,10 +120,10 @@ public class OioConstants {
     public static final String OBJECT_SET_PROP = "%s/v3.0/%s/content/set_properties?acct=%s&ref=%s&path=%s";
     public static final String OBJECT_GET_PROP = "%s/v3.0/%s/content/get_properties?acct=%s&ref=%s&path=%s";
     public static final String OBJECT_DEL_PROP = "%s/v3.0/%s/content/del_properties?acct=%s&ref=%s&path=%s";
-    
+
     /* -- Common String format -- */
     public static final String PROXY_ERROR_FORMAT = "(%d) %s";
-    
+
     /* -- Common error messages -- */
     public static final String INVALID_URL_MSG = "Invalid url";
 

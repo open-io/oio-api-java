@@ -10,11 +10,11 @@ import com.google.gson.stream.JsonReader;
 
 import io.openio.sds.exceptions.BadRequestException;
 import io.openio.sds.exceptions.ChunkNotFoundException;
+import io.openio.sds.exceptions.ContainerNotEmptyException;
 import io.openio.sds.exceptions.ContainerNotFoundException;
 import io.openio.sds.exceptions.ObjectNotFoundException;
 import io.openio.sds.exceptions.OioException;
 import io.openio.sds.exceptions.OioSystemException;
-import io.openio.sds.exceptions.ReferenceAlreadyExistException;
 import io.openio.sds.exceptions.ReferenceNotFoundException;
 import io.openio.sds.models.ProxyError;
 
@@ -29,7 +29,7 @@ public class Verifiers {
 
         @Override
         public void verify(OioHttpResponse resp) throws OioException {
-            if(200 == resp.code() || 201 == resp.code()
+            if (200 == resp.code() || 201 == resp.code()
                     || 204 == resp.code())
                 return;
             ProxyError err = extractError(resp);
@@ -52,7 +52,7 @@ public class Verifiers {
 
         @Override
         public void verify(OioHttpResponse resp) throws OioException {
-            if(200 == resp.code() || 201 == resp.code()
+            if (200 == resp.code() || 201 == resp.code()
                     || 204 == resp.code())
                 return;
             ProxyError err = extractError(resp);
@@ -61,6 +61,8 @@ public class Verifiers {
                 throw new BadRequestException(err.toString());
             case 406:
                 throw new ContainerNotFoundException(err.toString());
+            case 438:
+                throw new ContainerNotEmptyException(err.toString());
             case 500:
                 throw new OioSystemException(err.toString());
             default:
@@ -73,7 +75,7 @@ public class Verifiers {
 
         @Override
         public void verify(OioHttpResponse resp) throws OioException {
-            if(200 == resp.code() || 201 == resp.code()
+            if (200 == resp.code() || 201 == resp.code()
                     || 204 == resp.code())
                 return;
             ProxyError err = extractError(resp);
@@ -94,7 +96,7 @@ public class Verifiers {
 
         @Override
         public void verify(OioHttpResponse resp) throws OioException {
-            if(200 == resp.code() || 201 == resp.code()
+            if (200 == resp.code() || 201 == resp.code()
                     || 204 == resp.code())
                 return;
             ProxyError err = extractError(resp);
@@ -110,7 +112,6 @@ public class Verifiers {
             }
         }
     };
-    
 
     public static final OioHttpResponseVerifier RAWX_VERIFIER = new OioHttpResponseVerifier() {
 

@@ -6,6 +6,8 @@ import io.openio.sds.settings.ProxySettings;
 
 public class TestHelper {
 
+    private static final String TEST_ACCOUNT = "TEST";
+    
     public static TestHelper INSTANCE;
 
     private static ProxySettings proxySettings = new ProxySettings()
@@ -23,16 +25,20 @@ public class TestHelper {
         return proxySettings;
     }
 
-    public String ns() {
+    public static String ns() {
         return "NS";
     }
 
-    public String proxyd() {
+    public static String proxyd() {
         return "http://127.0.0.1:6002";
+    }
+    
+    public static String testAccount(){
+        return TEST_ACCOUNT;
     }
 
     // TODO provide actual test_file
-    public String test_file() {
+    public static String test_file() {
         return "/test/file";
     }
 
