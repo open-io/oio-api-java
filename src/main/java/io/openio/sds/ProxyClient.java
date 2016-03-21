@@ -628,6 +628,8 @@ public class ProxyClient {
      *            uploaded object
      * @param reqId
      *            the id to use to identify the request
+     * @param version
+     *            the version to set (could be {@code null} to the object
      * @return the validated object.
      * @throws OioException
      *             if any error occurs during request execution
@@ -1167,7 +1169,7 @@ public class ProxyClient {
     private ObjectInfo objectInfoAndClose(OioUrl url, OioHttpResponse resp) {
         boolean success = false;
         try {
-            ObjectInfo oinf =  fillObjectInfo(url, resp)
+            ObjectInfo oinf = fillObjectInfo(url, resp)
                     .chunks(bodyChunk(resp));
             success = true;
             return oinf;
@@ -1207,7 +1209,7 @@ public class ProxyClient {
         try {
             Type t = new TypeToken<List<T>>() {
             }.getType();
-            List<T> res =  gson().fromJson(new JsonReader(
+            List<T> res = gson().fromJson(new JsonReader(
                     new InputStreamReader(resp.body(), OIO_CHARSET)), t);
             success = true;
             return res;
@@ -1223,7 +1225,7 @@ public class ProxyClient {
         try {
             Type t = new TypeToken<List<ServiceInfo>>() {
             }.getType();
-            List<ServiceInfo> res=  gson().fromJson(new JsonReader(
+            List<ServiceInfo> res = gson().fromJson(new JsonReader(
                     new InputStreamReader(resp.body(), OIO_CHARSET)), t);
             success = true;
             return res;
@@ -1233,13 +1235,11 @@ public class ProxyClient {
             resp.close(success);
         }
     }
-    
 
     private String versionHeader(ObjectInfo oinf, Long version) {
         return null == version ? null == oinf.version() ? null
                 : oinf.version().toString()
                 : version.toString();
     }
-
 
 }

@@ -35,13 +35,13 @@ public class SocketPool {
     }
 
     public SocketPool(OioHttpSettings settings, InetSocketAddress target,
-            boolean startCleaner) {
+            boolean selfCleaning) {
         this.settings = settings;
         this.leased = new AtomicInteger(0);
         this.target = target;
         this.q = new ArrayBlockingQueue<PooledSocket>(
                 settings.pooling().maxPerRoute());
-        if (startCleaner) {
+        if (selfCleaning) {
             this.selfCleaner = new SelfCleaner();
             this.selfCleaner.start();
         }
@@ -52,11 +52,7 @@ public class SocketPool {
             selfCleaner.interrupt();
         Iterator<PooledSocket> it = q.iterator();
         while (it.hasNext())
-            try {
-                it.next().close();
-            } catch (IOException e) {
-                logger.warn("Socket close failure", e);
-            }
+            it.next().quietClose();
     }
 
     public PooledSocket lease() {
@@ -76,19 +72,16 @@ public class SocketPool {
                                     target.toString()));
             }
         }
-        if (null != sock) {
-            sock.markUnpooled();
-            leased.incrementAndGet();
-        }
-        return sock;
+
+        leased.incrementAndGet();
+        return sock.markUnpooled();
     }
 
     public SocketPool release(PooledSocket sock) {
         leased.decrementAndGet();
-        if(sock.isInputShutdown()) {
+        if (sock.isInputShutdown()
+                || !q.offer(sock.lastUsage(System.currentTimeMillis()))) {
             sock.quietClose();
-        } else {
-            q.offer(sock.lastUsage(System.currentTimeMillis()));
         }
         return this;
     }
@@ -96,15 +89,13 @@ public class SocketPool {
     public int size() {
         return q.size();
     }
-    
+
     public int leased() {
         return leased.get();
     }
 
     private PooledSocket tryCreate() {
-        if (canCreate())
-            return create();
-        return null;
+        return canCreate() ? create() : null;
     }
 
     private boolean canCreate() {
@@ -138,7 +129,8 @@ public class SocketPool {
                     p.quietClose();
                 } else {
                     stop = true;
-                    q.offer(p);
+                    if (!q.offer(p))
+                        p.quietClose();
                 }
             }
         }
@@ -156,8 +148,8 @@ public class SocketPool {
             try {
                 sleep(settings.pooling().cleanDelay() * 1000);
                 while (true) {
-                    sleep(settings.pooling().cleanRate() * 1000);
                     clean();
+                    sleep(settings.pooling().cleanRate() * 1000);
                 }
             } catch (InterruptedException e) {
                 logger.debug("Pool cleaner thread interrupted");

@@ -2,6 +2,7 @@ package io.openio.sds.socket;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.openio.sds.logging.SdsLogger;
 import io.openio.sds.logging.SdsLoggerFactory;
@@ -17,19 +18,20 @@ public class PooledSocket extends Socket {
             .getLogger(PooledSocket.class);
 
     private SocketPool pool;
-    private boolean pooled = false;
+    private AtomicBoolean pooled;
     private long lastUsage;
 
     PooledSocket(SocketPool pool) {
         super();
         this.pool = pool;
+        this.pooled = new AtomicBoolean(false);
     }
 
     @Override
     public void close() throws IOException {
-        if (!pooled) {
+        if (!pooled.get()) {
             pool.release(this);
-            pooled = true;
+            pooled.set(true);
         } 
     }
 
@@ -42,7 +44,7 @@ public class PooledSocket extends Socket {
     }
 
     PooledSocket markUnpooled() {
-        this.pooled = false;
+        this.pooled.set(false);
         return this;
     }
 

@@ -137,8 +137,8 @@ public class PoolingSettings {
     /**
      * Specifies the max leased socket allowed in total
      * 
-     * @param maxTotal
-     * @return
+     * @param maxTotal the value to set
+     * @return this
      */
     public PoolingSettings maxTotal(Integer maxTotal) {
         this.maxTotal = maxTotal;

@@ -25,7 +25,7 @@ public class SocketPoolTest {
         OioHttpSettings settings = new OioHttpSettings();
         settings.pooling().cleanDelay(1L)
                 .cleanRate(1L)
-                .socketIdleTimeout(1000)
+                .socketIdleTimeout(500)
                 .maxPerRoute(20)
                 .maxWait(100);
         pool = new SocketPool(settings,
@@ -67,7 +67,7 @@ public class SocketPoolTest {
             threads[i] = new Thread() {
                 @Override
                 public void run() {
-                    for (int i = 0; i < 50; i++) {
+                    for (int j = 0; j < 50; j++) {
                         PooledSocket sock = pool.lease();
                         try {
                             Thread.sleep(10);
@@ -84,7 +84,7 @@ public class SocketPoolTest {
             threads[i].start();
         for (int i = 0; i < 10; i++)
             threads[i].join();
-        Thread.sleep(3000);
+        Thread.sleep(4000);
         Assert.assertEquals(0, pool.size());
         Assert.assertEquals(0, pool.leased());
     }
