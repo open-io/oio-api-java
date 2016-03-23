@@ -16,7 +16,8 @@ import io.openio.sds.models.NamespaceInfo;
 import io.openio.sds.models.ObjectInfo;
 import io.openio.sds.models.ObjectList;
 import io.openio.sds.models.OioUrl;
-import io.openio.sds.settings.Settings;
+import io.openio.sds.proxy.ProxyClient;
+import io.openio.sds.rawx.RawxClient;
 
 /**
  * Basis implementation of {@link Client} interface based on {@link OioHttp}
@@ -29,9 +30,9 @@ public class DefaultClient implements Client {
     private final ProxyClient proxy;
     private final RawxClient rawx;
 
-    DefaultClient(OioHttp http, Settings settings) {
-        this.proxy = new ProxyClient(http, settings.proxy());
-        this.rawx = new RawxClient(http, settings.rawx());
+    DefaultClient(ProxyClient proxy, RawxClient rawx) {
+        this.proxy = proxy;
+        this.rawx = rawx;
     }
 
     public ProxyClient proxy() {

@@ -1,4 +1,4 @@
-package io.openio.sds;
+package io.openio.sds.rawx;
 
 import static io.openio.sds.common.Check.checkArgument;
 import static io.openio.sds.common.IdGen.requestId;
@@ -45,7 +45,6 @@ import io.openio.sds.logging.SdsLogger;
 import io.openio.sds.logging.SdsLoggerFactory;
 import io.openio.sds.models.ChunkInfo;
 import io.openio.sds.models.ObjectInfo;
-import io.openio.sds.settings.RawxSettings;
 
 /**
  * 
@@ -65,7 +64,7 @@ public class RawxClient {
     private final ExecutorService executors;
     private final RawxSettings settings;
 
-    RawxClient(OioHttp http, RawxSettings settings) {
+    public RawxClient(OioHttp http, RawxSettings settings) {
         this.http = http;
         this.settings = settings;
         this.executors = new ThreadPoolExecutor(MIN_WORKERS,
@@ -267,7 +266,7 @@ public class RawxClient {
         int done = 0;
         while (done < size) {
             byte[] b = new byte[Math.min(size.intValue() - done,
-                    settings.bufsize())];
+                    settings.http().receiveBufferSize())];
             try {
                 done += fill(b, data);
                 for (FeedableInputStream in : gens) {

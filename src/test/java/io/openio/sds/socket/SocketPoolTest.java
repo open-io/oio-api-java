@@ -10,6 +10,8 @@ import org.junit.Test;
 
 import io.openio.sds.exceptions.OioException;
 import io.openio.sds.http.OioHttpSettings;
+import io.openio.sds.http.PooledSocket;
+import io.openio.sds.pool.Pool;
 
 /**
  * 
@@ -18,7 +20,7 @@ import io.openio.sds.http.OioHttpSettings;
  */
 public class SocketPoolTest {
 
-    private SocketPool pool;
+    private Pool pool;
 
     @Before
     public void before() {
@@ -28,7 +30,7 @@ public class SocketPoolTest {
                 .socketIdleTimeout(500)
                 .maxPerRoute(20)
                 .maxWait(100);
-        pool = new SocketPool(settings,
+        pool = new Pool(settings,
                 new InetSocketAddress("127.0.0.1", 6002),
                 true);
     }
@@ -67,7 +69,7 @@ public class SocketPoolTest {
             threads[i] = new Thread() {
                 @Override
                 public void run() {
-                    for (int j = 0; j < 50; j++) {
+                    for (int j = 0; j < 1000; j++) {
                         PooledSocket sock = pool.lease();
                         try {
                             Thread.sleep(10);

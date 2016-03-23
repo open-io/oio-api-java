@@ -41,7 +41,7 @@ public class OioHttpResponse {
         this.sock = sock;
     }
 
-    public static OioHttpResponse build(Socket sock, boolean consumeBeforeClose) throws IOException {
+    public static OioHttpResponse build(Socket sock) throws IOException {
         return new OioHttpResponse(sock)
                 .responseHead();
     }

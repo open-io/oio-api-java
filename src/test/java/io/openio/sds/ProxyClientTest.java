@@ -12,6 +12,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import io.openio.sds.common.SocketProviders;
 import io.openio.sds.exceptions.ContainerNotFoundException;
 import io.openio.sds.exceptions.OioException;
 import io.openio.sds.exceptions.ReferenceNotFoundException;
@@ -24,6 +25,7 @@ import io.openio.sds.models.NamespaceInfo;
 import io.openio.sds.models.ObjectInfo;
 import io.openio.sds.models.OioUrl;
 import io.openio.sds.models.ServiceInfo;
+import io.openio.sds.proxy.ProxyClient;
 
 public class ProxyClientTest {
 
@@ -31,7 +33,7 @@ public class ProxyClientTest {
 
     @BeforeClass
     public static void setup() {
-        proxy = new ProxyClient(OioHttp.http(new OioHttpSettings()),
+        proxy = new ProxyClient(OioHttp.http(new OioHttpSettings(),
                 TestHelper.proxySettings());
     }
 

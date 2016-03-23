@@ -23,11 +23,11 @@ import java.util.Map.Entry;
 import com.google.gson.stream.JsonReader;
 
 import io.openio.sds.common.Check;
+import io.openio.sds.common.SocketProvider;
 import io.openio.sds.exceptions.OioException;
 import io.openio.sds.exceptions.OioSystemException;
 import io.openio.sds.logging.SdsLogger;
 import io.openio.sds.logging.SdsLoggerFactory;
-import io.openio.sds.socket.SocketPoolGroup;
 
 /**
  * Simple HTTP client
@@ -44,17 +44,18 @@ public class OioHttp {
 
     private OioHttpSettings settings;
 
-    private SocketPoolGroup pools;
+    private SocketProvider socketProvider;
 
-    private OioHttp(OioHttpSettings settings, SocketPoolGroup pools) {
+    private OioHttp(OioHttpSettings settings, SocketProvider socketProvider) {
         this.settings = settings;
-        this.pools = pools;
+        this.socketProvider = socketProvider;
     }
 
-    public static OioHttp http(OioHttpSettings settings) {
+    public static OioHttp http(OioHttpSettings settings,
+            SocketProvider socketProvider) {
         Check.checkArgument(null != settings);
-        SocketPoolGroup pools = new SocketPoolGroup(settings);
-        return new OioHttp(settings, pools);
+        Check.checkArgument(null != socketProvider);
+        return new OioHttp(settings, socketProvider);
     }
 
     public RequestBuilder post(String uri) {
@@ -144,7 +145,7 @@ public class OioHttp {
         public OioHttpResponse execute() throws OioException {
             Socket sock = null;
             try {
-                sock = pools.lease(uri.getHost(), uri.getPort());
+                sock = socketProvider.getSocket(uri.getHost(), uri.getPort());
                 sendRequest(sock);
                 OioHttpResponse resp = readResponse(sock);
                 try {
@@ -164,7 +165,7 @@ public class OioHttp {
                                 ioe);
                     }
                 throw new OioSystemException("Http request execution error", e);
-            } 
+            }
         }
 
         public <T> T execute(Class<T> c) {
@@ -183,14 +184,14 @@ public class OioHttp {
         }
 
         private OioHttpResponse readResponse(Socket sock) throws IOException {
-            return OioHttpResponse.build(sock, settings.pooling().enabled());
+            return OioHttpResponse.build(sock);
         }
 
         private void sendRequest(Socket sock) throws IOException {
             headers.put("Host", sock.getLocalAddress().toString().substring(1)
                     + ":" + sock.getLocalPort());
-            headers.put("Connection",
-                    settings.pooling().enabled() ? "keep-alive" : "close");
+            headers.put("Connection", socketProvider.reusableSocket()
+                    ? "keep-alive" : "close");
             headers.put("Accept", "*/*");
             headers.put("Accept-Encoding", "gzip, deflate");
             headers.put("User-Agent", "oio-http");

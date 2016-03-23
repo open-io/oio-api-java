@@ -1,4 +1,4 @@
-package io.openio.sds.socket;
+package io.openio.sds.http;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -6,22 +6,24 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.openio.sds.logging.SdsLogger;
 import io.openio.sds.logging.SdsLoggerFactory;
+import io.openio.sds.pool.Pool;
+import io.openio.sds.pool.Poolable;
 
 /**
  * 
  * @author Christopher Dedeurwaerder
  *
  */
-public class PooledSocket extends Socket {
+public class PooledSocket extends Socket implements Poolable {
 
     private static final SdsLogger logger = SdsLoggerFactory
             .getLogger(PooledSocket.class);
 
-    private SocketPool pool;
+    private Pool<PooledSocket> pool;
     private AtomicBoolean pooled;
     private long lastUsage;
 
-    PooledSocket(SocketPool pool) {
+    PooledSocket(Pool<PooledSocket> pool) {
         super();
         this.pool = pool;
         this.pooled = new AtomicBoolean(false);
@@ -43,18 +45,24 @@ public class PooledSocket extends Socket {
         }
     }
 
-    PooledSocket markUnpooled() {
+    @Override
+    public boolean reusable() {
+        return !this.isInputShutdown();
+    }
+
+    @Override
+    public void lastUsage(long lastUsage) {
+        this.lastUsage = lastUsage;
+    }
+
+    @Override
+    public void markUnpooled() {
         this.pooled.set(false);
-        return this;
     }
 
-    long lastUsage() {
-        return lastUsage;
-    }
-
-    public PooledSocket lastUsage(long t) {
-        this.lastUsage = t;
-        return this;
+    @Override
+    public long lastUsage() {
+       return this.lastUsage;
     }
 
 }

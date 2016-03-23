@@ -1,4 +1,4 @@
-package io.openio.sds;
+package io.openio.sds.proxy;
 
 import static io.openio.sds.common.Check.checkArgument;
 import static io.openio.sds.common.IdGen.requestId;
@@ -95,7 +95,6 @@ import io.openio.sds.models.ObjectList;
 import io.openio.sds.models.OioUrl;
 import io.openio.sds.models.ReferenceInfo;
 import io.openio.sds.models.ServiceInfo;
-import io.openio.sds.settings.ProxySettings;
 
 /**
  * Simple OpenIO proxyd http client based on API reference available at

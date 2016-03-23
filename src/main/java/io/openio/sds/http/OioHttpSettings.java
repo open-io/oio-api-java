@@ -1,6 +1,6 @@
 package io.openio.sds.http;
 
-import io.openio.sds.settings.PoolingSettings;
+import io.openio.sds.pool.PoolingSettings;
 
 /**
  * 
@@ -13,7 +13,6 @@ public class OioHttpSettings {
     private Integer receiveBufferSize = 8192;
     private Integer connectTimeout = 30000;
     private Integer readTimeout = 60000;
-    private PoolingSettings pooling = new PoolingSettings();
 
     public OioHttpSettings() {
     }
@@ -51,15 +50,6 @@ public class OioHttpSettings {
 
     public OioHttpSettings readTimeout(Integer readTimeout) {
         this.readTimeout = readTimeout;
-        return this;
-    }
-
-    public PoolingSettings pooling() {
-        return pooling;
-    }
-
-    public OioHttpSettings pooling(PoolingSettings pooling) {
-        this.pooling = pooling;
         return this;
     }
 }

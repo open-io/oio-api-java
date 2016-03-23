@@ -2,7 +2,7 @@ package io.openio.sds;
 
 import java.util.Random;
 
-import io.openio.sds.settings.ProxySettings;
+import io.openio.sds.proxy.ProxySettings;
 
 public class TestHelper {
 

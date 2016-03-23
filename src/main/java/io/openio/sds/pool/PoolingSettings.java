@@ -1,4 +1,4 @@
-package io.openio.sds.settings;
+package io.openio.sds.pool;
 
 /**
  * 
@@ -10,10 +10,10 @@ public class PoolingSettings {
     private Boolean enabled = true;
     private Long cleanDelay = 1L;
     private Long cleanRate = 1L;
-    private Integer maxPerRoute = 1024;
+    private Integer maxForEach = 1024;
     private Integer maxTotal = 8192;
     private Integer maxWait = 5000;
-    private Integer socketIdleTimeout = 3000;
+    private Integer idleTimeout = 3000;
 
     public PoolingSettings() {
     }
@@ -88,8 +88,8 @@ public class PoolingSettings {
      * 
      * @return the socket idle timeout in milliseconds
      */
-    public Integer socketIdleTimeout() {
-        return socketIdleTimeout;
+    public Integer idleTimeout() {
+        return idleTimeout;
     }
 
     /**
@@ -99,29 +99,29 @@ public class PoolingSettings {
      *            the socket idle timeout in milliseconds
      * @return this
      */
-    public PoolingSettings socketIdleTimeout(Integer socketIdleTimeout) {
-        this.socketIdleTimeout = socketIdleTimeout;
+    public PoolingSettings idleTimeout(Integer idleTimeout) {
+        this.idleTimeout = idleTimeout;
         return this;
     }
 
     /**
      * Returns the max leased socket allowed per route
      * 
-     * @return the max leased socket allowed per route
+     * @return the max leased item allowed by pool
      */
-    public Integer maxPerRoute() {
-        return maxPerRoute;
+    public Integer maxForEach() {
+        return maxForEach;
     }
 
     /**
-     * Specifies the max leased socket allowed per route
+     * Specifies the max leased items in each pool in a pool group
      * 
-     * @param maxPerRoute
+     * @param maxForEach
      *            the value to set
      * @return this
      */
-    public PoolingSettings maxPerRoute(Integer maxPerRoute) {
-        this.maxPerRoute = maxPerRoute;
+    public PoolingSettings maxForEach(Integer maxForEach) {
+        this.maxForEach = maxForEach;
         return this;
     }
 

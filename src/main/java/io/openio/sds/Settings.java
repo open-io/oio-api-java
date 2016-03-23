@@ -1,4 +1,7 @@
-package io.openio.sds.settings;
+package io.openio.sds;
+
+import io.openio.sds.proxy.ProxySettings;
+import io.openio.sds.rawx.RawxSettings;
 
 /**
  * 

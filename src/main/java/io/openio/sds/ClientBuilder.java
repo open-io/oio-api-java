@@ -1,13 +1,21 @@
 package io.openio.sds;
 
-import static io.openio.sds.common.Check.checkArgument;
+import static io.openio.sds.http.OioHttp.http;
+import static java.lang.String.format;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.net.URI;
+
+import io.openio.sds.common.SocketProvider;
+import io.openio.sds.exceptions.OioException;
 import io.openio.sds.http.OioHttp;
 import io.openio.sds.http.OioHttpSettings;
-import io.openio.sds.settings.ProxySettings;
-import io.openio.sds.settings.RawxSettings;
-import io.openio.sds.settings.Settings;
-
+import io.openio.sds.http.SocketPool;
+import io.openio.sds.pool.PoolingSettings;
+import io.openio.sds.proxy.ProxyClient;
+import io.openio.sds.rawx.RawxClient;
 
 /**
  * Builder for @link {@link Client} implementations
@@ -17,70 +25,21 @@ import io.openio.sds.settings.Settings;
  */
 public class ClientBuilder {
 
-    private String ns;
-    private String proxydUrl;
-    private OioHttp http;
-
     /**
-     * Generates a client builder to prepare {@link Client} configuration
-     * 
-     * @return a new {@code ClientBuilder}
+     * Creates a clien using the specified settings
+     * @param settings the settings to use
+     * @return The build {@link Client}
      */
-    public static ClientBuilder prepareClient() {
-        return new ClientBuilder();
-    }
-
-    /**
-     * Defines the url of the OpenIO proxyd service
-     * 
-     * @param proxydUrl
-     *            the url to set
-     * @return this
-     */
-    public ClientBuilder proxydUrl(String proxydUrl) {
-        this.proxydUrl = proxydUrl;
-        return this;
-    }
-
-    /**
-     * Defines the OpenIO Namespace
-     *
-     * @param ns
-     *            the OpenIO Namespace to set
-     * @return this
-     */
-    public ClientBuilder ns(String ns) {
-        this.ns = ns;
-        return this;
-    }
-
-    /**
-     * Set a specific {@link OioHttp} instance to be used by the built
-     * clients
-     * 
-     * @param http
-     *            the OioHttp instance to set
-     * @return this
-     */
-    public ClientBuilder http(OioHttp http) {
-        this.http = http;
-        return this;
-    }
-
-    /**
-     * Builds a client using the specified settings
-     * 
-     * @return the new client
-     */
-    public DefaultClient build() {
-        checkArgument(null != ns, "Namespace cannot be null");
-        checkArgument(null != proxydUrl, "Proxyd URL cannot be null");
-        return new DefaultClient(
-                null == http ? OioHttp.http(new OioHttpSettings()) : http,
-                new Settings().proxy(new ProxySettings()
-                        .ns(ns)
-                        .url(proxydUrl))
-                        .rawx(new RawxSettings()));
+    public static DefaultClient newClient(Settings settings) {
+        OioHttp proxyHttp = http(settings.proxy().http(),
+                proxySocketProvider(
+                        settings.proxy().url(), settings.proxy().http(),
+                        settings.proxy().pooling()));
+        OioHttp rawxHttp = http(settings.rawx().http(),
+                rawxSocketProvider(settings.rawx().http()));
+        ProxyClient proxy = new ProxyClient(proxyHttp, settings.proxy());
+        RawxClient rawx = new RawxClient(rawxHttp, settings.rawx());
+        return new DefaultClient(proxy, rawx);
     }
 
     /**
@@ -94,10 +53,84 @@ public class ClientBuilder {
      * @return The build {@link Client}
      */
     public static DefaultClient newClient(String ns, String proxydUrl) {
-        return new DefaultClient(OioHttp.http(new OioHttpSettings()),
-                new Settings().proxy(new ProxySettings()
-                        .ns(ns)
-                        .url(proxydUrl))
-                        .rawx(new RawxSettings()));
+        Settings settings = new Settings();
+        settings.proxy().url(proxydUrl);
+        settings.proxy().ns(ns);
+        return newClient(settings);
+    }
+
+    private static SocketProvider proxySocketProvider(String url,
+            final OioHttpSettings http, PoolingSettings pooling) {
+        URI uri = URI.create(url);
+        final InetSocketAddress target = new InetSocketAddress(uri.getHost(),
+                uri.getPort());
+        if (pooling.enabled()) {
+            final SocketPool pool = new SocketPool(http, pooling, target);
+            return new SocketProvider() {
+
+                @Override
+                public boolean reusableSocket() {
+                    return true;
+                }
+
+                @Override
+                public Socket getSocket(String host, int port) {
+                    return pool.lease();
+                }
+            };
+
+        }
+
+        return new SocketProvider() {
+
+            @Override
+            public boolean reusableSocket() {
+                return false;
+            }
+
+            @Override
+            public Socket getSocket(String host, int port) {
+                InetSocketAddress target = new InetSocketAddress(host, port);
+                try {
+                    Socket sock = new Socket();
+                    sock.setSendBufferSize(http.sendBufferSize());
+                    sock.setReuseAddress(true);
+                    sock.setReceiveBufferSize(http.receiveBufferSize());
+                    sock.connect(target, http.connectTimeout());
+                    return sock;
+                } catch (IOException e) {
+                    throw new OioException(format(
+                            "Unable to get connection to %s",
+                            target.toString()), e);
+                }
+            }
+        };
+    }
+
+    private static SocketProvider rawxSocketProvider(
+            final OioHttpSettings http) {
+        return new SocketProvider() {
+            @Override
+            public boolean reusableSocket() {
+                return false;
+            }
+
+            @Override
+            public Socket getSocket(String host, int port) {
+                InetSocketAddress target = new InetSocketAddress(host, port);
+                try {
+                    Socket sock = new Socket();
+                    sock.setSendBufferSize(http.sendBufferSize());
+                    sock.setReuseAddress(true);
+                    sock.setReceiveBufferSize(http.receiveBufferSize());
+                    sock.connect(target, http.connectTimeout());
+                    return sock;
+                } catch (IOException e) {
+                    throw new OioException(format(
+                            "Unable to get connection to %s",
+                            target.toString()), e);
+                }
+            }
+        };
     }
 }
