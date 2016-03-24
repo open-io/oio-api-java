@@ -21,40 +21,49 @@ import com.google.gson.stream.JsonReader;
 
 import io.openio.sds.models.Position;
 
+/**
+ * Gson utility class
+ */
 public class JsonUtils {
 
-    private static final GsonBuilder builder = new GsonBuilder()
-            .registerTypeAdapter(Position.class, new PositionAdapter());
+	private static final GsonBuilder builder = new GsonBuilder()
+	        .registerTypeAdapter(Position.class, new PositionAdapter());
 
-    private static final Type MAP_TYPE = new TypeToken<Map<String, String>>() {
-    }.getType();
+	private static final Type MAP_TYPE = new TypeToken<Map<String, String>>() {
+	}.getType();
 
-    public static Gson gson() {
-        return builder.create();
-    }
+	/**
+	 * Returns a new {@code Gson} instance with OpenIO adapters
+	 * 
+	 * @return the gson instance
+	 */
+	public static Gson gson() {
+		return builder.create();
+	}
 
-    public static Map<String, String> jsonToMap(String map) {
-        return gson().fromJson(map, MAP_TYPE);
-    }
+	public static Map<String, String> jsonToMap(String map) {
+		return gson().fromJson(map, MAP_TYPE);
+	}
 
-    public static Map<String, String> jsonToMap(InputStream in) {
-        return gson().fromJson(new JsonReader(
-                new InputStreamReader(in, OIO_CHARSET)), MAP_TYPE);
-    }
+	public static Map<String, String> jsonToMap(InputStream in) {
+		return gson().fromJson(
+		        new JsonReader(new InputStreamReader(in, OIO_CHARSET)),
+		        MAP_TYPE);
+	}
 
-    private static final class PositionAdapter
-            implements JsonSerializer<Position>, JsonDeserializer<Position> {
+	private static final class PositionAdapter
+	        implements JsonSerializer<Position>, JsonDeserializer<Position> {
 
-        @Override
-        public Position deserialize(JsonElement json, Type typeOfT,
-                JsonDeserializationContext context) throws JsonParseException {
-            return Position.parse(json.getAsString());
-        }
+		@Override
+		public Position deserialize(JsonElement json, Type typeOfT,
+		        JsonDeserializationContext context) throws JsonParseException {
+			return Position.parse(json.getAsString());
+		}
 
-        @Override
-        public JsonElement serialize(Position src, Type typeOfSrc,
-                JsonSerializationContext context) {
-            return new JsonPrimitive(src.toString());
-        }
-    }
+		@Override
+		public JsonElement serialize(Position src, Type typeOfSrc,
+		        JsonSerializationContext context) {
+			return new JsonPrimitive(src.toString());
+		}
+	}
 }

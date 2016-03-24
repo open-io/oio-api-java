@@ -56,13 +56,18 @@ public class PooledSocket extends Socket implements Poolable {
     }
 
     @Override
-    public void markUnpooled() {
-        this.pooled.set(false);
+    public void setPooled(boolean pooled) {
+        this.pooled.set(pooled);
     }
 
     @Override
     public long lastUsage() {
        return this.lastUsage;
     }
+
+	@Override
+	public boolean isPooled() {
+		return this.pooled.get();
+	}
 
 }

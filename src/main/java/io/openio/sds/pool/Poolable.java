@@ -28,9 +28,7 @@ public interface Poolable {
      */
     public void lastUsage(long lastUsage);
     
-    /**
-     * 
-     */
-    public void markUnpooled();
-
+    public void setPooled(boolean pooled);
+    
+    public boolean isPooled();
 }
