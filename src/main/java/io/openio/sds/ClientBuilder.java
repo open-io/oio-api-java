@@ -22,7 +22,7 @@ import io.openio.sds.rawx.RawxClient;
 public class ClientBuilder {
 
 	/**
-	 * Creates a clien using the specified settings
+	 * Creates a client using the specified settings
 	 * 
 	 * @param settings
 	 *            the settings to use

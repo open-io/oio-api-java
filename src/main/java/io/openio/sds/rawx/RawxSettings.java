@@ -9,7 +9,7 @@ import io.openio.sds.http.OioHttpSettings;
  */
 public class RawxSettings {
 
-    private OioHttpSettings http;
+    private OioHttpSettings http = new OioHttpSettings();
 
     public RawxSettings() {
     }

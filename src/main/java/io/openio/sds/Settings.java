@@ -10,8 +10,8 @@ import io.openio.sds.rawx.RawxSettings;
  */
 public class Settings {
 
-    private ProxySettings proxy;
-    private RawxSettings rawx;
+    private ProxySettings proxy = new ProxySettings();
+    private RawxSettings rawx = new RawxSettings();
     
     public ProxySettings proxy() {
         return proxy;

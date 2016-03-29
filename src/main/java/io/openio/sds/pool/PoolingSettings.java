@@ -93,10 +93,10 @@ public class PoolingSettings {
     }
 
     /**
-     * Specifies the socket idle timeout in milliseconds
+     * Specifies the idle timeout in milliseconds
      * 
-     * @param socketIdleTimeout
-     *            the socket idle timeout in milliseconds
+     * @param idleTimeout
+     *            the value to set
      * @return this
      */
     public PoolingSettings idleTimeout(Integer idleTimeout) {

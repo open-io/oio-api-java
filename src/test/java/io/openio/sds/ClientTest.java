@@ -26,7 +26,6 @@ import org.junit.Test;
 import io.openio.sds.exceptions.ContainerExistException;
 import io.openio.sds.exceptions.ContainerNotFoundException;
 import io.openio.sds.exceptions.ObjectNotFoundException;
-import io.openio.sds.exceptions.OioException;
 import io.openio.sds.models.ContainerInfo;
 import io.openio.sds.models.ObjectInfo;
 import io.openio.sds.models.OioUrl;
@@ -127,11 +126,7 @@ public class ClientTest {
                 client.deleteObject(url);
             }
         } finally {
-            try {
-                client.deleteContainer(url);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            client.deleteContainer(url);
         }
 
     }
@@ -166,9 +161,6 @@ public class ClientTest {
         client.createContainer(url);
         try {
             client.deleteObject(url);
-        } catch (OioException e) {
-            e.printStackTrace();
-            throw e;
         } finally {
             client.deleteContainer(url);
         }

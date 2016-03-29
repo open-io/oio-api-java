@@ -34,8 +34,8 @@ public class Hex {
 
 	/**
 	 * Converts the specified byte array in its hexadecimal string format (in upper case)
-	 * @param bytes
-	 * @return
+	 * @param bytes the byte array to convert
+	 * @return the hexadecimal format
 	 */
 	public static String toHex(byte[] bytes) {
 		char[] hexChars = new char[bytes.length * 2];

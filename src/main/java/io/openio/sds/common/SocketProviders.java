@@ -36,7 +36,7 @@ public class SocketProviders {
 		};
 	}
 	
-	public static SocketProvider directSocketProvider(OioHttpSettings http) {
+	public static SocketProvider directSocketProvider(final OioHttpSettings http) {
 		return new SocketProvider() {
 
 			@Override
