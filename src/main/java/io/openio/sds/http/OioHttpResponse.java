@@ -71,15 +71,19 @@ public class OioHttpResponse {
         return null == str ? 0L : Long.parseLong(str);
     }
 
-    public OioHttpResponse close() {
+    public OioHttpResponse close(boolean reuse) {
         try {
+            if(!reuse)               
+                sock.shutdownInput();
             sock.close();
-            if (null != sis)
-                sis.close();
         } catch (Exception e) {
-            logger.warn("Close failure, possible leak", e);
+            logger.warn("Socket close failure, possible leak", e);
         }
         return this;
+    }
+    
+    public OioHttpResponse close() {
+        return close(true);
     }
 
     private OioHttpResponse responseHead() throws IOException {

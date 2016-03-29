@@ -16,14 +16,14 @@ public class ObjectInfo {
 
     private OioUrl url;
     private String oid;
-    private long ctime;
-    private boolean deleted;
+    private Long ctime;
+    private Boolean deleted = false;
     private String policy;
     private String hash;
     private String hashMethod;
     private String chunkMethod;
-    private long size;
-    private long version;
+    private Long size;
+    private Long version;
     private String mtype;
     private List<ChunkInfo> chunks;
     private transient Map<Integer, List<ChunkInfo>> sortedChunks;
@@ -58,7 +58,7 @@ public class ObjectInfo {
         return this;
     }
 
-    public ObjectInfo size(long size) {
+    public ObjectInfo size(Long size) {
         this.size = size;
         return this;
     }
@@ -90,7 +90,7 @@ public class ObjectInfo {
         return hash;
     }
 
-    public long size() {
+    public Long size() {
         return size;
     }
 
@@ -107,11 +107,11 @@ public class ObjectInfo {
         return deleted;
     }
 
-    public long ctime() {
+    public Long ctime() {
         return ctime;
     }
 
-    public ObjectInfo ctime(long ctime) {
+    public ObjectInfo ctime(Long ctime) {
         this.ctime = ctime;
         return this;
     }
@@ -134,11 +134,11 @@ public class ObjectInfo {
         return this;
     }
 
-    public long version() {
+    public Long version() {
         return version;
     }
 
-    public ObjectInfo version(long version) {
+    public ObjectInfo version(Long version) {
         this.version = version;
         return this;
     }
@@ -152,12 +152,12 @@ public class ObjectInfo {
         return this;
     }
 
-    public int nbchunks() {
+    public Integer nbchunks() {
         return sortedChunks.size();
     }
 
     // FIXME Not good for RAIN
-    public long chunksize(int pos) {
+    public Long chunksize(Integer pos) {
         return sortedChunks.get(pos).get(0).size();
     }
 

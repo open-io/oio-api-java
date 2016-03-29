@@ -1,9 +1,11 @@
 package io.openio.sds.common;
 
+import static io.openio.sds.common.OioConstants.OIO_REQUEST_ID_HEADER;
+import static io.openio.sds.http.Verifiers.RAWX_VERIFIER;
+
 import java.io.IOException;
 import java.io.InputStream;
 
-import io.openio.sds.RawxClient;
 import io.openio.sds.exceptions.OioException;
 import io.openio.sds.http.OioHttp;
 import io.openio.sds.http.OioHttpResponse;
@@ -28,10 +30,12 @@ public class ObjectInputStream extends InputStream {
     private int pos = 0;
     private int currentRemaining;
     private OioHttpResponse current;
+    private String reqId;
 
-    public ObjectInputStream(ObjectInfo oinf, OioHttp http) {
+    public ObjectInputStream(ObjectInfo oinf, OioHttp http, String reqId) {
         this.oinf = oinf;
         this.http = http;
+        this.reqId = reqId;
     }
 
     @Override
@@ -83,7 +87,8 @@ public class ObjectInputStream extends InputStream {
             logger.debug("dl from " + ci.url());
         try {
             current = http.get(ci.url())
-                    .verifier(RawxClient.RAWX_VERIFIER)
+                    .header(OIO_REQUEST_ID_HEADER, reqId)
+                    .verifier(RAWX_VERIFIER)
                     .execute();
             currentRemaining = ci.size().intValue();
             pos++;

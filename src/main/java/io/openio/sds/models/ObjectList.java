@@ -43,43 +43,57 @@ public class ObjectList {
     }
 
     /**
+     * Returns the prefixes
      * 
-     * @return
+     * @return the prefixes
      */
     public List<String> prefixes() {
         return prefixes;
     }
 
     /**
+     * Returns the options
      * 
-     * @return
+     * @return the options
      */
     public ListOptions listOptions() {
         return listOptions;
     }
 
     /**
+     * Specifies the listing prefixes
      * 
      * @param prefixes
+     *            the value to set
+     * @return this
      */
-    public void prefixes(List<String> prefixes) {
+    public ObjectList prefixes(List<String> prefixes) {
         this.prefixes = prefixes;
+        return this;
     }
 
     /**
+     * Specifies the listing options
      * 
      * @param listOptions
+     *            the value to set
+     * @return this
      */
-    public void listOptions(ListOptions listOptions) {
+    public ObjectList listOptions(ListOptions listOptions) {
         this.listOptions = listOptions;
+        return this;
     }
 
     /**
+     * Specifies if the listing is truncated
      * 
      * @param truncated
+     *            the value to set
+     * @return this
      */
-    public void truncated(boolean truncated) {
+    public ObjectList truncated(boolean truncated) {
         this.truncated = truncated;
+        return this;
     }
 
     /**
@@ -114,17 +128,20 @@ public class ObjectList {
         }
 
         /**
+         * Returns the name of the object
          * 
-         * @return
+         * @return the name of the object
          */
         public String name() {
             return name;
         }
 
         /**
+         * Specifies the name of the object
          * 
          * @param name
-         * @return
+         *            the value to set
+         * @return this
          */
         public ObjectView name(String name) {
             this.name = name;
@@ -132,17 +149,20 @@ public class ObjectList {
         }
 
         /**
+         * Returns the object version
          * 
-         * @return
+         * @return the object version
          */
         public String version() {
             return ver;
         }
 
         /**
+         * Specifies the object version
          * 
          * @param version
-         * @return
+         *            the version to set
+         * @return this
          */
         public ObjectView version(String version) {
             this.ver = version;
@@ -150,17 +170,20 @@ public class ObjectList {
         }
 
         /**
+         * Returns the object creation time
          * 
-         * @return
+         * @return the object creation time
          */
         public String ctime() {
             return ctime;
         }
 
         /**
+         * Specifies the object creation time
          * 
          * @param ctime
-         * @return
+         *            the value to set
+         * @return this
          */
         public ObjectView ctime(String ctime) {
             this.ctime = ctime;
@@ -168,17 +191,20 @@ public class ObjectList {
         }
 
         /**
+         * Returns the system metadata
          * 
-         * @return
+         * @return the system metadata
          */
         public String sysmd() {
             return sysmd;
         }
 
         /**
+         * Specifies the object system metadata
          * 
          * @param sysmd
-         * @return
+         *            the metadata to set
+         * @return this
          */
         public ObjectView sysmd(String sysmd) {
             this.sysmd = sysmd;
@@ -197,9 +223,11 @@ public class ObjectList {
         }
 
         /**
+         * Specifies if content is deleted or not
          * 
          * @param deleted
-         * @return
+         *            the value to set
+         * @return this
          */
         public ObjectView deleted(Boolean deleted) {
             this.deleted = deleted;
@@ -207,17 +235,20 @@ public class ObjectList {
         }
 
         /**
+         * Returns the policy
          * 
-         * @return
+         * @return the policy
          */
         public String policy() {
             return policy;
         }
 
         /**
+         * Specifies the policy
          * 
          * @param policy
-         * @return
+         *            the policy to set
+         * @return this
          */
         public ObjectView policy(String policy) {
             this.policy = policy;
@@ -225,17 +256,20 @@ public class ObjectList {
         }
 
         /**
+         * Returns the hash
          * 
-         * @return
+         * @return the hash
          */
         public String hash() {
             return hash;
         }
 
         /**
+         * Specifies the hash
          * 
          * @param hash
-         * @return
+         *            the hash to set
+         * @return this
          */
         public ObjectView hash(String hash) {
             this.hash = hash;
@@ -243,17 +277,20 @@ public class ObjectList {
         }
 
         /**
+         * Returns the size
          * 
-         * @return
+         * @return the size
          */
         public Long size() {
             return size;
         }
 
         /**
+         * Specifies the size
          * 
          * @param size
-         * @return
+         *            the size to set
+         * @return this
          */
         public ObjectView size(Long size) {
             this.size = size;

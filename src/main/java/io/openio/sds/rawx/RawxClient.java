@@ -1,6 +1,7 @@
-package io.openio.sds;
+package io.openio.sds.rawx;
 
 import static io.openio.sds.common.Check.checkArgument;
+import static io.openio.sds.common.IdGen.requestId;
 import static io.openio.sds.common.OioConstants.CHUNK_META_CHUNK_HASH;
 import static io.openio.sds.common.OioConstants.CHUNK_META_CHUNK_ID;
 import static io.openio.sds.common.OioConstants.CHUNK_META_CHUNK_POS;
@@ -13,7 +14,8 @@ import static io.openio.sds.common.OioConstants.CHUNK_META_CONTENT_PATH;
 import static io.openio.sds.common.OioConstants.CHUNK_META_CONTENT_POLICY;
 import static io.openio.sds.common.OioConstants.CHUNK_META_CONTENT_SIZE;
 import static io.openio.sds.common.OioConstants.CHUNK_META_CONTENT_VERSION;
-import static java.lang.String.format;
+import static io.openio.sds.common.OioConstants.OIO_REQUEST_ID_HEADER;
+import static io.openio.sds.http.Verifiers.RAWX_VERIFIER;
 import static java.nio.ByteBuffer.wrap;
 
 import java.io.ByteArrayInputStream;
@@ -36,18 +38,13 @@ import java.util.concurrent.TimeUnit;
 
 import io.openio.sds.common.FeedableInputStream;
 import io.openio.sds.common.ObjectInputStream;
-import io.openio.sds.exceptions.BadRequestException;
-import io.openio.sds.exceptions.ChunkNotFoundException;
 import io.openio.sds.exceptions.OioException;
 import io.openio.sds.http.OioHttp;
 import io.openio.sds.http.OioHttp.RequestBuilder;
-import io.openio.sds.http.OioHttpResponse;
-import io.openio.sds.http.OioHttpResponseVerifier;
 import io.openio.sds.logging.SdsLogger;
 import io.openio.sds.logging.SdsLoggerFactory;
 import io.openio.sds.models.ChunkInfo;
 import io.openio.sds.models.ObjectInfo;
-import io.openio.sds.settings.RawxSettings;
 
 /**
  * 
@@ -67,7 +64,7 @@ public class RawxClient {
     private final ExecutorService executors;
     private final RawxSettings settings;
 
-    RawxClient(OioHttp http, RawxSettings settings) {
+    public RawxClient(OioHttp http, RawxSettings settings) {
         this.http = http;
         this.settings = settings;
         this.executors = new ThreadPoolExecutor(MIN_WORKERS,
@@ -96,18 +93,36 @@ public class RawxClient {
     /**
      * Uploads the chunks of the specified {@code ObjectInfo} asynchronously
      * 
+     * 
      * @param oinf
      *            the ObjectInfo to deal with
      * @param data
      *            the data to upload
+     * 
      * @return oinf
      */
     public ObjectInfo uploadChunks(ObjectInfo oinf,
             InputStream data) {
+        return uploadChunks(oinf, data, requestId());
+    }
+
+    /**
+     * Uploads the chunks of the specified {@code ObjectInfo} asynchronously
+     * 
+     * @param oinf
+     *            the ObjectInfo to deal with
+     * @param data
+     *            the data to upload
+     * @param reqId
+     *            the id to use to identify the request
+     * @return oinf
+     */
+    public ObjectInfo uploadChunks(ObjectInfo oinf,
+            InputStream data, String reqId) {
         long remaining = oinf.size();
         for (int pos = 0; pos < oinf.nbchunks(); pos++) {
             long csize = Math.min(remaining, oinf.chunksize(pos));
-            uploadPosition(oinf, pos, csize, data);
+            uploadPosition(oinf, pos, csize, data, reqId);
             remaining -= csize;
         }
         return oinf;
@@ -123,11 +138,26 @@ public class RawxClient {
      * @return oinf
      */
     public ObjectInfo uploadChunks(ObjectInfo oinf, File data) {
+        return uploadChunks(oinf, data, requestId());
+    }
+
+    /**
+     * Uploads the chunks of the specified {@code ObjectInfo} asynchronously
+     * 
+     * @param oinf
+     *            the ObjectInfo to deal with
+     * @param data
+     *            the data to upload
+     * @param reqId
+     *            the id to use to identify the request
+     * @return oinf
+     */
+    public ObjectInfo uploadChunks(ObjectInfo oinf, File data, String reqId) {
 
         try {
             FileInputStream fin = new FileInputStream(data);
             try {
-                return uploadChunks(oinf, fin);
+                return uploadChunks(oinf, fin, reqId);
             } finally {
                 try {
                     fin.close();
@@ -140,20 +170,29 @@ public class RawxClient {
         }
     }
 
+    public ObjectInfo uploadChunks(ObjectInfo oinf, byte[] data) {
+        return uploadChunks(oinf, data, requestId());
+    }
+
     public ObjectInfo uploadChunks(
-            ObjectInfo oinf, byte[] data) {
-        return uploadChunks(oinf, new ByteArrayInputStream(data));
+            ObjectInfo oinf, byte[] data, String reqId) {
+        return uploadChunks(oinf, new ByteArrayInputStream(data), reqId);
     }
 
     public InputStream downloadObject(ObjectInfo oinf) {
+        return downloadObject(oinf, requestId());
+    }
+    
+    public InputStream downloadObject(ObjectInfo oinf, String reqId) {
         checkArgument(null != oinf);
-        return new ObjectInputStream(oinf, http);
+        return new ObjectInputStream(oinf, http, reqId);
     }
 
     /* --- INTERNALS --- */
 
     private ObjectInfo uploadPosition(final ObjectInfo oinf,
-            final int pos, final Long size, InputStream data) {
+            final int pos, final Long size, InputStream data,
+            final String reqId) {
         List<ChunkInfo> cil = oinf.sortedChunks().get(pos);
         final List<FeedableInputStream> gens = size == 0 ? null
                 : feedableBodys(cil.size(), size);
@@ -188,6 +227,7 @@ public class RawxClient {
                                 .header(CHUNK_META_CHUNK_ID, ci.id())
                                 .header(CHUNK_META_CHUNK_POS,
                                         ci.pos().toString())
+                                .header(OIO_REQUEST_ID_HEADER, reqId)
                                 .verifier(RAWX_VERIFIER);
                         if (null == gens)
                             builder.body("");
@@ -195,7 +235,7 @@ public class RawxClient {
                             builder.body(in, size);
                         ci.size(size);
                         ci.hash(builder.execute()
-                                .close()
+                                .close(false)
                                 .header(CHUNK_META_CHUNK_HASH));
                     } catch (OioException e) {
                         return e;
@@ -226,7 +266,7 @@ public class RawxClient {
         int done = 0;
         while (done < size) {
             byte[] b = new byte[Math.min(size.intValue() - done,
-                    settings.bufsize())];
+                    settings.http().receiveBufferSize())];
             try {
                 done += fill(b, data);
                 for (FeedableInputStream in : gens) {
@@ -260,27 +300,4 @@ public class RawxClient {
             res.add(new FeedableInputStream(5));
         return res;
     }
-
-    public static final OioHttpResponseVerifier RAWX_VERIFIER = new OioHttpResponseVerifier() {
-
-        @Override
-        public void verify(OioHttpResponse resp) throws OioException {
-            switch (resp.code()) {
-            case 200:
-            case 201:
-            case 204:
-                return;
-            case 400:
-                throw new BadRequestException(resp.msg());
-            case 404:
-                throw new ChunkNotFoundException(resp.msg());
-            case 500:
-                throw new OioException(format("Internal error (%d %s)",
-                        resp.code(), resp.msg()));
-            default:
-                throw new OioException(format("Unmanaged response code (%d %s)",
-                        resp.code(), resp.msg()));
-            }
-        }
-    };
 }

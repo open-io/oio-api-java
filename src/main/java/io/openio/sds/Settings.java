@@ -1,4 +1,7 @@
-package io.openio.sds.settings;
+package io.openio.sds;
+
+import io.openio.sds.proxy.ProxySettings;
+import io.openio.sds.rawx.RawxSettings;
 
 /**
  * 
@@ -7,8 +10,8 @@ package io.openio.sds.settings;
  */
 public class Settings {
 
-    private ProxySettings proxy;
-    private RawxSettings rawx;
+    private ProxySettings proxy = new ProxySettings();
+    private RawxSettings rawx = new RawxSettings();
     
     public ProxySettings proxy() {
         return proxy;

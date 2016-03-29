@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.URI;
 import java.util.HashMap;
@@ -24,6 +23,7 @@ import java.util.Map.Entry;
 import com.google.gson.stream.JsonReader;
 
 import io.openio.sds.common.Check;
+import io.openio.sds.common.SocketProvider;
 import io.openio.sds.exceptions.OioException;
 import io.openio.sds.exceptions.OioSystemException;
 import io.openio.sds.logging.SdsLogger;
@@ -44,13 +44,18 @@ public class OioHttp {
 
     private OioHttpSettings settings;
 
-    private OioHttp(OioHttpSettings settings) {
+    private SocketProvider socketProvider;
+
+    private OioHttp(OioHttpSettings settings, SocketProvider socketProvider) {
         this.settings = settings;
+        this.socketProvider = socketProvider;
     }
 
-    public static OioHttp http(OioHttpSettings settings) {
+    public static OioHttp http(OioHttpSettings settings,
+            SocketProvider socketProvider) {
         Check.checkArgument(null != settings);
-        return new OioHttp(settings);
+        Check.checkArgument(null != socketProvider);
+        return new OioHttp(settings, socketProvider);
     }
 
     public RequestBuilder post(String uri) {
@@ -140,13 +145,7 @@ public class OioHttp {
         public OioHttpResponse execute() throws OioException {
             Socket sock = null;
             try {
-                sock = new Socket();
-                sock.setSendBufferSize(settings.sendBufferSize());
-                sock.setReuseAddress(true);
-                sock.setReceiveBufferSize(settings.receiveBufferSize());
-                sock.connect(
-                        new InetSocketAddress(uri.getHost(), uri.getPort()),
-                        settings.connectTimeout());
+                sock = socketProvider.getSocket(uri.getHost(), uri.getPort());
                 sendRequest(sock);
                 OioHttpResponse resp = readResponse(sock);
                 try {
@@ -154,15 +153,16 @@ public class OioHttp {
                         verifier.verify(resp);
                     return resp;
                 } catch (OioException e) {
-                    resp.close();
+                    resp.close(true);
                     throw e;
                 }
             } catch (IOException e) {
-                if (null != sock && !sock.isClosed())
+                if (null != sock)
                     try {
                         sock.close();
                     } catch (IOException ioe) {
-                        logger.warn("Unable to close socket, possible leak", ioe);
+                        logger.warn("Unable to close socket, possible leak",
+                                ioe);
                     }
                 throw new OioSystemException("Http request execution error", e);
             }
@@ -170,13 +170,16 @@ public class OioHttp {
 
         public <T> T execute(Class<T> c) {
             OioHttpResponse resp = execute();
+            boolean success = false;
             try {
-                return gson().fromJson(
+                T t = gson().fromJson(
                         new JsonReader(new InputStreamReader(resp.body(),
                                 OIO_CHARSET)),
                         c);
+                success = true;
+                return t;
             } finally {
-                resp.close();
+                resp.close(success);
             }
         }
 
@@ -187,7 +190,8 @@ public class OioHttp {
         private void sendRequest(Socket sock) throws IOException {
             headers.put("Host", sock.getLocalAddress().toString().substring(1)
                     + ":" + sock.getLocalPort());
-            headers.put("Connection", "close");
+            headers.put("Connection", socketProvider.reusableSocket()
+                    ? "keep-alive" : "close");
             headers.put("Accept", "*/*");
             headers.put("Accept-Encoding", "gzip, deflate");
             headers.put("User-Agent", "oio-http");
