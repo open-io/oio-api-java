@@ -16,6 +16,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map.Entry;
@@ -159,6 +160,11 @@ public class OioHttp {
             } catch (IOException e) {
                 if (null != sock)
                     try {
+                        try {
+                            sock.shutdownInput();
+                        } catch (SocketException se) {
+                            logger.debug("Socket input already shutdown");
+                        }
                         sock.close();
                     } catch (IOException ioe) {
                         logger.warn("Unable to close socket, possible leak",
