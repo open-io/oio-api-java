@@ -10,6 +10,10 @@ targetCompatibility = 1.6
 
 repositories {
     jcenter()
+    maven {
+        name = 'Sonatype Nexus Snapshots'
+        url = 'https://oss.sonatype.org/content/repositories/snapshots/'
+    }
 }
 
 task wrapper(type: Wrapper) {
@@ -96,7 +100,7 @@ uploadArchives {
         authentication(userName: ossrhUsername, password: ossrhPassword)
       }
 
-      snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshosts/") {
+      snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
         authentication(userName: ossrhUsername, password: ossrhPassword)
       }
 
