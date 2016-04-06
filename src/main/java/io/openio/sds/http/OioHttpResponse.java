@@ -107,11 +107,11 @@ public class OioHttpResponse {
         bos.write(b);
         switch (state) {
         case R:
-            return b == BS_N ? RN : 0;
+            return b == BS_N ? RN : b == BS_R ? R : 0;
         case RN:
             return b == BS_R ? RNR : 0;
         case RNR:
-            return b == BS_N ? RNRN : 0;
+            return b == BS_N ? RNRN : b == BS_R ? R : 0;
         default:
             return b == BS_R ? R : 0;
         }

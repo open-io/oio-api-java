@@ -35,6 +35,7 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import io.openio.sds.common.FeedableInputStream;
 import io.openio.sds.common.ObjectInputStream;
@@ -247,7 +248,12 @@ public class RawxClient {
         consume(data, size, gens, futures);
         try {
             for (Future<OioException> f : futures) {
-                OioException e = f.get();
+                OioException e;
+                try {
+                    e = f.get(60, TimeUnit.SECONDS);
+                } catch (TimeoutException e1) {
+                    e = new OioException("Chunk upload timeout", e1);
+                }
                 // TODO improve, we should cry only in case of all copy fails
                 if (null != e)
                     throw e;
