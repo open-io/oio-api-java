@@ -52,6 +52,7 @@ public class SocketProviders {
 	                    sock.setSendBufferSize(http.sendBufferSize());
 	                    sock.setReuseAddress(true);
 	                    sock.setReceiveBufferSize(http.receiveBufferSize());
+	                    sock.setSoTimeout(http.readTimeout());
 	                    sock.connect(target, http.connectTimeout());
 	                    return sock;
 	                } catch (IOException e) {
