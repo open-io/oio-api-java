@@ -29,6 +29,7 @@ public class ObjectInputStream extends InputStream {
     private ObjectInfo oinf;
     private int pos = 0;
     private int currentRemaining;
+    private ChunkInfo currentChunk;
     private OioHttpResponse current;
     private String reqId;
 
@@ -61,42 +62,50 @@ public class ObjectInputStream extends InputStream {
     public int read(byte[] buf, int offset, int length) throws IOException {
         if (0 >= length)
             return 0;
-        if (null == current || 0 >= currentRemaining) {
-            if (pos >= oinf.nbchunks())
-                return -1;
-            next(0);
-            return read(buf, offset, length);
+        int totRead = 0;
+        while (totRead < length) {
+            if (null == current || 0 >= currentRemaining) {
+                if (pos >= oinf.nbchunks())
+                    return 0 == totRead ? -1 : totRead;
+                next(0);
+            }
+            int read = current.body().read(buf, offset + totRead,
+                    Math.min(currentRemaining,
+                            Math.min(length - totRead, buf.length - offset + totRead)));
+            if (-1 == read)
+                throw new IOException(
+                        String.format(
+                                "Error during download, unexpected end of chunk stream (url: %s, read: %d, size: %d)",
+                                currentChunk.url(),
+                                currentChunk.size() - currentRemaining,
+                                currentChunk.size()));
+            currentRemaining -= read;
+            if (0 == currentRemaining) {
+                current.close();
+                current = null;
+            }
+            totRead += Math.max(0, read);
         }
-        int read = current.body().read(buf, offset, Math.min(currentRemaining,
-                Math.min(length, buf.length - offset)));
-        if (-1 == read)
-            throw new IOException("Unexpected end of chunk stream");
-        currentRemaining -= read;
-        if (0 == currentRemaining) {
-            current.close();
-            current = null;
-        }
-        if (read < length)
-            return read + Math.max(0, read(buf, offset + read, length - read));
-        return read;
+        return totRead;
     }
 
     private void next(int offset) {
-        ChunkInfo ci = oinf.sortedChunks().get(pos).get(offset);
+        currentChunk = oinf.sortedChunks().get(pos).get(offset);
         if (logger.isDebugEnabled())
-            logger.debug("dl from " + ci.url());
+            logger.debug("dl from " + currentChunk.url());
         try {
-            current = http.get(ci.url())
+            current = http.get(currentChunk.url())
                     .header(OIO_REQUEST_ID_HEADER, reqId)
                     .verifier(RAWX_VERIFIER)
                     .execute();
-            currentRemaining = ci.size().intValue();
+            currentRemaining = currentChunk.size().intValue();
             pos++;
         } catch (OioException e) {
             if (offset + 1 >= oinf.sortedChunks().get(pos).size())
                 throw new OioException(
                         "Definitly fail to download chunk at pos " + pos, e);
-            logger.warn("Error while trying to download " + ci.url(), e);
+            logger.warn("Error while trying to download " + currentChunk.url(),
+                    e);
             next(offset + 1);
         }
     }

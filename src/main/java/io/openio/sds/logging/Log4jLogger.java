@@ -34,6 +34,11 @@ public class Log4jLogger implements SdsLogger {
     public void debug(String message) {
         logger.debug(message);
     }
+    
+    @Override
+    public void debug(String message, Throwable thrown) {
+        logger.debug(message, thrown);
+    }
 
     @Override
     public boolean isDebugEnabled() {

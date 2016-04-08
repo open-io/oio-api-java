@@ -38,6 +38,11 @@ public class BaseLogger implements SdsLogger {
     public void debug(String message) {
         logger.fine(message);
     }
+    
+    @Override
+    public void debug(String message, Throwable thrown) {
+        logger.log(FINE, message, thrown);
+    }
 
     @Override
     public boolean isDebugEnabled() {

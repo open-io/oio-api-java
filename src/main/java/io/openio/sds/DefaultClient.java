@@ -81,8 +81,13 @@ public class DefaultClient implements Client {
         checkArgument(null != url.object(), "url object cannot be null");
         String reqId = requestId();
         ObjectInfo oinf = proxy.getBeans(url, size, reqId);
-        rawx.uploadChunks(oinf, data, reqId);
-        proxy.putObject(oinf, reqId, version);
+        try {
+            rawx.uploadChunks(oinf, data, reqId);
+            proxy.putObject(oinf, reqId, version);
+        } catch (OioException e) {
+            // TODO improve by knowing which chunk is uploaded
+            rawx.deleteChunks(oinf.chunks());
+        }
         return oinf;
     }
 
@@ -98,8 +103,14 @@ public class DefaultClient implements Client {
         checkArgument(null != url.object(), "url object cannot be null");
         String reqId = requestId();
         ObjectInfo oinf = proxy.getBeans(url, size, reqId);
-        rawx.uploadChunks(oinf, data, reqId);
-        proxy.putObject(oinf, reqId, version);
+        try {
+            rawx.uploadChunks(oinf, data, reqId);
+            proxy.putObject(oinf, reqId, version);
+        } catch (OioException oioe) {
+            // TODO improve by knowing which chunk is uploaded
+            rawx.deleteChunks(oinf.chunks());
+            throw oioe;
+        }
         return oinf;
     }
 
