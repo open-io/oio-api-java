@@ -73,6 +73,11 @@ public class OioHttp {
         Check.checkArgument(!nullOrEmpty(uri));
         return new RequestBuilder().get(uri);
     }
+    
+    public RequestBuilder delete(String uri) {
+        Check.checkArgument(!nullOrEmpty(uri));
+        return new RequestBuilder().delete(uri);
+    }
 
     public class RequestBuilder {
 

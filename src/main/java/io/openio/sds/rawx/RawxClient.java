@@ -183,10 +183,28 @@ public class RawxClient {
     public InputStream downloadObject(ObjectInfo oinf) {
         return downloadObject(oinf, requestId());
     }
-    
+
     public InputStream downloadObject(ObjectInfo oinf, String reqId) {
         checkArgument(null != oinf);
         return new ObjectInputStream(oinf, http, reqId);
+    }
+
+    public void deleteChunks(List<ChunkInfo> l) {
+        for (ChunkInfo ci : l)
+            deleteChunk(ci);
+    }
+
+    public void deleteChunk(ChunkInfo ci) {
+        // no verifier, don't wanna exceptions
+        try {
+            http.delete(ci.url())
+                    .execute()
+                    .close();
+        } catch (OioException e) {
+            if (logger.isDebugEnabled())
+                logger.debug(String.format("Chunk %s deletion error", ci.url()),
+                        e);
+        }
     }
 
     /* --- INTERNALS --- */

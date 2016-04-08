@@ -46,6 +46,17 @@ public interface SdsLogger {
      *            the message to log.
      */
     public void debug(String message);
+    
+    /**
+     * Logs message with associated throwable information at
+     * {@link Level#FINE}.
+     *
+     * @param message
+     *            the message to log
+     * @param thrown
+     *            the Throwable associated to the message.
+     */
+    public void debug(String message, Throwable thrown);
 
     /**
      * Checks if the {@link Level#FINE} is enabled.
