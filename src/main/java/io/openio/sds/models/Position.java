@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 public class Position {
 
     private static final Pattern POSITION_PATTERN = Pattern
-            .compile("^([\\d]+)(\\.([\\d]+)(p)?)?$");
+            .compile("^([\\d]+)(\\.(p)?([\\d]+))?$");
 
     private int meta;
     private boolean parity;
@@ -32,7 +32,7 @@ public class Position {
         if (null == m.group(2))
             return simple(Integer.parseInt(m.group(1)));
         return composed(Integer.parseInt(m.group(1)),
-                Integer.parseInt(m.group(3)), null != m.group(4));
+                Integer.parseInt(m.group(4)), null != m.group(3));
     }
 
     public static Position simple(int meta) {
@@ -62,7 +62,7 @@ public class Position {
     public String toString() {
         StringBuilder sb = new StringBuilder().append(meta);
         if (-1 != sub)
-            sb.append(".").append(sub).append(parity ? "p" : "");
+            sb.append(".").append(parity ? "p" : "").append(sub);
         return sb.toString();
     }
 
