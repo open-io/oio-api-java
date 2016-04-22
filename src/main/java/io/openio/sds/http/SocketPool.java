@@ -33,6 +33,7 @@ public class SocketPool extends Pool<PooledSocket> {
             sock.setSendBufferSize(settings.sendBufferSize());
             sock.setReuseAddress(true);
             sock.setReceiveBufferSize(settings.receiveBufferSize());
+            sock.setSoTimeout(settings.readTimeout());
             sock.connect(target, settings.connectTimeout());
             return sock;
         } catch (IOException e) {
