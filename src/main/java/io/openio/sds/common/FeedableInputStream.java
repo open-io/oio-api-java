@@ -21,15 +21,24 @@ public class FeedableInputStream extends InputStream {
 
     private LinkedBlockingQueue<DataPart> q;
     private DataPart current = null;
+    private boolean failed = false;
 
     public FeedableInputStream(int qsize) {
-        this.q = new LinkedBlockingQueue<FeedableInputStream.DataPart>(5);
+        this.q = new LinkedBlockingQueue<FeedableInputStream.DataPart>(qsize);
     }
 
     public void feed(ByteBuffer b, boolean last) {
+        if (failed)
+            return;
         try {
-            q.put(new DataPart(b, last));
+            DataPart part = new DataPart(b, last);
+            while (!(failed || q.offer(part, 10L, TimeUnit.SECONDS))) {
+                /* Retry until done
+                 * or reader has been interrupted
+                 * or we are interrupted */
+            }
         } catch (InterruptedException e) {
+            failed = true;
             logger.warn("feed interrupted", e);
         }
     }
@@ -50,16 +59,18 @@ public class FeedableInputStream extends InputStream {
     public int read(byte[] buf, int offset, int length) {
         if (0 >= length)
             return 0;
-        if (null == current) {
+        if (current == null) {
             try {
                 current = q.poll(10L, TimeUnit.SECONDS);
             } catch (InterruptedException e) {
+                failed = true;
                 current = new DataPart(null, true);
             }
             return read(buf, offset, length);
         }
-        
-        if (!current.buffer().hasRemaining()) {
+
+        if (current.buffer() == null ||
+                !current.buffer().hasRemaining()) {
             if (current.isLast())
                 return -1;
             current = null;

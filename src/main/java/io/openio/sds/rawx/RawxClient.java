@@ -61,7 +61,7 @@ public class RawxClient {
     private static final int MAX_WORKERS = 100;
     private static final int IDLE_THREAD_KEEP_ALIVE = 30; // in seconds
 
-    private final OioHttp http;
+    final OioHttp http;
     private final ExecutorService executors;
     private final RawxSettings settings;
 
@@ -265,6 +265,7 @@ public class RawxClient {
         }
         consume(data, size, gens, futures);
         try {
+            ArrayList<OioException> failures = new ArrayList<OioException>();
             for (Future<OioException> f : futures) {
                 OioException e;
                 try {
@@ -272,12 +273,21 @@ public class RawxClient {
                 } catch (TimeoutException e1) {
                     e = new OioException("Chunk upload timeout", e1);
                 }
-                // TODO improve, we should cry only in case of all copy fails
-                if (null != e)
-                    throw e;
+                // TODO: log the URL of the chunk that failed
+                if (null != e) {
+                    logger.warn("Failed to upload chunk", e);
+                    failures.add(e);
+                }
+            }
+            if (failures.size() >= cil.size()) {
+                throw new OioException("All chunk uploads failed", failures.get(0));
+            } else if (failures.size() > 0) {
+                logger.warn(String
+                        .format("%1$d of %2$d uploads failed for position %3$d of %4$s",
+                                failures.size(), cil.size(), pos, oinf.url()));
             }
         } catch (InterruptedException e) {
-            throw new OioException("get interrupted", e);
+            throw new OioException("got interrupted", e);
         } catch (ExecutionException e) {
             throw new OioException("Execution exception", e.getCause());
         }
