@@ -228,6 +228,37 @@ public class ClientTest {
         }
     }
 
+    @Test
+    public void objectPutAndGetWithProperties() {
+        OioUrl url = url("TEST", UUID.randomUUID().toString(),
+                UUID.randomUUID().toString());
+        Map<String, String> props = new HashMap<String, String>();
+        props.put("key1", "val1");
+        client.createContainer(url);
+        try {
+            client.putObject(url, 10L,
+                    new ByteArrayInputStream("0123456789".getBytes()),
+                    props);
+            try {
+                ObjectInfo oinf = client.getObjectInfo(url);
+                Assert.assertNotNull(oinf);
+                Assert.assertNotNull(oinf.properties());
+                Assert.assertEquals(1, oinf.properties().size());
+                Assert.assertTrue(oinf.properties().containsKey("key1"));
+                Assert.assertEquals("val1", oinf.properties().get("key1"));
+            } finally {
+                try {
+                client.deleteObject(url);
+                } catch(Exception e){}
+            }
+
+        } finally {
+            try {
+            client.deleteContainer(url);
+        } catch(Exception e){}
+        }
+    }
+
     private void checkObject(ObjectInfo oinf, InputStream src)
             throws IOException {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();

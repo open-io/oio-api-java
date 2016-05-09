@@ -48,6 +48,8 @@ import static io.openio.sds.common.OioConstants.OIO_ACTION_MODE_HEADER;
 import static io.openio.sds.common.OioConstants.OIO_CHARSET;
 import static io.openio.sds.common.OioConstants.OIO_REQUEST_ID_HEADER;
 import static io.openio.sds.common.OioConstants.PREFIX_PARAM;
+import static io.openio.sds.common.OioConstants.PROP_HEADER_PREFIX;
+import static io.openio.sds.common.OioConstants.PROP_HEADER_PREFIX_LEN;
 import static io.openio.sds.common.OioConstants.PUT_OBJECT_FORMAT;
 import static io.openio.sds.common.OioConstants.SCHEMA_VERSION_HEADER;
 import static io.openio.sds.common.OioConstants.TYPE_HEADER;
@@ -68,6 +70,7 @@ import static java.lang.String.format;
 
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -456,6 +459,9 @@ public class ProxyClient {
                 .verifier(CONTAINER_VERIFIER)
                 .execute()
                 .close();
+        for (Entry<String, String> e : r.headers().entrySet()) {
+            System.out.println(e.getKey() + ": " + e.getValue());
+        }
         return new ContainerInfo(url.container())
                 .account(r.header(ACCOUNT_HEADER))
                 .ctime(longHeader(r, M2_CTIME_HEADER))
@@ -647,6 +653,7 @@ public class ProxyClient {
                 .header(OIO_REQUEST_ID_HEADER, reqId)
                 .header(CONTENT_META_VERSION_HEADER,
                         versionHeader(oinf, version))
+                .headers(propsToHeaders(oinf.properties()))
                 .body(gson().toJson(oinf.chunks()))
                 .verifier(OBJECT_VERIFIER)
                 .execute()
@@ -1187,7 +1194,8 @@ public class ProxyClient {
                 .policy(r.header(CONTENT_META_POLICY_HEADER))
                 .version(longHeader(r, CONTENT_META_VERSION_HEADER))
                 .hashMethod(r.header(CONTENT_META_HASH_METHOD_HEADER))
-                .mtype(r.header(CONTENT_META_MIME_TYPE_HEADER));
+                .mtype(r.header(CONTENT_META_MIME_TYPE_HEADER))
+                .properties(propsFromHeaders(r.headers()));
     }
 
     private List<ChunkInfo> bodyChunk(OioHttpResponse resp)
@@ -1241,4 +1249,31 @@ public class ProxyClient {
                 : version.toString();
     }
 
+    private Map<String, String> propsToHeaders(
+            Map<String, String> props) {
+        if (null == props || 0 == props.size())
+            return null;
+        System.out.println(props);
+        HashMap<String, String> res = new HashMap<String, String>();
+        for (Entry<String, String> e : props.entrySet()) {
+            if (null != e.getKey() && null != e.getValue()) {
+                System.out.println("adding " + PROP_HEADER_PREFIX + e.getKey()
+                        + " " + e.getValue());
+                res.put(PROP_HEADER_PREFIX + e.getKey(),
+                        e.getValue());
+            }
+        }
+        return res;
+    }
+
+    private Map<String, String> propsFromHeaders(
+            HashMap<String, String> headers) {
+        HashMap<String, String> res = new HashMap<String, String>();
+        for (Entry<String, String> e : headers.entrySet()) {
+            if (e.getKey().startsWith(PROP_HEADER_PREFIX))
+                res.put(e.getKey().substring(PROP_HEADER_PREFIX_LEN),
+                        e.getValue());
+        }
+        return res;
+    }
 }

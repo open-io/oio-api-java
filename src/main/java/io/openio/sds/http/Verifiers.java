@@ -82,6 +82,8 @@ public class Verifiers {
             switch (err.status()) {
             case 400:
                 throw new BadRequestException(err.toString());
+            case 406:
+                throw new ContainerNotFoundException(err.toString());
             case 420:
                 throw new ObjectNotFoundException(err.toString());
             case 500:

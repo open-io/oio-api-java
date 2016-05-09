@@ -27,6 +27,9 @@ public class OioConstants {
 
     /* -- proxyd common headers -- */
 
+    public static final String PROP_HEADER_PREFIX = "X-oio-content-meta-x-";
+    public static final int PROP_HEADER_PREFIX_LEN = PROP_HEADER_PREFIX.length();
+    
     public static final String CONTENT_LENGTH_HEADER = "Content-Length";
     public static final String CONTENT_TYPE_HEADER = "Content-Type";
 

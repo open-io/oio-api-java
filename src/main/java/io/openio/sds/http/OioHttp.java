@@ -19,6 +19,7 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.URI;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Map.Entry;
 
 import com.google.gson.stream.JsonReader;
@@ -73,7 +74,7 @@ public class OioHttp {
         Check.checkArgument(!nullOrEmpty(uri));
         return new RequestBuilder().get(uri);
     }
-    
+
     public RequestBuilder delete(String uri) {
         Check.checkArgument(!nullOrEmpty(uri));
         return new RequestBuilder().delete(uri);
@@ -115,6 +116,12 @@ public class OioHttp {
         public RequestBuilder header(String name, String value) {
             if (!nullOrEmpty(name) && !nullOrEmpty(value))
                 headers.put(name, value);
+            return this;
+        }
+
+        public RequestBuilder headers(Map<String, String> headers) {
+            if (null != headers)
+                this.headers.putAll(headers);
             return this;
         }
 

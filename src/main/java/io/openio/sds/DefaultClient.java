@@ -71,16 +71,29 @@ public class DefaultClient implements Client {
 
     @Override
     public ObjectInfo putObject(OioUrl url, Long size, File data) {
-        return putObject(url, size, data, null);
+        return putObject(url, size, data, null, null);
+    }
+
+    @Override
+    public ObjectInfo putObject(OioUrl url, Long size, File data,
+            Map<String, String> properties) throws OioException {
+        return putObject(url, size, data, null, properties);
     }
 
     @Override
     public ObjectInfo putObject(OioUrl url, Long size, File data,
             Long version) {
+        return putObject(url, size, data, version, null);
+    }
+
+    @Override
+    public ObjectInfo putObject(OioUrl url, Long size, File data, Long version,
+            Map<String, String> properties) throws OioException {
         checkArgument(null != url, "url cannot be null");
         checkArgument(null != url.object(), "url object cannot be null");
         String reqId = requestId();
         ObjectInfo oinf = proxy.getBeans(url, size, reqId);
+        oinf.properties(properties);
         try {
             rawx.uploadChunks(oinf, data, reqId);
             proxy.putObject(oinf, reqId, version);
@@ -93,16 +106,29 @@ public class DefaultClient implements Client {
 
     @Override
     public ObjectInfo putObject(OioUrl url, Long size, InputStream data) {
-        return putObject(url, size, data, null);
+        return putObject(url, size, data, null, null);
+    }
+
+    @Override
+    public ObjectInfo putObject(OioUrl url, Long size, InputStream data,
+            Map<String, String> properties) throws OioException {
+        return putObject(url, size, data, null, properties);
     }
 
     @Override
     public ObjectInfo putObject(OioUrl url, Long size, InputStream data,
             Long version) {
+        return putObject(url, size, data, version, null);
+    }
+
+    @Override
+    public ObjectInfo putObject(OioUrl url, Long size, InputStream data,
+            Long version, Map<String, String> properties) throws OioException {
         checkArgument(null != url, "url cannot be null");
         checkArgument(null != url.object(), "url object cannot be null");
         String reqId = requestId();
         ObjectInfo oinf = proxy.getBeans(url, size, reqId);
+        oinf.properties(properties);
         try {
             rawx.uploadChunks(oinf, data, reqId);
             proxy.putObject(oinf, reqId, version);
@@ -191,4 +217,5 @@ public class DefaultClient implements Client {
             throws OioException {
         proxy.deleteObjectProperties(url, keys, requestId());
     }
+
 }

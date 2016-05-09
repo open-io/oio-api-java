@@ -25,6 +25,7 @@ public class ObjectInfo {
     private Long size;
     private Long version;
     private String mtype;
+    private Map<String, String> properties;
     private List<ChunkInfo> chunks;
     private transient Map<Integer, List<ChunkInfo>> sortedChunks;
 
@@ -39,6 +40,7 @@ public class ObjectInfo {
 
     public ObjectInfo() {
         // TODO: content hash
+        this.properties = new HashMap<String, String>();
         this.hash = Hash.md5()
                 .hashBytes("".getBytes(OIO_CHARSET))
                 .toString();
@@ -160,6 +162,16 @@ public class ObjectInfo {
     public Long chunksize(Integer pos) {
         return sortedChunks.get(pos).get(0).size();
     }
+    
+
+    public Map<String, String> properties() {
+        return properties;
+    }
+
+    public ObjectInfo properties(Map<String, String> properties) {
+        this.properties = properties;
+        return this;
+    }
 
     @Override
     public String toString() {
@@ -175,6 +187,7 @@ public class ObjectInfo {
                 .add("chunk-method", chunkMethod)
                 .add("size", size)
                 .add("version", version)
+                .add("props", properties)
                 .add("chunks", chunks)
                 .toString();
     }
@@ -198,4 +211,5 @@ public class ObjectInfo {
 
         return res;
     }
+
 }

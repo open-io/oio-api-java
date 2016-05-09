@@ -204,6 +204,29 @@ public interface Client {
      *            the size of the object
      * @param data
      *            the file to read the data from
+     * @param properties
+     *            the properties to set to the object. Note that the properties
+     *            are case insensitive and will always be returned in lower
+     *            case.
+     * @return informations about the uploaded object
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public ObjectInfo putObject(OioUrl url, Long size, File data,
+            Map<String, String> properties)
+                    throws OioException;
+
+    /**
+     * Push an object into the oio namespace
+     * 
+     * @param url
+     *            the url of the object to create
+     * @param size
+     *            the size of the object
+     * @param data
+     *            the file to read the data from
      * @param version
      *            the version of content to upload
      * @return informations about the uploaded object
@@ -214,6 +237,30 @@ public interface Client {
      */
     public ObjectInfo putObject(OioUrl url, Long size, File data,
             Long version) throws OioException;
+
+    /**
+     * Push an object into the oio namespace
+     * 
+     * @param url
+     *            the url of the object to create
+     * @param size
+     *            the size of the object
+     * @param data
+     *            the file to read the data from
+     * @param version
+     *            the version of content to upload
+     * @param properties
+     *            the properties to set to the object. Note that the properties
+     *            are case insensitive and will always be returned in lower
+     *            case.
+     * @return informations about the uploaded object
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public ObjectInfo putObject(OioUrl url, Long size, File data,
+            Long version, Map<String, String> properties) throws OioException;
 
     /**
      * Push an object into the oio namespace
@@ -244,6 +291,31 @@ public interface Client {
      *            the size of the object
      * @param data
      *            the InputStream to read the data from
+     * @param properties
+     *            the properties to set to the object. Note that the properties
+     *            are case insensitive and will always be returned in lower
+     *            case.
+     * @return informations about the uploaded object
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws ObjectExistException
+     *             if the specified object alreadeay exist in the container
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public ObjectInfo putObject(OioUrl url, Long size,
+            InputStream data, Map<String, String> properties)
+                    throws OioException;
+
+    /**
+     * Push an object into the oio namespace
+     * 
+     * @param url
+     *            the url of the object to create
+     * @param size
+     *            the size of the object
+     * @param data
+     *            the InputStream to read the data from
      * @param version
      *            the version of content to upload
      * @return informations about the uploaded object
@@ -256,6 +328,33 @@ public interface Client {
      */
     public ObjectInfo putObject(OioUrl url, Long size,
             InputStream data, Long version) throws OioException;
+
+    /**
+     * Push an object into the oio namespace
+     * 
+     * @param url
+     *            the url of the object to create
+     * @param size
+     *            the size of the object
+     * @param data
+     *            the InputStream to read the data from
+     * @param version
+     *            the version of content to upload
+     * @param properties
+     *            the properties to set to the object. Note that the properties
+     *            are case insensitive and will always be returned in lower
+     *            case.
+     * @return informations about the uploaded object
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws ObjectExistException
+     *             if the specified object alreadeay exist in the container
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public ObjectInfo putObject(OioUrl url, Long size,
+            InputStream data, Long version, Map<String, String> properties)
+                    throws OioException;
 
     /**
      * Returns informations about the specified object
