@@ -153,7 +153,7 @@ public class OioHttpResponse {
                 String[] tok = line.trim().split(":", 2);
                 if (2 != tok.length)
                     continue;
-                headers.put(tok[0].trim(), tok[1].trim());
+                headers.put(tok[0].trim().toLowerCase(), tok[1].trim());
             }
             return this;
         }
@@ -163,7 +163,7 @@ public class OioHttpResponse {
         }
 
         public String header(String key) {
-            return this.headers.get(key);
+            return this.headers.get(key.toLowerCase());
         }
 
         public int code() {
