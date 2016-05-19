@@ -35,7 +35,7 @@ import io.openio.sds.models.OioUrl;
  * @author Christopher Dedeurwaerder
  *
  */
-public class ClientTest {
+public class ClientITest {
 
     private static Client client;
 
@@ -121,6 +121,11 @@ public class ClientTest {
             try {
                 ObjectInfo oinf = client.getObjectInfo(url);
                 Assert.assertNotNull(oinf);
+                Assert.assertEquals(1024, oinf.size().longValue());
+                Assert.assertTrue(0 < oinf.ctime());
+                Assert.assertNotNull(oinf.policy());
+                Assert.assertNotNull(oinf.chunkMethod());
+                Assert.assertNotNull(oinf.hashMethod());
                 checkObject(oinf, new ByteArrayInputStream(src));
             } finally {
                 client.deleteObject(url);
@@ -242,6 +247,12 @@ public class ClientTest {
             try {
                 ObjectInfo oinf = client.getObjectInfo(url);
                 Assert.assertNotNull(oinf);
+                Assert.assertNotNull(oinf.oid());
+                Assert.assertEquals(10, oinf.size().longValue());
+                Assert.assertTrue(0 < oinf.ctime());
+                Assert.assertNotNull(oinf.policy());
+                Assert.assertNotNull(oinf.chunkMethod());
+                Assert.assertNotNull(oinf.hashMethod());
                 Assert.assertNotNull(oinf.properties());
                 Assert.assertEquals(1, oinf.properties().size());
                 Assert.assertTrue(oinf.properties().containsKey("key1"));

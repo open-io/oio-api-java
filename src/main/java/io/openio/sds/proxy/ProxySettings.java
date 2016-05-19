@@ -12,6 +12,8 @@ public class ProxySettings {
 
     private String url;
     private String ns;
+    private String swift;
+    private boolean swiftrain = true; //not configurable atm cuz we can't do somehow else
     private OioHttpSettings http = new OioHttpSettings();
     private PoolingSettings pooling = new PoolingSettings();
 
@@ -52,5 +54,18 @@ public class ProxySettings {
     public ProxySettings pooling(PoolingSettings pooling) {
         this.pooling = pooling;
         return this;
+    }
+
+    public String swift() {
+        return swift;
+    }
+
+    public ProxySettings swift(String swift) {
+        this.swift = swift;
+        return this;
+    }
+    
+    public boolean swiftrain(){
+        return swiftrain;
     }
 }

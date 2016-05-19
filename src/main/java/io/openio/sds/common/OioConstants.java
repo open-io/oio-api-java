@@ -131,4 +131,6 @@ public class OioConstants {
     public static final String INVALID_URL_MSG = "Invalid url";
 
     public static final String USER_PROP_PREFIX = "user.";
+
+    public static final Object CHUNK_METHOD_PLAIN = "plain";
 }
