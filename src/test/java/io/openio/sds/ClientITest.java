@@ -1,7 +1,5 @@
 package io.openio.sds;
 
-import static io.openio.sds.TestHelper.ns;
-import static io.openio.sds.TestHelper.proxyd;
 import static io.openio.sds.TestHelper.testAccount;
 import static io.openio.sds.common.OioConstants.OIO_CHARSET;
 import static io.openio.sds.models.OioUrl.url;
@@ -21,6 +19,7 @@ import java.util.UUID;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import io.openio.sds.exceptions.ContainerExistException;
@@ -35,13 +34,18 @@ import io.openio.sds.models.OioUrl;
  * @author Christopher Dedeurwaerder
  *
  */
-public class ClientTest {
+public class ClientITest {
 
     private static Client client;
 
     @BeforeClass
     public static void setup() {
-        client = ClientBuilder.newClient(ns(), proxyd());
+        Settings settings = new Settings();
+        settings.proxy()
+                .ns(TestHelper.ns())
+                .url(TestHelper.proxyd())
+                .gateway(TestHelper.gateway());
+        client = ClientBuilder.newClient(settings);
     }
 
     @AfterClass
@@ -121,6 +125,11 @@ public class ClientTest {
             try {
                 ObjectInfo oinf = client.getObjectInfo(url);
                 Assert.assertNotNull(oinf);
+                Assert.assertEquals(1024, oinf.size().longValue());
+                Assert.assertTrue(0 < oinf.ctime());
+                Assert.assertNotNull(oinf.policy());
+                Assert.assertNotNull(oinf.chunkMethod());
+                Assert.assertNotNull(oinf.hashMethod());
                 checkObject(oinf, new ByteArrayInputStream(src));
             } finally {
                 client.deleteObject(url);
@@ -228,6 +237,7 @@ public class ClientTest {
         }
     }
 
+    @Ignore
     @Test
     public void objectPutAndGetWithProperties() {
         OioUrl url = url("TEST", UUID.randomUUID().toString(),
@@ -242,20 +252,28 @@ public class ClientTest {
             try {
                 ObjectInfo oinf = client.getObjectInfo(url);
                 Assert.assertNotNull(oinf);
+                Assert.assertNotNull(oinf.oid());
+                Assert.assertEquals(10, oinf.size().longValue());
+                Assert.assertTrue(0 < oinf.ctime());
+                Assert.assertNotNull(oinf.policy());
+                Assert.assertNotNull(oinf.chunkMethod());
+                Assert.assertNotNull(oinf.hashMethod());
                 Assert.assertNotNull(oinf.properties());
                 Assert.assertEquals(1, oinf.properties().size());
                 Assert.assertTrue(oinf.properties().containsKey("key1"));
                 Assert.assertEquals("val1", oinf.properties().get("key1"));
             } finally {
                 try {
-                client.deleteObject(url);
-                } catch(Exception e){}
+                    client.deleteObject(url);
+                } catch (Exception e) {
+                }
             }
 
         } finally {
             try {
-            client.deleteContainer(url);
-        } catch(Exception e){}
+                client.deleteContainer(url);
+            } catch (Exception e) {
+            }
         }
     }
 

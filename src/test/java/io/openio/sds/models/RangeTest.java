@@ -3,6 +3,7 @@ package io.openio.sds.models;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 public class RangeTest {
@@ -58,6 +59,56 @@ public class RangeTest {
     @Test(expected = IllegalArgumentException.class)
     public void betweenBadBoth() {
         Range.between(10, 1);
+    }
+    
+    @Test
+    public void parseOkWithFromAndTo(){
+        Range r = Range.parse("10-20");
+        Assert.assertNotNull(r);
+        Assert.assertEquals(10, r.from());
+        Assert.assertEquals(20, r.to());
+    }
+    
+    @Test
+    public void parseOkWithFrom(){
+        Range r = Range.parse("10-");
+        Assert.assertNotNull(r);
+        Assert.assertEquals(10, r.from());
+        Assert.assertEquals(-1, r.to());
+    }
+    
+    @Test
+    public void parseOkWithTo(){
+        Range r = Range.parse("-20");
+        Assert.assertNotNull(r);
+        Assert.assertEquals(0, r.from());
+        Assert.assertEquals(20, r.to());
+    }
+    
+    @Test(expected=IllegalArgumentException.class)
+    public void parseInvalid1(){
+        Range.parse("azuhepoaizeuh");
+    }
+    
+    @Test(expected=IllegalArgumentException.class)
+    public void parseInvalid2(){
+        Range.parse("-");
+    }
+    
+    @Test
+    public void stringify(){
+        Range r = Range.between(10, 20);
+        Assert.assertEquals("bytes=10-20", r.headerValue());
+        Assert.assertEquals("10-20", r.rangeValue());
+        Assert.assertNotNull(r.toString());
+        
+        r = Range.from(10);
+        Assert.assertEquals("bytes=10-", r.headerValue());
+        Assert.assertEquals("10-", r.rangeValue());
+        
+        r = Range.upTo(20);
+        Assert.assertEquals("bytes=0-20", r.headerValue());
+        Assert.assertEquals("0-20", r.rangeValue());
     }
 
 }

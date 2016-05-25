@@ -75,11 +75,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.function.Predicate;
 
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 
 import io.openio.sds.common.JsonUtils;
+import io.openio.sds.common.OioConstants;
+import io.openio.sds.common.Strings;
 import io.openio.sds.exceptions.ContainerExistException;
 import io.openio.sds.exceptions.ContainerNotFoundException;
 import io.openio.sds.exceptions.ObjectNotFoundException;
@@ -96,6 +99,7 @@ import io.openio.sds.models.NamespaceInfo;
 import io.openio.sds.models.ObjectInfo;
 import io.openio.sds.models.ObjectList;
 import io.openio.sds.models.OioUrl;
+import io.openio.sds.models.Position;
 import io.openio.sds.models.ReferenceInfo;
 import io.openio.sds.models.ServiceInfo;
 
@@ -459,9 +463,7 @@ public class ProxyClient {
                 .verifier(CONTAINER_VERIFIER)
                 .execute()
                 .close();
-        for (Entry<String, String> e : r.headers().entrySet()) {
-            System.out.println(e.getKey() + ": " + e.getValue());
-        }
+        
         return new ContainerInfo(url.container())
                 .account(r.header(ACCOUNT_HEADER))
                 .ctime(longHeader(r, M2_CTIME_HEADER))
@@ -517,6 +519,7 @@ public class ProxyClient {
             String reqId)
                     throws OioException {
         checkArgument(null != url, INVALID_URL_MSG);
+        checkArgument(null != options, "Invalid options");
         return http.get(
                 format(LIST_OBJECTS_FORMAT,
                         settings.url(), settings.ns(), url.account(),
@@ -608,7 +611,7 @@ public class ProxyClient {
                 .header(OIO_REQUEST_ID_HEADER, reqId)
                 .verifier(OBJECT_VERIFIER)
                 .execute();
-        return objectInfoAndClose(url, resp);
+        return getBeansObjectInfoAndClose(url, resp);
     }
 
     /**
@@ -710,7 +713,7 @@ public class ProxyClient {
                         null == version ? null : version.toString())
                 .verifier(OBJECT_VERIFIER)
                 .execute();
-        return objectInfoAndClose(url, resp);
+        return objectShowObjectInfoAndClose(url, resp);
     }
 
     /**
@@ -1171,12 +1174,45 @@ public class ProxyClient {
     }
 
     /* -- INTERNALS -- */
-
-    private ObjectInfo objectInfoAndClose(OioUrl url, OioHttpResponse resp) {
+    
+    private ObjectInfo getBeansObjectInfoAndClose(OioUrl url, OioHttpResponse resp) {
         boolean success = false;
         try {
-            ObjectInfo oinf = fillObjectInfo(url, resp)
-                    .chunks(bodyChunk(resp));
+            ObjectInfo oinf = fillObjectInfo(url, resp);
+            List<ChunkInfo> chunks = bodyChunk(resp);
+            // check if we are using EC with gateway
+            if (chunks.stream().anyMatch(isParity)) {
+                if (settings.gatewayrain()) {
+                    if (Strings.nullOrEmpty(settings.gateway()))
+                        throw new OioException(
+                                "Missing proxy#gateway configuration");
+                    chunks.clear();
+                    chunks.add(buildGatewayFakeChunk(oinf));
+                } else {
+                    // TODO impl EC in java
+                    throw new IllegalStateException(
+                            "Invalid configuration, we cannot do EC without gateway ATM");
+                }
+            }
+            oinf.chunks(chunks);
+            success = true;
+            return oinf;
+        } finally {
+            resp.close(success);
+        }
+    }
+
+    private ObjectInfo objectShowObjectInfoAndClose(OioUrl url, OioHttpResponse resp) {
+        boolean success = false;
+        try {
+            ObjectInfo oinf = fillObjectInfo(url, resp);
+            List<ChunkInfo> chunks = bodyChunk(resp);
+            // check if we are using EC with gateway
+            if (oinf.chunkMethod().equals(OioConstants.CHUNK_METHOD_PLAIN)
+                && (!settings.gatewayrain() || Strings.nullOrEmpty(settings.gateway())))
+                        throw new OioException(
+                                "Unable to decode EC encoded object without gateway");
+            oinf.chunks(chunks);
             success = true;
             return oinf;
         } finally {
@@ -1209,6 +1245,20 @@ public class ProxyClient {
         } catch (Exception e) {
             throw new OioException("Body extraction error", e);
         }
+    }
+
+    private ChunkInfo buildGatewayFakeChunk(ObjectInfo oinf) {
+        String gatewayUrl = String.format("%s/v1/%s/%s/%s",
+                settings.gateway(),
+                oinf.url().account(),
+                oinf.url().container(),
+                oinf.url().object());
+
+        return new ChunkInfo()
+                .url(gatewayUrl)
+                .size(oinf.size())
+                .pos(Position.simple(0));
+
     }
 
     private <T> List<T> listAndClose(OioHttpResponse resp) {
@@ -1253,12 +1303,9 @@ public class ProxyClient {
             Map<String, String> props) {
         if (null == props || 0 == props.size())
             return null;
-        System.out.println(props);
         HashMap<String, String> res = new HashMap<String, String>();
         for (Entry<String, String> e : props.entrySet()) {
             if (null != e.getKey() && null != e.getValue()) {
-                System.out.println("adding " + PROP_HEADER_PREFIX + e.getKey()
-                        + " " + e.getValue());
                 res.put(PROP_HEADER_PREFIX + e.getKey(),
                         e.getValue());
             }
@@ -1276,4 +1323,12 @@ public class ProxyClient {
         }
         return res;
     }
+
+    private Predicate<ChunkInfo> isParity = new Predicate<ChunkInfo>() {
+
+        @Override
+        public boolean test(ChunkInfo ci) {
+            return ci.pos().parity();
+        }
+    };
 }

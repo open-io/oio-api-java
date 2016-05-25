@@ -12,6 +12,8 @@ public class ProxySettings {
 
     private String url;
     private String ns;
+    private String gateway;
+    private boolean gatewayrain = true; //not configurable atm cuz we can't do somehow else
     private OioHttpSettings http = new OioHttpSettings();
     private PoolingSettings pooling = new PoolingSettings();
 
@@ -52,5 +54,18 @@ public class ProxySettings {
     public ProxySettings pooling(PoolingSettings pooling) {
         this.pooling = pooling;
         return this;
+    }
+
+    public String gateway() {
+        return gateway;
+    }
+
+    public ProxySettings gateway(String gateway) {
+        this.gateway = gateway;
+        return this;
+    }
+    
+    public boolean gatewayrain(){
+        return gatewayrain;
     }
 }
