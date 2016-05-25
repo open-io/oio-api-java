@@ -75,7 +75,7 @@ public class ProxyClientITest {
             System.out.println(si);
     }
 
-    @Test
+    @Test(expected=ContainerNotFoundException.class)
     public void containerNominal() {
         String container = UUID.randomUUID().toString();
         System.out.println(container);

@@ -1,7 +1,5 @@
 package io.openio.sds;
 
-import static io.openio.sds.TestHelper.ns;
-import static io.openio.sds.TestHelper.proxyd;
 import static io.openio.sds.TestHelper.testAccount;
 import static io.openio.sds.common.OioConstants.OIO_CHARSET;
 import static io.openio.sds.models.OioUrl.url;
@@ -21,6 +19,7 @@ import java.util.UUID;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import io.openio.sds.exceptions.ContainerExistException;
@@ -41,7 +40,12 @@ public class ClientITest {
 
     @BeforeClass
     public static void setup() {
-        client = ClientBuilder.newClient(ns(), proxyd());
+        Settings settings = new Settings();
+        settings.proxy()
+                .ns(TestHelper.ns())
+                .url(TestHelper.proxyd())
+                .swift(TestHelper.swift());
+        client = ClientBuilder.newClient(settings);
     }
 
     @AfterClass
@@ -233,6 +237,7 @@ public class ClientITest {
         }
     }
 
+    @Ignore
     @Test
     public void objectPutAndGetWithProperties() {
         OioUrl url = url("TEST", UUID.randomUUID().toString(),
@@ -259,14 +264,16 @@ public class ClientITest {
                 Assert.assertEquals("val1", oinf.properties().get("key1"));
             } finally {
                 try {
-                client.deleteObject(url);
-                } catch(Exception e){}
+                    client.deleteObject(url);
+                } catch (Exception e) {
+                }
             }
 
         } finally {
             try {
-            client.deleteContainer(url);
-        } catch(Exception e){}
+                client.deleteContainer(url);
+            } catch (Exception e) {
+            }
         }
     }
 

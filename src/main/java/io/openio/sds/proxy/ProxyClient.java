@@ -463,9 +463,7 @@ public class ProxyClient {
                 .verifier(CONTAINER_VERIFIER)
                 .execute()
                 .close();
-        for (Entry<String, String> e : r.headers().entrySet()) {
-            System.out.println(e.getKey() + ": " + e.getValue());
-        }
+        
         return new ContainerInfo(url.container())
                 .account(r.header(ACCOUNT_HEADER))
                 .ctime(longHeader(r, M2_CTIME_HEADER))
