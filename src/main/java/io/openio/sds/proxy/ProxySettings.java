@@ -12,8 +12,8 @@ public class ProxySettings {
 
     private String url;
     private String ns;
-    private String gateway;
-    private boolean gatewayrain = true; //not configurable atm cuz we can't do somehow else
+    private String ecd;
+    private boolean ecdrain = true; //not configurable atm cuz we can't do somehow else
     private OioHttpSettings http = new OioHttpSettings();
     private PoolingSettings pooling = new PoolingSettings();
 
@@ -56,16 +56,16 @@ public class ProxySettings {
         return this;
     }
 
-    public String gateway() {
-        return gateway;
+    public String ecd() {
+        return ecd;
     }
 
-    public ProxySettings gateway(String gateway) {
-        this.gateway = gateway;
+    public ProxySettings ecd(String ecd) {
+        this.ecd = ecd;
         return this;
     }
     
-    public boolean gatewayrain(){
-        return gatewayrain;
+    public boolean ecdrain(){
+        return ecdrain;
     }
 }

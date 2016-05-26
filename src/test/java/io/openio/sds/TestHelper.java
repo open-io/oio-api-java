@@ -35,8 +35,8 @@ public class TestHelper {
     public static String proxyd() {
         return String.format("http://%s:%d", proxyIp, proxyPort);
     }
-
-    public static String gateway() {
+    
+    public static String ecd() {
         return "";
     }
 

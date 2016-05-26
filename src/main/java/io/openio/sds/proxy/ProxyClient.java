@@ -75,7 +75,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.function.Predicate;
 
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
@@ -463,7 +462,7 @@ public class ProxyClient {
                 .verifier(CONTAINER_VERIFIER)
                 .execute()
                 .close();
-        
+
         return new ContainerInfo(url.container())
                 .account(r.header(ACCOUNT_HEADER))
                 .ctime(longHeader(r, M2_CTIME_HEADER))
@@ -1174,27 +1173,29 @@ public class ProxyClient {
     }
 
     /* -- INTERNALS -- */
-    
-    private ObjectInfo getBeansObjectInfoAndClose(OioUrl url, OioHttpResponse resp) {
+
+    private ObjectInfo getBeansObjectInfoAndClose(OioUrl url,
+            OioHttpResponse resp) {
         boolean success = false;
         try {
             ObjectInfo oinf = fillObjectInfo(url, resp);
             List<ChunkInfo> chunks = bodyChunk(resp);
-            // check if we are using EC with gateway
-            if (chunks.stream().anyMatch(isParity)) {
-                if (settings.gatewayrain()) {
-                    if (Strings.nullOrEmpty(settings.gateway()))
+            // check if we are using EC with ec daemon
+            if (oinf.chunkMethod().startsWith(OioConstants.EC_PREFIX)) {
+                if (settings.ecdrain()) {
+                    if (Strings.nullOrEmpty(settings.ecd()))
                         throw new OioException(
-                                "Missing proxy#gateway configuration");
+                                "Missing proxy#ecd configuration");
                     chunks.clear();
-                    chunks.add(buildGatewayFakeChunk(oinf));
+                    chunks.add(buildECDFakeChunk(oinf));
                 } else {
                     // TODO impl EC in java
                     throw new IllegalStateException(
-                            "Invalid configuration, we cannot do EC without gateway ATM");
+                            "Invalid configuration, we cannot do EC without ecd ATM");
                 }
             }
             oinf.chunks(chunks);
+
             success = true;
             return oinf;
         } finally {
@@ -1202,16 +1203,18 @@ public class ProxyClient {
         }
     }
 
-    private ObjectInfo objectShowObjectInfoAndClose(OioUrl url, OioHttpResponse resp) {
+    private ObjectInfo objectShowObjectInfoAndClose(OioUrl url,
+            OioHttpResponse resp) {
         boolean success = false;
         try {
             ObjectInfo oinf = fillObjectInfo(url, resp);
             List<ChunkInfo> chunks = bodyChunk(resp);
-            // check if we are using EC with gateway
-            if (oinf.chunkMethod().equals(OioConstants.CHUNK_METHOD_PLAIN)
-                && (!settings.gatewayrain() || Strings.nullOrEmpty(settings.gateway())))
-                        throw new OioException(
-                                "Unable to decode EC encoded object without gateway");
+            // check if we are using EC with ecd
+            if (oinf.chunkMethod().startsWith(OioConstants.EC_PREFIX)
+                    && (!settings.ecdrain()
+                            || Strings.nullOrEmpty(settings.ecd())))
+                throw new OioException(
+                        "Unable to decode EC encoded object without ecd");
             oinf.chunks(chunks);
             success = true;
             return oinf;
@@ -1229,6 +1232,7 @@ public class ProxyClient {
                 .chunkMethod(r.header(CONTENT_META_CHUNK_METHOD_HEADER))
                 .policy(r.header(CONTENT_META_POLICY_HEADER))
                 .version(longHeader(r, CONTENT_META_VERSION_HEADER))
+                .hash(r.header(OioConstants.CONTENT_META_HASH_HEADER))
                 .hashMethod(r.header(CONTENT_META_HASH_METHOD_HEADER))
                 .mtype(r.header(CONTENT_META_MIME_TYPE_HEADER))
                 .properties(propsFromHeaders(r.headers()));
@@ -1247,15 +1251,15 @@ public class ProxyClient {
         }
     }
 
-    private ChunkInfo buildGatewayFakeChunk(ObjectInfo oinf) {
-        String gatewayUrl = String.format("%s/v1/%s/%s/%s",
-                settings.gateway(),
+    private ChunkInfo buildECDFakeChunk(ObjectInfo oinf) {
+        String ecdUrl = String.format("%s/v1/%s/%s/%s",
+                settings.ecd(),
                 oinf.url().account(),
                 oinf.url().container(),
                 oinf.url().object());
 
         return new ChunkInfo()
-                .url(gatewayUrl)
+                .url(ecdUrl)
                 .size(oinf.size())
                 .pos(Position.simple(0));
 
@@ -1323,12 +1327,4 @@ public class ProxyClient {
         }
         return res;
     }
-
-    private Predicate<ChunkInfo> isParity = new Predicate<ChunkInfo>() {
-
-        @Override
-        public boolean test(ChunkInfo ci) {
-            return ci.pos().parity();
-        }
-    };
 }
