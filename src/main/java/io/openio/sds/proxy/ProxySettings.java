@@ -12,8 +12,8 @@ public class ProxySettings {
 
     private String url;
     private String ns;
-    private String swift;
-    private boolean swiftrain = true; //not configurable atm cuz we can't do somehow else
+    private String ecd;
+    private boolean ecdrain = true; //not configurable atm cuz we can't do somehow else
     private OioHttpSettings http = new OioHttpSettings();
     private PoolingSettings pooling = new PoolingSettings();
 
@@ -56,16 +56,16 @@ public class ProxySettings {
         return this;
     }
 
-    public String swift() {
-        return swift;
+    public String ecd() {
+        return ecd;
     }
 
-    public ProxySettings swift(String swift) {
-        this.swift = swift;
+    public ProxySettings ecd(String ecd) {
+        this.ecd = ecd;
         return this;
     }
     
-    public boolean swiftrain(){
-        return swiftrain;
+    public boolean ecdrain(){
+        return ecdrain;
     }
 }

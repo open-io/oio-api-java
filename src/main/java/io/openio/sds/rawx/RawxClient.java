@@ -38,6 +38,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import io.openio.sds.common.FeedableInputStream;
+import io.openio.sds.common.Hex;
 import io.openio.sds.common.ObjectInputStream;
 import io.openio.sds.exceptions.OioException;
 import io.openio.sds.http.OioHttp;
@@ -120,13 +121,14 @@ public class RawxClient {
      */
     public ObjectInfo uploadChunks(ObjectInfo oinf,
             InputStream data, String reqId) {
+        StreamWrapper wrapper = new StreamWrapper(data);
         long remaining = oinf.size();
         for (int pos = 0; pos < oinf.nbchunks(); pos++) {
             long csize = Math.min(remaining, oinf.chunksize(pos));
-            uploadPosition(oinf, pos, csize, data, reqId);
+            uploadPosition(oinf, pos, csize, wrapper, reqId);
             remaining -= csize;
         }
-        return oinf;
+        return oinf.hash(Hex.toHex(wrapper.md5()));
     }
 
     /**

@@ -132,5 +132,7 @@ public class OioConstants {
 
     public static final String USER_PROP_PREFIX = "user.";
 
-    public static final Object CHUNK_METHOD_PLAIN = "plain";
+    public static final String CHUNK_METHOD_PLAIN = "plain";
+    
+    public static final String EC_PREFIX ="ec/";
 }

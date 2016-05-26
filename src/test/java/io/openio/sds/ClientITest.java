@@ -11,6 +11,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -22,6 +24,7 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import io.openio.sds.common.Hex;
 import io.openio.sds.exceptions.ContainerExistException;
 import io.openio.sds.exceptions.ContainerNotFoundException;
 import io.openio.sds.exceptions.ObjectNotFoundException;
@@ -44,7 +47,7 @@ public class ClientITest {
         settings.proxy()
                 .ns(TestHelper.ns())
                 .url(TestHelper.proxyd())
-                .swift(TestHelper.swift());
+                .ecd(TestHelper.swift());
         client = ClientBuilder.newClient(settings);
     }
 
@@ -90,7 +93,7 @@ public class ClientITest {
     }
 
     @Test
-    public void handleEmptyObject() throws IOException {
+    public void handleEmptyObject() throws IOException, NoSuchAlgorithmException {
         OioUrl url = url(testAccount(),
                 UUID.randomUUID().toString(),
                 UUID.randomUUID().toString());
@@ -103,6 +106,8 @@ public class ClientITest {
                 Assert.assertNotNull(oinf);
                 InputStream in = client.downloadObject(oinf);
                 Assert.assertEquals(-1, in.read());
+                Assert.assertEquals(Hex.toHex(MessageDigest.getInstance("MD5").digest()),
+                        oinf.hash());
                 in.close();
             } finally {
                 client.deleteObject(url);
@@ -113,7 +118,8 @@ public class ClientITest {
     }
 
     @Test
-    public void handleSizedObject() throws IOException {
+    public void handleSizedObject()
+            throws IOException, NoSuchAlgorithmException {
         byte[] src = TestHelper.bytes(1024L);
         OioUrl url = url(testAccount(),
                 UUID.randomUUID().toString(),
@@ -131,6 +137,9 @@ public class ClientITest {
                 Assert.assertNotNull(oinf.chunkMethod());
                 Assert.assertNotNull(oinf.hashMethod());
                 checkObject(oinf, new ByteArrayInputStream(src));
+                Assert.assertEquals(
+                        Hex.toHex(MessageDigest.getInstance("MD5").digest(src)),
+                        oinf.hash());
             } finally {
                 client.deleteObject(url);
             }
@@ -141,7 +150,7 @@ public class ClientITest {
     }
 
     @Test
-    public void handleMultiChunkObject() throws IOException {
+    public void handleMultiChunkObject() throws IOException, NoSuchAlgorithmException {
         byte[] src = TestHelper.bytes(1090000L);
         OioUrl url = url(testAccount(),
                 UUID.randomUUID().toString(),
@@ -154,6 +163,9 @@ public class ClientITest {
                 ObjectInfo oinf = client.getObjectInfo(url);
                 Assert.assertNotNull(oinf);
                 checkObject(oinf, new ByteArrayInputStream(src));
+                Assert.assertEquals(
+                        Hex.toHex(MessageDigest.getInstance("MD5").digest(src)),
+                        oinf.hash());
             } finally {
                 client.deleteObject(url);
             }

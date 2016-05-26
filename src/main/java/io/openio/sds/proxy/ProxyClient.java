@@ -463,7 +463,7 @@ public class ProxyClient {
                 .verifier(CONTAINER_VERIFIER)
                 .execute()
                 .close();
-        
+
         return new ContainerInfo(url.container())
                 .account(r.header(ACCOUNT_HEADER))
                 .ctime(longHeader(r, M2_CTIME_HEADER))
@@ -1174,27 +1174,29 @@ public class ProxyClient {
     }
 
     /* -- INTERNALS -- */
-    
-    private ObjectInfo getBeansObjectInfoAndClose(OioUrl url, OioHttpResponse resp) {
+
+    private ObjectInfo getBeansObjectInfoAndClose(OioUrl url,
+            OioHttpResponse resp) {
         boolean success = false;
         try {
             ObjectInfo oinf = fillObjectInfo(url, resp);
             List<ChunkInfo> chunks = bodyChunk(resp);
-            // check if we are using EC with swift
-            if (chunks.stream().anyMatch(isParity)) {
-                if (settings.swiftrain()) {
-                    if (Strings.nullOrEmpty(settings.swift()))
+            // check if we are using EC with ec daemon
+            if (oinf.chunkMethod().startsWith(OioConstants.EC_PREFIX)) {
+                if (settings.ecdrain()) {
+                    if (Strings.nullOrEmpty(settings.ecd()))
                         throw new OioException(
-                                "Missing proxy#swift configuration");
+                                "Missing proxy#ecd configuration");
                     chunks.clear();
-                    chunks.add(buildSwiftFakeChunk(oinf));
+                    chunks.add(buildECDFakeChunk(oinf));
                 } else {
                     // TODO impl EC in java
                     throw new IllegalStateException(
-                            "Invalid configuration, we cannot do EC without swift ATM");
+                            "Invalid configuration, we cannot do EC without ecd ATM");
                 }
             }
             oinf.chunks(chunks);
+
             success = true;
             return oinf;
         } finally {
@@ -1202,16 +1204,18 @@ public class ProxyClient {
         }
     }
 
-    private ObjectInfo objectShowObjectInfoAndClose(OioUrl url, OioHttpResponse resp) {
+    private ObjectInfo objectShowObjectInfoAndClose(OioUrl url,
+            OioHttpResponse resp) {
         boolean success = false;
         try {
             ObjectInfo oinf = fillObjectInfo(url, resp);
             List<ChunkInfo> chunks = bodyChunk(resp);
-            // check if we are using EC with swift
+            // check if we are using EC with ecd
             if (oinf.chunkMethod().equals(OioConstants.CHUNK_METHOD_PLAIN)
-                && (!settings.swiftrain() || Strings.nullOrEmpty(settings.swift())))
-                        throw new OioException(
-                                "Unable to decode EC encoded object without swift");
+                    && (!settings.ecdrain()
+                            || Strings.nullOrEmpty(settings.ecd())))
+                throw new OioException(
+                        "Unable to decode EC encoded object without ecd");
             oinf.chunks(chunks);
             success = true;
             return oinf;
@@ -1229,6 +1233,7 @@ public class ProxyClient {
                 .chunkMethod(r.header(CONTENT_META_CHUNK_METHOD_HEADER))
                 .policy(r.header(CONTENT_META_POLICY_HEADER))
                 .version(longHeader(r, CONTENT_META_VERSION_HEADER))
+                .hash(r.header(OioConstants.CONTENT_META_HASH_HEADER))
                 .hashMethod(r.header(CONTENT_META_HASH_METHOD_HEADER))
                 .mtype(r.header(CONTENT_META_MIME_TYPE_HEADER))
                 .properties(propsFromHeaders(r.headers()));
@@ -1247,15 +1252,15 @@ public class ProxyClient {
         }
     }
 
-    private ChunkInfo buildSwiftFakeChunk(ObjectInfo oinf) {
-        String swiftUrl = String.format("%s/v1/%s/%s/%s",
-                settings.swift(),
+    private ChunkInfo buildECDFakeChunk(ObjectInfo oinf) {
+        String ecdUrl = String.format("%s/v1/%s/%s/%s",
+                settings.ecd(),
                 oinf.url().account(),
                 oinf.url().container(),
                 oinf.url().object());
 
         return new ChunkInfo()
-                .url(swiftUrl)
+                .url(ecdUrl)
                 .size(oinf.size())
                 .pos(Position.simple(0));
 
