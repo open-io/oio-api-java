@@ -8,8 +8,8 @@ import io.openio.sds.proxy.ProxySettings;
 public class TestHelper {
 
     private static final String TEST_ACCOUNT = "TEST";
-    private static String proxyIp = "192.168.15.224";
-    private static int proxyPort = 6006;
+    private static String proxyIp = "127.0.0.1";
+    private static int proxyPort = 6002;
 
     public static TestHelper INSTANCE;
 
@@ -29,15 +29,15 @@ public class TestHelper {
     }
 
     public static String ns() {
-        return "OPENIO";
+        return "NS";
     }
 
     public static String proxyd() {
         return String.format("http://%s:%d", proxyIp, proxyPort);
     }
-
-    public static String swift() {
-        return "http://192.168.15.226:6020";
+    
+    public static String ecd() {
+        return "";
     }
 
     public static InetSocketAddress proxyAddr() {

@@ -75,7 +75,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.function.Predicate;
 
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
@@ -1211,7 +1210,7 @@ public class ProxyClient {
             ObjectInfo oinf = fillObjectInfo(url, resp);
             List<ChunkInfo> chunks = bodyChunk(resp);
             // check if we are using EC with ecd
-            if (oinf.chunkMethod().equals(OioConstants.CHUNK_METHOD_PLAIN)
+            if (oinf.chunkMethod().startsWith(OioConstants.EC_PREFIX)
                     && (!settings.ecdrain()
                             || Strings.nullOrEmpty(settings.ecd())))
                 throw new OioException(
@@ -1328,12 +1327,4 @@ public class ProxyClient {
         }
         return res;
     }
-
-    private Predicate<ChunkInfo> isParity = new Predicate<ChunkInfo>() {
-
-        @Override
-        public boolean test(ChunkInfo ci) {
-            return ci.pos().parity();
-        }
-    };
 }

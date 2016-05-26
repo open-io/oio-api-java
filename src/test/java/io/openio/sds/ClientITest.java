@@ -47,7 +47,7 @@ public class ClientITest {
         settings.proxy()
                 .ns(TestHelper.ns())
                 .url(TestHelper.proxyd())
-                .ecd(TestHelper.swift());
+                .ecd(TestHelper.ecd());
         client = ClientBuilder.newClient(settings);
     }
 
