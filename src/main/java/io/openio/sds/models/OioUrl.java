@@ -16,19 +16,23 @@ public class OioUrl {
 
     private static final byte[] BACK_ZERO = { '\0' };
 
+    private String ns;
     private String account;
     private String container;
     private String cid;
     private String object;
 
-    private OioUrl(String account, String container, String cid,
+    private OioUrl(String ns, String account, String container, String cid,
             String object) {
+        this.ns = ns;
         this.account = account;
         this.container = container;
         this.cid = cid;
         this.object = object;
     }
-
+    
+    
+    
     public static OioUrl url(String account, String container) {
         return url(account, container, null);
     }
@@ -39,10 +43,33 @@ public class OioUrl {
                 "account cannot be null or empty");
         checkArgument(!nullOrEmpty(container),
                 "container cannot be null or empty");
-        return new OioUrl(account,
+        return new OioUrl(null,
+                account,
                 container,
                 cid(account, container),
                 object);
+    }
+    
+    public static OioUrl url(String ns, String account, String container,
+            String object) {
+        checkArgument(!nullOrEmpty(account),
+                "account cannot be null or empty");
+        checkArgument(!nullOrEmpty(container),
+                "container cannot be null or empty");
+        return new OioUrl(ns, 
+                account,
+                container,
+                cid(account, container),
+                object);
+    }
+
+    public String namespace() {
+        return ns;
+    }
+
+    public OioUrl namespace(String namespace) {
+        this.ns = namespace;
+        return this;
     }
 
     public String account() {
@@ -80,6 +107,7 @@ public class OioUrl {
     public String toString() {
         return MoreObjects.toStringHelper(this)
                 .omitNullValues()
+                .add("namespace", ns)
                 .add("account", account)
                 .add("container", container)
                 .add("object", object)
