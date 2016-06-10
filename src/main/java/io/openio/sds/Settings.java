@@ -1,7 +1,7 @@
 package io.openio.sds;
 
 import io.openio.sds.proxy.ProxySettings;
-import io.openio.sds.rawx.RawxSettings;
+import io.openio.sds.storage.rawx.RawxSettings;
 
 /**
  * 

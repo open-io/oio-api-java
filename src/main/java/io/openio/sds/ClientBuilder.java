@@ -11,7 +11,7 @@ import io.openio.sds.http.OioHttp;
 import io.openio.sds.http.OioHttpSettings;
 import io.openio.sds.pool.PoolingSettings;
 import io.openio.sds.proxy.ProxyClient;
-import io.openio.sds.rawx.RawxClient;
+import io.openio.sds.storage.rawx.RawxClient;
 
 /**
  * Builder for @link {@link Client} implementations

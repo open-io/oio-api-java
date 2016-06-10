@@ -17,7 +17,7 @@ import io.openio.sds.models.ObjectInfo;
 import io.openio.sds.models.ObjectList;
 import io.openio.sds.models.OioUrl;
 import io.openio.sds.proxy.ProxyClient;
-import io.openio.sds.rawx.RawxClient;
+import io.openio.sds.storage.rawx.RawxClient;
 
 /**
  * Basis implementation of {@link Client} interface based on {@link OioHttp}

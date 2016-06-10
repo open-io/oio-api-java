@@ -1,4 +1,4 @@
-package io.openio.sds.rawx;
+package io.openio.sds.storage.rawx;
 
 import static io.openio.sds.common.Check.checkArgument;
 import static io.openio.sds.common.IdGen.requestId;
@@ -47,13 +47,14 @@ import io.openio.sds.logging.SdsLogger;
 import io.openio.sds.logging.SdsLoggerFactory;
 import io.openio.sds.models.ChunkInfo;
 import io.openio.sds.models.ObjectInfo;
+import io.openio.sds.storage.StorageClient;
 
 /**
  * 
  * @author Christopher Dedeurwaerder
  *
  */
-public class RawxClient {
+public class RawxClient implements StorageClient {
 
     private static final SdsLogger logger = SdsLoggerFactory
             .getLogger(RawxClient.class);

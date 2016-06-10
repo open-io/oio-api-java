@@ -1,4 +1,4 @@
-package io.openio.sds.rawx;
+package io.openio.sds.storage.rawx;
 
 import java.io.IOException;
 import java.io.InputStream;
