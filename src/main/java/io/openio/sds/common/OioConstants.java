@@ -34,6 +34,7 @@ public class OioConstants {
     public static final String CONTENT_TYPE_HEADER = "Content-Type";
 
     public static final String ACCOUNT_HEADER = "X-oio-container-meta-sys-account";
+    public static final String ACTION_MODE_HEADER = "X-oio-action-mode";
     public static final String M2_CTIME_HEADER = "X-oio-container-meta-sys-m2-ctime";
     public static final String M2_INIT_HEADER = "X-oio-container-meta-sys-m2-init";
     public static final String M2_USAGE_HEADER = "X-oio-container-meta-sys-m2-usage";
@@ -133,6 +134,7 @@ public class OioConstants {
     public static final String USER_PROP_PREFIX = "user.";
 
     public static final String CHUNK_METHOD_PLAIN = "plain";
+    public static final String AUTOCREATE_ACTION_MODE = "autocreate";
     
     public static final String EC_PREFIX ="ec/";
 }
