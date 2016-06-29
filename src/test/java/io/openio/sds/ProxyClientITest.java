@@ -111,7 +111,7 @@ public class ProxyClientITest {
     public void getBeansNominal() {
         OioUrl url = url("TEST", UUID.randomUUID().toString(),
                 UUID.randomUUID().toString());
-        proxy.createContainer(url);
+        //proxy.createContainer(url);
         try {
             ObjectInfo oinf = proxy.getBeans(url, 1024);
             assertNotNull(oinf);

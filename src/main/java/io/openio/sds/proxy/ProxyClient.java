@@ -4,6 +4,7 @@ import static io.openio.sds.common.Check.checkArgument;
 import static io.openio.sds.common.IdGen.requestId;
 import static io.openio.sds.common.JsonUtils.gson;
 import static io.openio.sds.common.OioConstants.ACCOUNT_HEADER;
+import static io.openio.sds.common.OioConstants.ACTION_MODE_HEADER;
 import static io.openio.sds.common.OioConstants.CONTAINER_DEL_PROP;
 import static io.openio.sds.common.OioConstants.CONTAINER_GET_PROP;
 import static io.openio.sds.common.OioConstants.CONTAINER_SET_PROP;
@@ -607,6 +608,7 @@ public class ProxyClient {
                         settings.url(), settings.ns(), url.account(),
                         url.container(), url.object()))
                 .body(gson().toJson(new BeansRequest().size(size)))
+                .header(ACTION_MODE_HEADER, settings.autocreate() ? OioConstants.AUTOCREATE_ACTION_MODE : null)
                 .header(OIO_REQUEST_ID_HEADER, reqId)
                 .verifier(OBJECT_VERIFIER)
                 .execute();

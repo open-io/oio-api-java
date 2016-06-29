@@ -14,6 +14,7 @@ public class ProxySettings {
     private String ns;
     private String ecd;
     private boolean ecdrain = true; //not configurable atm cuz we can't do somehow else
+    private boolean autocreate = true;
     private OioHttpSettings http = new OioHttpSettings();
     private PoolingSettings pooling = new PoolingSettings();
 
@@ -68,4 +69,13 @@ public class ProxySettings {
     public boolean ecdrain(){
         return ecdrain;
     }
+
+	public boolean autocreate() {
+		return autocreate;
+	}
+
+	public ProxySettings autocreate(boolean autocreate) {
+		this.autocreate = autocreate;
+		return this;
+	}
 }
