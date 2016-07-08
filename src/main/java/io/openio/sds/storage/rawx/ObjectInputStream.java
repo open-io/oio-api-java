@@ -1,4 +1,4 @@
-package io.openio.sds.common;
+package io.openio.sds.storage.rawx;
 
 import static io.openio.sds.common.OioConstants.OIO_REQUEST_ID_HEADER;
 import static io.openio.sds.http.Verifiers.RAWX_VERIFIER;

@@ -82,6 +82,12 @@ public class OioConstants {
     public static final String CHUNK_META_CHUNK_ID = "X-oio-chunk-meta-chunk-id";
     public static final String CHUNK_META_CHUNK_POS = "X-oio-chunk-meta-chunk-pos";
     public static final String CHUNK_META_CHUNK_HASH = "X-oio-chunk-meta-chunk-hash";
+    
+    /* -- ECD common headers -- */
+    
+    public static final String CHUNK_META_CHUNK_PREFIX = "X-oio-chunk-meta-chunk-";
+    public static final String CHUNK_META_CHUNKS_NB = "X-oio-chunk-meta-chunks-nb";
+    public static final String CHUNK_META_CHUNK_SIZE = "X-oio-chunk-meta-chunk-size";
 
     /* -- Common parameters names -- */
 

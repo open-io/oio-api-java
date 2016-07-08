@@ -11,6 +11,7 @@ import io.openio.sds.http.OioHttp;
 import io.openio.sds.http.OioHttpSettings;
 import io.openio.sds.pool.PoolingSettings;
 import io.openio.sds.proxy.ProxyClient;
+import io.openio.sds.storage.ecd.EcdClient;
 import io.openio.sds.storage.rawx.RawxClient;
 
 /**
@@ -36,7 +37,10 @@ public class ClientBuilder {
 		        rawxSocketProvider(settings.rawx().http()));
 		ProxyClient proxy = new ProxyClient(proxyHttp, settings.proxy());
 		RawxClient rawx = new RawxClient(rawxHttp, settings.rawx());
-		return new DefaultClient(proxy, rawx);
+		EcdClient ecd = null == settings.proxy().ecd() 
+				? null
+				: new EcdClient(rawxHttp, settings.rawx(), settings.proxy().ecd());
+		return new DefaultClient(proxy, rawx, ecd);
 	}
 
 	/**
@@ -52,6 +56,25 @@ public class ClientBuilder {
 	public static DefaultClient newClient(String ns, String proxydUrl) {
 		Settings settings = new Settings();
 		settings.proxy().url(proxydUrl).ns(ns);
+		return newClient(settings);
+	}
+	
+	/**
+	 * Creates a client without specific configuration. Useful for testing
+	 * purpose
+	 *
+	 * @param ns
+	 *            the OpenIO Namespace
+	 * @param proxydUrl
+	 *            the url of OpenIO proxyd service
+	 * @return The build {@link Client}
+	 */
+	public static DefaultClient newClient(String ns, 
+			String proxydUrl,
+			String ecdUrl) {
+		Settings settings = new Settings();
+		settings.proxy().url(proxydUrl).ns(ns);
+		settings.proxy().ecd(ecdUrl);
 		return newClient(settings);
 	}
 

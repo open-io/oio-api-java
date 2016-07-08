@@ -39,7 +39,6 @@ import java.util.concurrent.TimeoutException;
 
 import io.openio.sds.common.FeedableInputStream;
 import io.openio.sds.common.Hex;
-import io.openio.sds.common.ObjectInputStream;
 import io.openio.sds.exceptions.OioException;
 import io.openio.sds.http.OioHttp;
 import io.openio.sds.http.OioHttp.RequestBuilder;
@@ -186,7 +185,7 @@ public class RawxClient implements StorageClient {
     public InputStream downloadObject(ObjectInfo oinf) {
         return downloadObject(oinf, requestId());
     }
-
+    
     public InputStream downloadObject(ObjectInfo oinf, String reqId) {
         checkArgument(null != oinf);
         return new ObjectInputStream(oinf, http, reqId);

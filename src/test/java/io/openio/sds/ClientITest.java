@@ -9,6 +9,8 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.MessageDigest;
@@ -151,13 +153,18 @@ public class ClientITest {
 
     @Test
     public void handleMultiChunkObject() throws IOException, NoSuchAlgorithmException {
-        byte[] src = TestHelper.bytes(1090000L);
+        byte[] src = TestHelper.bytes(10 * 1000 * 1024L);
         OioUrl url = url(testAccount(),
                 UUID.randomUUID().toString(),
                 UUID.randomUUID().toString());
+        
+        
+        FileOutputStream fout = new FileOutputStream(new File("./in"));
+        		fout.write(src);
+        		fout.flush();
         client.createContainer(url);
         try {
-            client.putObject(url, 1090000L,
+            client.putObject(url, 10 * 1000 * 1024L,
                     new ByteArrayInputStream(src));
             try {
                 ObjectInfo oinf = client.getObjectInfo(url);
@@ -167,10 +174,11 @@ public class ClientITest {
                         Hex.toHex(MessageDigest.getInstance("MD5").digest(src)),
                         oinf.hash());
             } finally {
-                client.deleteObject(url);
+                //client.deleteObject(url);
+                System.out.println(url);
             }
         } finally {
-            client.deleteContainer(url);
+            //client.deleteContainer(url);
         }
     }
 
@@ -292,6 +300,7 @@ public class ClientITest {
     private void checkObject(ObjectInfo oinf, InputStream src)
             throws IOException {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        FileOutputStream foutout = new FileOutputStream(new File("./out"+UUID.randomUUID().toString()));
         InputStream in = client.downloadObject(oinf);
         byte[] buf = new byte[8192];
         int nbRead = 0;
@@ -300,9 +309,14 @@ public class ClientITest {
                 bos.write(buf, 0, nbRead);
         }
         byte[] res = bos.toByteArray();
+        foutout.write(res);
+        foutout.flush();
+        int count = 0;
         for (int i = 0; i < oinf.size(); i++)
             try {
-                Assert.assertEquals(src.read(), res[i] & 0xFF);
+            	//Assert.assertTrue(-1 != src.read());
+                Assert.assertEquals("Fail at index: " + count, src.read(), res[i] & 0xFF);
+                count++;
             } catch (IOException e) {
                 Assert.fail(e.getMessage());
             }
