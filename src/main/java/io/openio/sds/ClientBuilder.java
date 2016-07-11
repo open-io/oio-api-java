@@ -67,6 +67,8 @@ public class ClientBuilder {
 	 *            the OpenIO Namespace
 	 * @param proxydUrl
 	 *            the url of OpenIO proxyd service
+	 * @param ecdUrl 
+	 * 			  url of ECD service to manage Erasure Coding
 	 * @return The build {@link Client}
 	 */
 	public static DefaultClient newClient(String ns, 
