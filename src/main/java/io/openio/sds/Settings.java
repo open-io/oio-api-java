@@ -23,6 +23,9 @@ public class Settings {
     
     /**
      * Specifies a proxyd connection configuration
+     * @param proxy
+     *  the configuration to set
+     * @return this
      */
     public Settings proxy(ProxySettings proxy) {
         this.proxy = proxy;
@@ -38,9 +41,9 @@ public class Settings {
     }
     
     /**
-     * 
-     * @param rawx
-     * @return
+     * Specifies rawx connections configuration
+     * @param rawx the configuration to set
+     * @return this
      */
     public Settings rawx(RawxSettings rawx) {
         this.rawx = rawx;
