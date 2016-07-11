@@ -42,7 +42,7 @@ public class ChunkedStream extends InputStream {
 			readSize();
 		if (-1 == currentRemaining)
 			return -1;
-		int res = chunked.read(buf, 0,
+		int res = chunked.read(buf, offset,
 		        Math.min(len, Math.min(buf.length - offset, currentRemaining)));
 		currentRemaining = currentRemaining - res;
 		return res;

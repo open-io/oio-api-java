@@ -79,6 +79,10 @@ public class EcdInputStream extends InputStream {
 			int read = current.body().read(buf, offset + totRead,
 			        Math.min(length - totRead,
 			                buf.length - offset + totRead));
+			if (logger.isTraceEnabled())
+				logger.trace("At offset 0+" + totRead + " of " + buf
+						+ ", read byte " + buf[0] + " and length " + read
+						+ " from " + current.body());
 			if (-1 == read) {
 				eof = true;
 				current.close();
@@ -106,8 +110,8 @@ public class EcdInputStream extends InputStream {
 				        ci.url());
 			}
 
-			builder.header(OioConstants.CHUNK_META_CHUNK_SIZE, 
-					String.valueOf((oinf.ecinfo().k() + oinf.ecinfo().m()) * oinf.sortedChunks().get(pos).get(0).size()));
+			builder.header(OioConstants.CHUNK_META_CHUNK_SIZE,
+					oinf.sortedChunks().get(pos).get(0).size().toString());
 
 			current = builder.execute();
 			
