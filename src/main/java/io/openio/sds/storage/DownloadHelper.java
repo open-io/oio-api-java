@@ -51,14 +51,11 @@ public class DownloadHelper {
 	}
 
 	private static ObjectOffset findOffset(ObjectInfo oinf, int offset) {
-		System.out.println("offset = " + offset);
 		if (-1 == offset)
 			return new ObjectOffset()
 			        .pos(oinf.nbchunks() - 1)
 			        .offset(oinf.chunksize(oinf.nbchunks() - 1).intValue() - 1);
 		for (int pos = 0; pos < oinf.nbchunks(); pos++) {
-			System.out.println("pos " + pos);
-			System.out.println("csize " + oinf.chunksize(pos));
 			long size = oinf.chunksize(pos);
 			if (offset <= size)
 				return new ObjectOffset().pos(pos).offset(offset);
