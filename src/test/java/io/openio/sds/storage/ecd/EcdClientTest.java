@@ -43,7 +43,7 @@ public class EcdClientTest {
 	@Test
 	public void testShortData() {
 
-		Long size = 40 * 1024 * 1024L;
+		Long size = 10 * 1000 * 1024L;
 		
 		OioHttp http = OioHttp.http(new OioHttpSettings(),
 		        SocketProviders.directSocketProvider(new OioHttpSettings()));

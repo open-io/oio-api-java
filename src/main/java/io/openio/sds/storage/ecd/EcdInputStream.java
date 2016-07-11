@@ -72,7 +72,7 @@ public class EcdInputStream extends InputStream {
 		int totRead = 0;
 		while (totRead < length) {
 			if (null == current || eof) {
-				if (pos >= oinf.nbchunks())
+				if (pos >= oinf.sortedChunks().size())
 					return 0 == totRead ? -1 : totRead;
 				next();
 			}
@@ -100,7 +100,6 @@ public class EcdInputStream extends InputStream {
 			        .header(OioConstants.CHUNK_META_CONTENT_CHUNK_METHOD,
 			                oinf.chunkMethod())
 			        .verifier(RAWX_VERIFIER);
-
 			for (ChunkInfo ci : oinf.sortedChunks().get(pos)) {
 				builder.header(
 				        OioConstants.CHUNK_META_CHUNK_PREFIX + ci.pos().sub(),

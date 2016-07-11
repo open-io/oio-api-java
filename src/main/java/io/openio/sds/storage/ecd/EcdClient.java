@@ -62,9 +62,15 @@ public class EcdClient implements StorageClient {
 	        String reqId) {
 		StreamWrapper wrapper = new StreamWrapper(data);
 		long remaining = oinf.size();
-		for (int pos = 0; pos < oinf.nbchunks(); pos++) {
+		for (int pos = 0; pos < oinf.sortedChunks().size(); pos++) {
+			StreamWrapper chunkwrapper = new StreamWrapper(wrapper);
 			long csize = Math.min(remaining, oinf.metachunksize(pos));
-			uploadPosition(oinf, pos, csize, wrapper, reqId);
+			uploadPosition(oinf, pos, csize, chunkwrapper, reqId);
+			String hash = Hex.toHex(chunkwrapper.md5());
+			for(ChunkInfo ci : oinf.sortedChunks().get(pos)) {
+				ci.size(csize);
+				ci.hash(hash);
+			}
 			remaining -= csize;
 		}
 		return oinf.hash(Hex.toHex(wrapper.md5()));
