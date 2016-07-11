@@ -89,6 +89,8 @@ public class OioHttpResponse {
     private OioHttpResponse responseHead() throws IOException {
         this.sis = sock.getInputStream();
         this.head = ResponseHead.parse(readHeaders());
+    	if(head.chunked())
+    		this.sis = new ChunkedStream(sis);
         return this;
     }
 
@@ -172,6 +174,11 @@ public class OioHttpResponse {
 
         public String msg() {
             return statusLine.msg();
+        }
+        
+        public boolean chunked(){
+        	String chunked = this.header("transfer-encoding");
+        	return null != chunked && "chunked".equals(chunked);
         }
 
     }

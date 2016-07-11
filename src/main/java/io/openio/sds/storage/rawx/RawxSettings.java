@@ -1,4 +1,4 @@
-package io.openio.sds.rawx;
+package io.openio.sds.storage.rawx;
 
 import io.openio.sds.http.OioHttpSettings;
 

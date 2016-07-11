@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -31,6 +32,7 @@ import io.openio.sds.exceptions.ObjectNotFoundException;
 import io.openio.sds.models.ContainerInfo;
 import io.openio.sds.models.ObjectInfo;
 import io.openio.sds.models.OioUrl;
+import io.openio.sds.models.Range;
 
 /**
  * 
@@ -148,16 +150,52 @@ public class ClientITest {
         }
 
     }
-
+    
     @Test
-    public void handleMultiChunkObject() throws IOException, NoSuchAlgorithmException {
-        byte[] src = TestHelper.bytes(1090000L);
+    public void range()
+            throws IOException, NoSuchAlgorithmException {
+        byte[] src = TestHelper.bytes(1024L);
         OioUrl url = url(testAccount(),
                 UUID.randomUUID().toString(),
                 UUID.randomUUID().toString());
         client.createContainer(url);
+        
+        byte[] ranged = Arrays.copyOfRange(src, 10, 20);
+        
         try {
-            client.putObject(url, 1090000L,
+            client.putObject(url, 1024L,
+                    new ByteArrayInputStream(src));
+            try {
+                ObjectInfo oinf = client.getObjectInfo(url);
+                Assert.assertNotNull(oinf);
+                Assert.assertEquals(1024, oinf.size().longValue());
+                Assert.assertTrue(0 < oinf.ctime());
+                Assert.assertNotNull(oinf.policy());
+                Assert.assertNotNull(oinf.chunkMethod());
+                Assert.assertNotNull(oinf.hashMethod());
+                checkObject(oinf, Range.between(10, 20), new ByteArrayInputStream(ranged));
+                Assert.assertEquals(
+                        Hex.toHex(MessageDigest.getInstance("MD5").digest(src)),
+                        oinf.hash());
+            } finally {
+                client.deleteObject(url);
+            }
+        } finally {
+            client.deleteContainer(url);
+        }
+
+    }
+
+    @Test
+    public void handleMultiChunkObject() throws IOException, NoSuchAlgorithmException {
+        byte[] src = TestHelper.bytes(10 * 1000 * 1024L);
+        OioUrl url = url(testAccount(),
+                UUID.randomUUID().toString(),
+                UUID.randomUUID().toString());
+        
+        client.createContainer(url);
+        try {
+            client.putObject(url, 10 * 1000 * 1024L,
                     new ByteArrayInputStream(src));
             try {
                 ObjectInfo oinf = client.getObjectInfo(url);
@@ -167,10 +205,11 @@ public class ClientITest {
                         Hex.toHex(MessageDigest.getInstance("MD5").digest(src)),
                         oinf.hash());
             } finally {
-                client.deleteObject(url);
+                //client.deleteObject(url);
+                System.out.println(url);
             }
         } finally {
-            client.deleteContainer(url);
+            //client.deleteContainer(url);
         }
     }
 
@@ -300,9 +339,34 @@ public class ClientITest {
                 bos.write(buf, 0, nbRead);
         }
         byte[] res = bos.toByteArray();
+        int count = 0;
         for (int i = 0; i < oinf.size(); i++)
             try {
-                Assert.assertEquals(src.read(), res[i] & 0xFF);
+            	//Assert.assertTrue(-1 != src.read());
+                Assert.assertEquals("Fail at index: " + count, src.read(), res[i] & 0xFF);
+                count++;
+            } catch (IOException e) {
+                Assert.fail(e.getMessage());
+            }
+    }
+    
+    private void checkObject(ObjectInfo oinf, Range range, InputStream src)
+            throws IOException {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        InputStream in = client.downloadObject(oinf, range);
+        byte[] buf = new byte[8192];
+        int nbRead = 0;
+        while (-1 < (nbRead = in.read(buf))) {
+            if (0 < nbRead)
+                bos.write(buf, 0, nbRead);
+        }
+        byte[] res = bos.toByteArray();
+        int count = 0;
+        for (int i = 0; i < range.to() - range.from(); i++)
+            try {
+            	//Assert.assertTrue(-1 != src.read());
+                Assert.assertEquals("Fail at index: " + count, src.read(), res[i] & 0xFF);
+                count++;
             } catch (IOException e) {
                 Assert.fail(e.getMessage());
             }

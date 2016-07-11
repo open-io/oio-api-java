@@ -41,6 +41,7 @@ import static io.openio.sds.common.OioConstants.M2_USAGE_HEADER;
 import static io.openio.sds.common.OioConstants.M2_VERSION_HEADER;
 import static io.openio.sds.common.OioConstants.MARKER_PARAM;
 import static io.openio.sds.common.OioConstants.MAX_PARAM;
+import static io.openio.sds.common.OioConstants.NS_CHUNK_SIZE_HEADER;
 import static io.openio.sds.common.OioConstants.NS_HEADER;
 import static io.openio.sds.common.OioConstants.OBJECT_DEL_PROP;
 import static io.openio.sds.common.OioConstants.OBJECT_GET_PROP;
@@ -99,7 +100,6 @@ import io.openio.sds.models.NamespaceInfo;
 import io.openio.sds.models.ObjectInfo;
 import io.openio.sds.models.ObjectList;
 import io.openio.sds.models.OioUrl;
-import io.openio.sds.models.Position;
 import io.openio.sds.models.ReferenceInfo;
 import io.openio.sds.models.ServiceInfo;
 
@@ -655,6 +655,7 @@ public class ProxyClient {
                         String.valueOf(oinf.size()))
                 .header(CONTENT_META_HASH_HEADER, oinf.hash())
                 .header(OIO_REQUEST_ID_HEADER, reqId)
+                .header(CONTENT_META_CHUNK_METHOD_HEADER, oinf.chunkMethod())
                 .header(CONTENT_META_VERSION_HEADER,
                         versionHeader(oinf, version))
                 .headers(propsToHeaders(oinf.properties()))
@@ -1183,13 +1184,11 @@ public class ProxyClient {
             ObjectInfo oinf = fillObjectInfo(url, resp);
             List<ChunkInfo> chunks = bodyChunk(resp);
             // check if we are using EC with ec daemon
-            if (oinf.chunkMethod().startsWith(OioConstants.EC_PREFIX)) {
+            if (oinf.isEC()) {
                 if (settings.ecdrain()) {
                     if (Strings.nullOrEmpty(settings.ecd()))
                         throw new OioException(
                                 "Missing proxy#ecd configuration");
-                    chunks.clear();
-                    chunks.add(buildECDFakeChunk(oinf));
                 } else {
                     // TODO impl EC in java
                     throw new IllegalStateException(
@@ -1251,20 +1250,6 @@ public class ProxyClient {
         } catch (Exception e) {
             throw new OioException("Body extraction error", e);
         }
-    }
-
-    private ChunkInfo buildECDFakeChunk(ObjectInfo oinf) {
-        String ecdUrl = String.format("%s/v1/%s/%s/%s",
-                settings.ecd(),
-                oinf.url().account(),
-                oinf.url().container(),
-                oinf.url().object());
-
-        return new ChunkInfo()
-                .url(ecdUrl)
-                .size(oinf.size())
-                .pos(Position.simple(0));
-
     }
 
     private <T> List<T> listAndClose(OioHttpResponse resp) {

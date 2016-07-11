@@ -44,6 +44,15 @@ OpenIO SDS API is a java remote API for [OpenIO Software Defined Storage](https:
 ###### Basic client instantiation
    
     Client client = ClientBuilder.newClient("OPENIO", "http://127.0.0.1:6002");
+
+###### Advanced client configuration
+
+    Settings settings = new Settings();
+        settings.proxy()
+                .ns("OPENIO")
+                .url("http://127.0.0.1:6002")
+                .ecd("http://127.0.0.1:5000"); //setup an ecd url for Erasure cogin management
+        client = ClientBuilder.newClient(settings);
     
 
 ###### Container creation example 

@@ -124,6 +124,7 @@ public class Verifiers {
             case 200:
             case 201:
             case 204:
+            case 206:
                 return;
             case 400:
                 throw new BadRequestException(resp.msg());

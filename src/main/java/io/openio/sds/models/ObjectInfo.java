@@ -11,6 +11,7 @@ import java.util.Map;
 
 import io.openio.sds.common.Hash;
 import io.openio.sds.common.MoreObjects;
+import io.openio.sds.common.OioConstants;
 
 public class ObjectInfo {
 
@@ -27,7 +28,9 @@ public class ObjectInfo {
     private String mtype;
     private Map<String, String> properties;
     private List<ChunkInfo> chunks;
-    private transient Map<Integer, List<ChunkInfo>> sortedChunks;
+    private ECInfo ecinfo;
+    
+	private transient Map<Integer, List<ChunkInfo>> sortedChunks;
 
     private static final Comparator<ChunkInfo> comparator = new Comparator<ChunkInfo>() {
 
@@ -133,6 +136,7 @@ public class ObjectInfo {
 
     public ObjectInfo chunkMethod(String chunkMethod) {
         this.chunkMethod = chunkMethod;
+        this.ecinfo = ECInfo.fromString(chunkMethod);
         return this;
     }
 
@@ -155,7 +159,7 @@ public class ObjectInfo {
     }
 
     public Integer nbchunks() {
-        return sortedChunks.size();
+        return isEC() ? chunks.size() : sortedChunks.size();
     }
 
     // FIXME Not good for RAIN
@@ -172,7 +176,24 @@ public class ObjectInfo {
         this.properties = properties;
         return this;
     }
-
+    
+    public ECInfo ecinfo(){
+    	return ecinfo;
+    }
+        
+    public boolean isEC(){
+    	return null != ecinfo;
+    }
+    
+    public int metachunksize(int pos){
+    	if(!isEC())
+    		return -1;
+    	int maxmcsize = (int) (ecinfo.k() 
+    			* sortedChunks.get(pos).get(0).size());
+    	int remaining = (int) (size - (pos * maxmcsize));
+    	return Math.min(maxmcsize, remaining);
+    }
+    
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
