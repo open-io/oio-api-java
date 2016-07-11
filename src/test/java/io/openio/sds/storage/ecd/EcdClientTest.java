@@ -1,7 +1,5 @@
 package io.openio.sds.storage.ecd;
 
-import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,7 +16,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import sun.misc.IOUtils;
 import io.openio.sds.TestHelper;
 import io.openio.sds.common.Hash;
 import io.openio.sds.common.SocketProviders;

@@ -5,7 +5,7 @@ import static io.openio.sds.http.Verifiers.RAWX_VERIFIER;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map.Entry;
+import java.util.List;
 
 import io.openio.sds.common.OioConstants;
 import io.openio.sds.exceptions.OioException;
@@ -15,7 +15,7 @@ import io.openio.sds.http.OioHttpResponse;
 import io.openio.sds.logging.SdsLogger;
 import io.openio.sds.logging.SdsLoggerFactory;
 import io.openio.sds.models.ChunkInfo;
-import io.openio.sds.models.ObjectInfo;
+import io.openio.sds.storage.Target;
 
 /**
  * For not rained items only
@@ -29,20 +29,23 @@ public class EcdInputStream extends InputStream {
 	        .getLogger(EcdInputStream.class);
 
 	private OioHttp http;
-	private ObjectInfo oinf;
+	private List<Target> targets;
 	private int pos = 0;
 	private OioHttpResponse current;
 	private String reqId;
 	private String ecdUrl;
+	private String chunkMethod;
 	private boolean eof = false;
 
 	public EcdInputStream(String ecdUrl,
-	        ObjectInfo oinf,
+	        List<Target> targets,
+	        String chunkMethod,
 	        OioHttp http,
 	        String reqId) {
 		this.ecdUrl = ecdUrl;
-		this.oinf = oinf;
+		this.targets = targets;
 		this.http = http;
+		this.chunkMethod = chunkMethod;
 		this.reqId = reqId;
 	}
 
@@ -50,7 +53,7 @@ public class EcdInputStream extends InputStream {
 	public void close() {
 		if (null != current)
 			current.close();
-		pos = oinf.nbchunks() + 1;
+		pos = targets.size() + 1;
 	}
 
 	@Override
@@ -72,7 +75,7 @@ public class EcdInputStream extends InputStream {
 		int totRead = 0;
 		while (totRead < length) {
 			if (null == current || eof) {
-				if (pos >= oinf.sortedChunks().size())
+				if (pos >= targets.size())
 					return 0 == totRead ? -1 : totRead;
 				next();
 			}
@@ -81,8 +84,8 @@ public class EcdInputStream extends InputStream {
 			                buf.length - offset + totRead));
 			if (logger.isTraceEnabled())
 				logger.trace("At offset 0+" + totRead + " of " + buf
-						+ ", read byte " + buf[0] + " and length " + read
-						+ " from " + current.body());
+				        + ", read byte " + buf[0] + " and length " + read
+				        + " from " + current.body());
 			if (-1 == read) {
 				eof = true;
 				current.close();
@@ -102,19 +105,26 @@ public class EcdInputStream extends InputStream {
 			RequestBuilder builder = http.get(ecdUrl)
 			        .header(OIO_REQUEST_ID_HEADER, reqId)
 			        .header(OioConstants.CHUNK_META_CONTENT_CHUNK_METHOD,
-			                oinf.chunkMethod())
+			                chunkMethod)
 			        .verifier(RAWX_VERIFIER);
-			for (ChunkInfo ci : oinf.sortedChunks().get(pos)) {
+			for (ChunkInfo ci : targets.get(pos).getChunk()) {
 				builder.header(
 				        OioConstants.CHUNK_META_CHUNK_PREFIX + ci.pos().sub(),
 				        ci.url());
 			}
 
 			builder.header(OioConstants.CHUNK_META_CHUNK_SIZE,
-					oinf.sortedChunks().get(pos).get(0).size().toString());
+			        targets.get(pos).getChunk().get(0).size().toString());
+
+			if (null != targets.get(pos).getRange()) {
+				if(logger.isTraceEnabled())
+					logger.trace("Setting range : " + targets.get(pos).getRange().headerValue());
+				builder.header(OioConstants.RANGE_HEADER,
+				        targets.get(pos).getRange().headerValue());
+			}
 
 			current = builder.execute();
-			
+
 			eof = false;
 			pos++;
 		} catch (OioException e) {

@@ -1,5 +1,6 @@
 package io.openio.sds.storage.ecd;
 
+import static io.openio.sds.common.Check.checkArgument;
 import static io.openio.sds.common.IdGen.requestId;
 import static io.openio.sds.common.OioConstants.CHUNK_META_CHUNK_POS;
 import static io.openio.sds.common.OioConstants.CHUNK_META_CONTAINER_ID;
@@ -20,18 +21,20 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map.Entry;
+import java.util.List;
 
 import io.openio.sds.common.Hex;
 import io.openio.sds.common.OioConstants;
 import io.openio.sds.http.OioHttp;
 import io.openio.sds.http.OioHttp.RequestBuilder;
-import io.openio.sds.http.OioHttpResponse;
 import io.openio.sds.logging.SdsLogger;
 import io.openio.sds.logging.SdsLoggerFactory;
 import io.openio.sds.models.ChunkInfo;
 import io.openio.sds.models.ObjectInfo;
+import io.openio.sds.models.Range;
+import io.openio.sds.storage.DownloadHelper;
 import io.openio.sds.storage.StorageClient;
+import io.openio.sds.storage.Target;
 import io.openio.sds.storage.rawx.RawxClient;
 import io.openio.sds.storage.rawx.RawxSettings;
 import io.openio.sds.storage.rawx.StreamWrapper;
@@ -115,10 +118,26 @@ public class EcdClient implements StorageClient {
 	public InputStream downloadObject(ObjectInfo oinf) {
 		return downloadObject(oinf, requestId());
 	}
+	
+	@Override
+	public InputStream downloadObject(ObjectInfo oinf, Range range) {
+		return downloadObject(oinf, range, requestId());
+	}
 
 	@Override
 	public InputStream downloadObject(ObjectInfo oinf, String reqId) {
-		return new EcdInputStream(ecdUrl, oinf, http, reqId);
+		return downloadObject(oinf, null, reqId);
+	}
+	
+	@Override
+	public InputStream downloadObject(ObjectInfo oinf, Range range, String reqId) {
+		checkArgument(null != oinf);
+		List<Target> targets = DownloadHelper.loadTargets(oinf, range);
+		return new EcdInputStream(ecdUrl, 
+				targets,
+				oinf.chunkMethod(),
+				http, 
+				reqId);
 	}
 
 	/* --- INTERNALS --- */

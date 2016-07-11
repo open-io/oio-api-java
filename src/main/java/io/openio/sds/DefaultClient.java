@@ -16,6 +16,7 @@ import io.openio.sds.models.NamespaceInfo;
 import io.openio.sds.models.ObjectInfo;
 import io.openio.sds.models.ObjectList;
 import io.openio.sds.models.OioUrl;
+import io.openio.sds.models.Range;
 import io.openio.sds.proxy.ProxyClient;
 import io.openio.sds.storage.ecd.EcdClient;
 import io.openio.sds.storage.rawx.RawxClient;
@@ -174,6 +175,14 @@ public class DefaultClient implements Client {
 		return oinf.isEC() 
 				? ecd.downloadObject(oinf, requestId())
 				: rawx.downloadObject(oinf, requestId());
+	}
+	
+	@Override
+	public InputStream downloadObject(ObjectInfo oinf, Range range) {
+		checkArgument(null != oinf, "ObjectInfo cannot be null");
+		return oinf.isEC() 
+				? ecd.downloadObject(oinf, range, requestId())
+				: rawx.downloadObject(oinf, range,  requestId());
 	}
 
 	@Override

@@ -17,6 +17,7 @@ import io.openio.sds.models.NamespaceInfo;
 import io.openio.sds.models.ObjectInfo;
 import io.openio.sds.models.ObjectList;
 import io.openio.sds.models.OioUrl;
+import io.openio.sds.models.Range;
 
 /**
  * <p>
@@ -403,6 +404,21 @@ public interface Client {
      */
     public InputStream downloadObject(ObjectInfo oinf)
             throws OioException;
+    
+    /**
+     * Returns object's data between specified range
+     * 
+     * @param oinf
+     *            the informations about object to download
+     * @param range
+     * 			  the wanted data range
+     * 
+     * @return the data in InputStream format
+     * 
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public InputStream downloadObject(ObjectInfo oinf, Range range);
 
     /**
      * Deletes the specified object

@@ -67,6 +67,8 @@ public class OioConstants {
 
     public static final String OIO_ACTION_MODE_HEADER = "X-oio-action-mode";
     public static final String OIO_REQUEST_ID_HEADER = "X-oio-req-id";
+    
+	public static final String RANGE_HEADER = "Range";
 
     /* -- RAWX common headers -- */
 
@@ -143,4 +145,5 @@ public class OioConstants {
     public static final String AUTOCREATE_ACTION_MODE = "autocreate";
     
     public static final String EC_PREFIX ="ec/";
+
 }
