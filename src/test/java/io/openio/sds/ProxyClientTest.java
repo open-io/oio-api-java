@@ -65,6 +65,10 @@ public class ProxyClientTest {
         ProxyClient proxy = new ProxyClient(mockedHttp, mockedSettings);
 
         OioUrl url = Mockito.mock(OioUrl.class);
+        Mockito.when(url.account()).thenReturn("account");
+        Mockito.when(url.container()).thenReturn("container_name");
+        Mockito.when(url.object()).thenReturn("object_name");
+
         Assert.assertNotNull(proxy.listContainer(url, new ListOptions()));
 
     }

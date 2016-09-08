@@ -1,10 +1,17 @@
 package io.openio.sds.common;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import io.openio.sds.logging.SdsLogger;
+import io.openio.sds.logging.SdsLoggerFactory;
+
 public class Strings {
+
+    private static final SdsLogger LOGGER = SdsLoggerFactory.getLogger(Strings.class);
 
     public static boolean nullOrEmpty(String string) {
         return null == string || 0 == string.length();
@@ -36,5 +43,14 @@ public class Strings {
             if (!nullOrEmpty(tok))
                 res.add(tok);
         return res;
+    }
+
+    public static String urlEncode(String src) {
+        try {
+            return URLEncoder.encode(src, OioConstants.OIO_CHARSET.name());
+        } catch (UnsupportedEncodingException e) {
+            LOGGER.warn("Url encoding fail, may have some problems", e);
+            return src;
+        }
     }
 }
