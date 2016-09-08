@@ -46,9 +46,7 @@ public class ClientITest {
     @BeforeClass
     public static void setup() {
         Settings settings = new Settings();
-        settings.proxy()
-                .ns(TestHelper.ns())
-                .url(TestHelper.proxyd())
+        settings.proxy().ns(TestHelper.ns()).url(TestHelper.proxyd())
                 .ecd(TestHelper.ecd());
         client = ClientBuilder.newClient(settings);
     }
@@ -84,21 +82,19 @@ public class ClientITest {
 
     @Test(expected = ContainerNotFoundException.class)
     public void deleteUnknownContainer() {
-        client.deleteContainer(
-                url(testAccount(), UUID.randomUUID().toString()));
+        client.deleteContainer(url(testAccount(), UUID.randomUUID().toString()));
     }
 
     @Test(expected = ContainerNotFoundException.class)
     public void unknownContainerInfo() {
-        client.getContainerInfo(
-                url(testAccount(), UUID.randomUUID().toString()));
+        client.getContainerInfo(url(testAccount(), UUID.randomUUID().toString()));
     }
 
     @Test
-    public void handleEmptyObject() throws IOException, NoSuchAlgorithmException {
-        OioUrl url = url(testAccount(),
-                UUID.randomUUID().toString(),
-                UUID.randomUUID().toString());
+    public void handleEmptyObject() throws IOException,
+            NoSuchAlgorithmException {
+        OioUrl url = url(testAccount(), UUID.randomUUID().toString(), UUID
+                .randomUUID().toString());
         client.createContainer(url);
         try {
             client.putObject(url, 0L,
@@ -108,7 +104,8 @@ public class ClientITest {
                 Assert.assertNotNull(oinf);
                 InputStream in = client.downloadObject(oinf);
                 Assert.assertEquals(-1, in.read());
-                Assert.assertEquals(Hex.toHex(MessageDigest.getInstance("MD5").digest()),
+                Assert.assertEquals(
+                        Hex.toHex(MessageDigest.getInstance("MD5").digest()),
                         oinf.hash());
                 in.close();
             } finally {
@@ -120,16 +117,14 @@ public class ClientITest {
     }
 
     @Test
-    public void handleSizedObject()
-            throws IOException, NoSuchAlgorithmException {
+    public void handleSizedObject() throws IOException,
+            NoSuchAlgorithmException {
         byte[] src = TestHelper.bytes(1024L);
-        OioUrl url = url(testAccount(),
-                UUID.randomUUID().toString(),
-                UUID.randomUUID().toString());
+        OioUrl url = url(testAccount(), UUID.randomUUID().toString(), UUID
+                .randomUUID().toString());
         client.createContainer(url);
         try {
-            client.putObject(url, 1024L,
-                    new ByteArrayInputStream(src));
+            client.putObject(url, 1024L, new ByteArrayInputStream(src));
             try {
                 ObjectInfo oinf = client.getObjectInfo(url);
                 Assert.assertNotNull(oinf);
@@ -150,21 +145,18 @@ public class ClientITest {
         }
 
     }
-    
+
     @Test
-    public void range()
-            throws IOException, NoSuchAlgorithmException {
+    public void range() throws IOException, NoSuchAlgorithmException {
         byte[] src = TestHelper.bytes(1024L);
-        OioUrl url = url(testAccount(),
-                UUID.randomUUID().toString(),
-                UUID.randomUUID().toString());
+        OioUrl url = url(testAccount(), UUID.randomUUID().toString(), UUID
+                .randomUUID().toString());
         client.createContainer(url);
-        
+
         byte[] ranged = Arrays.copyOfRange(src, 10, 20);
-        
+
         try {
-            client.putObject(url, 1024L,
-                    new ByteArrayInputStream(src));
+            client.putObject(url, 1024L, new ByteArrayInputStream(src));
             try {
                 ObjectInfo oinf = client.getObjectInfo(url);
                 Assert.assertNotNull(oinf);
@@ -173,7 +165,8 @@ public class ClientITest {
                 Assert.assertNotNull(oinf.policy());
                 Assert.assertNotNull(oinf.chunkMethod());
                 Assert.assertNotNull(oinf.hashMethod());
-                checkObject(oinf, Range.between(10, 20), new ByteArrayInputStream(ranged));
+                checkObject(oinf, Range.between(10, 20),
+                        new ByteArrayInputStream(ranged));
                 Assert.assertEquals(
                         Hex.toHex(MessageDigest.getInstance("MD5").digest(src)),
                         oinf.hash());
@@ -187,16 +180,16 @@ public class ClientITest {
     }
 
     @Test
-    public void handleMultiChunkObject() throws IOException, NoSuchAlgorithmException {
+    public void handleMultiChunkObject() throws IOException,
+            NoSuchAlgorithmException {
         byte[] src = TestHelper.bytes(10 * 1000 * 1024L);
-        OioUrl url = url(testAccount(),
-                UUID.randomUUID().toString(),
-                UUID.randomUUID().toString());
-        
+        OioUrl url = url(testAccount(), UUID.randomUUID().toString(), UUID
+                .randomUUID().toString());
+
         client.createContainer(url);
         try {
-            client.putObject(url, 10 * 1000 * 1024L,
-                    new ByteArrayInputStream(src));
+            client.putObject(url, 10 * 1000 * 1024L, new ByteArrayInputStream(
+                    src));
             try {
                 ObjectInfo oinf = client.getObjectInfo(url);
                 Assert.assertNotNull(oinf);
@@ -205,19 +198,18 @@ public class ClientITest {
                         Hex.toHex(MessageDigest.getInstance("MD5").digest(src)),
                         oinf.hash());
             } finally {
-                //client.deleteObject(url);
+                // client.deleteObject(url);
                 System.out.println(url);
             }
         } finally {
-            //client.deleteContainer(url);
+            // client.deleteContainer(url);
         }
     }
 
     @Test(expected = ObjectNotFoundException.class)
     public void deleteUnknownObject() {
-        OioUrl url = url(testAccount(),
-                UUID.randomUUID().toString(),
-                UUID.randomUUID().toString());
+        OioUrl url = url(testAccount(), UUID.randomUUID().toString(), UUID
+                .randomUUID().toString());
         client.createContainer(url);
         try {
             client.deleteObject(url);
@@ -230,9 +222,9 @@ public class ClientITest {
     public void containerProperties() {
         OioUrl url = url("TEST", UUID.randomUUID().toString());
         Map<String, String> props = new HashMap<String, String>();
-        props.put("user.key1", "value1");
-        props.put("user.key2", "value2");
-        props.put("user.key3", "value3");
+        props.put("key1", "value1");
+        props.put("key2", "value2");
+        props.put("key3", "value3");
         client.createContainer(url);
         try {
             client.setContainerProperties(url, props);
@@ -243,7 +235,7 @@ public class ClientITest {
                 assertTrue(res.containsKey(e.getKey()));
                 assertEquals(e.getValue(), res.get(e.getKey()));
             }
-            client.deleteContainerProperties(url, "user.key1");
+            client.deleteContainerProperties(url, "key1");
             res = client.getContainerProperties(url);
             assertNotNull(res);
             assertEquals(2, res.size());
@@ -254,16 +246,18 @@ public class ClientITest {
 
     @Test
     public void objectProperties() {
-        OioUrl url = url("TEST", UUID.randomUUID().toString(),
-                UUID.randomUUID().toString());
+        OioUrl url = url("TEST", UUID.randomUUID().toString(), UUID
+                .randomUUID().toString());
         Map<String, String> props = new HashMap<String, String>();
         props.put("user.key1", "value1");
         props.put("user.key2", "value2");
         props.put("user.key3", "value3");
         client.createContainer(url);
         try {
-            client.putObject(url, 10L, new ByteArrayInputStream(
-                    "0123456789".getBytes(OIO_CHARSET)));
+            client.putObject(
+                    url,
+                    10L,
+                    new ByteArrayInputStream("0123456789".getBytes(OIO_CHARSET)));
             try {
                 client.setObjectProperties(url, props);
                 Map<String, String> res = client.getObjectProperties(url);
@@ -288,18 +282,16 @@ public class ClientITest {
         }
     }
 
-    @Ignore
     @Test
     public void objectPutAndGetWithProperties() {
-        OioUrl url = url("TEST", UUID.randomUUID().toString(),
-                UUID.randomUUID().toString());
+        OioUrl url = url("TEST", UUID.randomUUID().toString(), UUID
+                .randomUUID().toString());
         Map<String, String> props = new HashMap<String, String>();
         props.put("key1", "val1");
         client.createContainer(url);
         try {
             client.putObject(url, 10L,
-                    new ByteArrayInputStream("0123456789".getBytes()),
-                    props);
+                    new ByteArrayInputStream("0123456789".getBytes()), props);
             try {
                 ObjectInfo oinf = client.getObjectInfo(url);
                 Assert.assertNotNull(oinf);
@@ -342,14 +334,15 @@ public class ClientITest {
         int count = 0;
         for (int i = 0; i < oinf.size(); i++)
             try {
-            	//Assert.assertTrue(-1 != src.read());
-                Assert.assertEquals("Fail at index: " + count, src.read(), res[i] & 0xFF);
+                // Assert.assertTrue(-1 != src.read());
+                Assert.assertEquals("Fail at index: " + count, src.read(),
+                        res[i] & 0xFF);
                 count++;
             } catch (IOException e) {
                 Assert.fail(e.getMessage());
             }
     }
-    
+
     private void checkObject(ObjectInfo oinf, Range range, InputStream src)
             throws IOException {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -364,8 +357,9 @@ public class ClientITest {
         int count = 0;
         for (int i = 0; i < range.to() - range.from(); i++)
             try {
-            	//Assert.assertTrue(-1 != src.read());
-                Assert.assertEquals("Fail at index: " + count, src.read(), res[i] & 0xFF);
+                // Assert.assertTrue(-1 != src.read());
+                Assert.assertEquals("Fail at index: " + count, src.read(),
+                        res[i] & 0xFF);
                 count++;
             } catch (IOException e) {
                 Assert.fail(e.getMessage());

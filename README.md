@@ -115,3 +115,11 @@ Usage exceptions are detailed just below
 | OioSystemException                | A system error occurred during your request        |
 | ReferenceAlreadyExistException    | The reference you try to create is alreayd created |
 | ReferenceNotFoundException        | the reference you try to reach does not exist      |
+
+
+------------
+Contributing
+------------
+
+This project was originally indented with tabulations but should from now on
+be indented with 4 spaces.
