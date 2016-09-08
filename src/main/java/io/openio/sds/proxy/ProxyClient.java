@@ -41,7 +41,6 @@ import static io.openio.sds.common.OioConstants.M2_USAGE_HEADER;
 import static io.openio.sds.common.OioConstants.M2_VERSION_HEADER;
 import static io.openio.sds.common.OioConstants.MARKER_PARAM;
 import static io.openio.sds.common.OioConstants.MAX_PARAM;
-import static io.openio.sds.common.OioConstants.NS_CHUNK_SIZE_HEADER;
 import static io.openio.sds.common.OioConstants.NS_HEADER;
 import static io.openio.sds.common.OioConstants.OBJECT_DEL_PROP;
 import static io.openio.sds.common.OioConstants.OBJECT_GET_PROP;
@@ -56,7 +55,6 @@ import static io.openio.sds.common.OioConstants.PUT_OBJECT_FORMAT;
 import static io.openio.sds.common.OioConstants.SCHEMA_VERSION_HEADER;
 import static io.openio.sds.common.OioConstants.TYPE_HEADER;
 import static io.openio.sds.common.OioConstants.USER_NAME_HEADER;
-import static io.openio.sds.common.OioConstants.USER_PROP_PREFIX;
 import static io.openio.sds.common.OioConstants.VERSION_MAIN_ADMIN_HEADER;
 import static io.openio.sds.common.OioConstants.VERSION_MAIN_ALIASES_HEADER;
 import static io.openio.sds.common.OioConstants.VERSION_MAIN_CHUNKS_HEADER;
@@ -73,7 +71,6 @@ import static java.lang.String.format;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -106,9 +103,6 @@ import io.openio.sds.models.ServiceInfo;
 /**
  * Simple OpenIO proxyd http client based on API reference available at
  * https://github.com/open-io/oio-sds/wiki/OpenIO-Proxyd-API-Reference
- * 
- * @author Christopher Dedeurwaerder
- *
  */
 public class ProxyClient {
     private OioHttp http;
@@ -174,9 +168,8 @@ public class ProxyClient {
      */
     public void createReference(OioUrl url, String reqId) throws OioException {
         checkArgument(null != url, INVALID_URL_MSG);
-        http.post(
-                format(DIR_REF_CREATE_FORMAT, settings.url(), settings.ns(),
-                        url.account(), url.container()))
+        http.post(format(DIR_REF_CREATE_FORMAT, settings.url(), settings.ns(),
+                        Strings.urlEncode(url.account()), Strings.urlEncode(url.container())))
                 .header(OIO_REQUEST_ID_HEADER, reqId)
                 .verifier(REFERENCE_VERIFIER).execute().close();
     }
@@ -210,7 +203,7 @@ public class ProxyClient {
         checkArgument(null != url, INVALID_URL_MSG);
         return http
                 .get(format(DIR_REF_SHOW_FORMAT, settings.url(), settings.ns(),
-                        url.account(), url.container()))
+                        Strings.urlEncode(url.account()), Strings.urlEncode(url.container())))
                 .header(OIO_REQUEST_ID_HEADER, reqId)
                 .verifier(REFERENCE_VERIFIER).execute(ReferenceInfo.class);
     }
@@ -245,7 +238,7 @@ public class ProxyClient {
         checkArgument(null != url, INVALID_URL_MSG);
         http.post(
                 format(DIR_REF_DELETE_FORMAT, settings.url(), settings.ns(),
-                        url.account(), url.container()))
+                        Strings.urlEncode(url.account()), Strings.urlEncode(url.container())))
                 .header(OIO_REQUEST_ID_HEADER, reqId)
                 .verifier(REFERENCE_VERIFIER).execute().close();
     }
@@ -284,7 +277,8 @@ public class ProxyClient {
         checkArgument(!nullOrEmpty(type), "Missing type");
         OioHttpResponse resp = http
                 .post(format(DIR_LINK_SRV_FORMAT, settings.url(),
-                        settings.ns(), url.account(), url.container(), type))
+                        settings.ns(), 
+                        Strings.urlEncode(url.account()), Strings.urlEncode(url.container()), type))
                 .header(OIO_REQUEST_ID_HEADER, reqId)
                 .verifier(REFERENCE_VERIFIER).execute();
 
@@ -328,7 +322,7 @@ public class ProxyClient {
         checkArgument(!nullOrEmpty(type));
         return http
                 .get(format(DIR_LIST_SRV_FORMAT, settings.url(), settings.ns(),
-                        url.account(), url.container(), type))
+                        Strings.urlEncode(url.account()), Strings.urlEncode(url.container()), type))
                 .header(OIO_REQUEST_ID_HEADER, reqId)
                 .verifier(REFERENCE_VERIFIER).execute(ReferenceInfo.class)
                 .srv();
@@ -366,7 +360,7 @@ public class ProxyClient {
         checkArgument(!nullOrEmpty(type));
         http.post(
                 format(DIR_UNLINK_SRV_FORMAT, settings.url(), settings.ns(),
-                        url.account(), url.container(), type))
+                        Strings.urlEncode(url.account()), Strings.urlEncode(url.container()), type))
                 .header(OIO_REQUEST_ID_HEADER, reqId)
                 .verifier(REFERENCE_VERIFIER).execute().close();
 
@@ -403,7 +397,7 @@ public class ProxyClient {
         checkArgument(null != url, INVALID_URL_MSG);
         OioHttpResponse resp = http
                 .post(format(CREATE_CONTAINER_FORMAT, settings.url(),
-                        settings.ns(), url.account(), url.container()))
+                        settings.ns(), Strings.urlEncode(url.account()), Strings.urlEncode(url.container())))
                 .header(OIO_ACTION_MODE_HEADER, "autocreate")
                 .header(OIO_REQUEST_ID_HEADER, reqId).body("{}")
                 .verifier(CONTAINER_VERIFIER).execute().close();
@@ -442,7 +436,8 @@ public class ProxyClient {
         checkArgument(null != url, INVALID_URL_MSG);
         OioHttpResponse r = http
                 .get(format(GET_CONTAINER_INFO_FORMAT, settings.url(),
-                        settings.ns(), url.account(), url.container()))
+                        settings.ns(),
+                        Strings.urlEncode(url.account()), Strings.urlEncode(url.container())))
                 .header(OIO_REQUEST_ID_HEADER, reqId)
                 .verifier(CONTAINER_VERIFIER).execute().close();
 
@@ -501,7 +496,7 @@ public class ProxyClient {
         checkArgument(null != options, "Invalid options");
         return http
                 .get(format(LIST_OBJECTS_FORMAT, settings.url(), settings.ns(),
-                        url.account(), url.container()))
+                        Strings.urlEncode(url.account()), Strings.urlEncode(url.container())))
                 .query(MAX_PARAM,
                         options.limit() > 0 ? String.valueOf(options.limit())
                                 : null).query(PREFIX_PARAM, options.prefix())
@@ -539,7 +534,7 @@ public class ProxyClient {
         checkArgument(null != url, INVALID_URL_MSG);
         http.post(
                 format(DELETE_CONTAINER_FORMAT, settings.url(), settings.ns(),
-                        url.account(), url.container()))
+                        Strings.urlEncode(url.account()), Strings.urlEncode(url.container())))
                 .verifier(CONTAINER_VERIFIER)
                 .header(OIO_REQUEST_ID_HEADER, reqId).execute().close();
     }
@@ -580,7 +575,9 @@ public class ProxyClient {
         checkArgument(null != url, INVALID_URL_MSG);
         OioHttpResponse resp = http
                 .post(format(GET_BEANS_FORMAT, settings.url(), settings.ns(),
-                        url.account(), url.container(), url.object()))
+                        Strings.urlEncode(url.account()),
+                        Strings.urlEncode(url.container()),
+                        Strings.urlEncode(url.object())))
                 .body(gson().toJson(new BeansRequest().size(size)))
                 .header(ACTION_MODE_HEADER,
                         settings.autocreate() ? OioConstants.AUTOCREATE_ACTION_MODE
@@ -625,9 +622,10 @@ public class ProxyClient {
                 gson().toJson(oinf.chunks()),
                 props != null ? gson().toJson(props) : "{}");
         http.post(
-                format(PUT_OBJECT_FORMAT, settings.url(), settings.ns(), oinf
-                        .url().account(), oinf.url().container(), oinf.url()
-                        .object()))
+                format(PUT_OBJECT_FORMAT, settings.url(), settings.ns(),
+                        Strings.urlEncode(oinf.url().account()),
+                        Strings.urlEncode(oinf.url().container()),
+                        Strings.urlEncode(oinf.url().object())))
                 .header(CONTENT_META_LENGTH_HEADER, String.valueOf(oinf.size()))
                 .header(CONTENT_META_HASH_HEADER, oinf.hash())
                 .header(OIO_REQUEST_ID_HEADER, reqId)
@@ -680,7 +678,9 @@ public class ProxyClient {
         checkArgument(null != url, INVALID_URL_MSG);
         OioHttpResponse resp = http
                 .get(format(GET_OBJECT_FORMAT, settings.url(), settings.ns(),
-                        url.account(), url.container(), url.object()))
+                        Strings.urlEncode(url.account()),
+                        Strings.urlEncode(url.container()),
+                        Strings.urlEncode(url.object())))
                 .header(OIO_REQUEST_ID_HEADER, reqId)
                 .header(CONTENT_META_VERSION_HEADER,
                         null == version ? null : version.toString())
@@ -735,7 +735,9 @@ public class ProxyClient {
         checkArgument(null != url, INVALID_URL_MSG);
         http.post(
                 format(DELETE_OBJECT_FORMAT, settings.url(), settings.ns(),
-                        url.account(), url.container(), url.object()))
+                        Strings.urlEncode(url.account()),
+                        Strings.urlEncode(url.container()),
+                        Strings.urlEncode(url.object())))
                 .header(CONTENT_META_VERSION_HEADER,
                         null == version ? null : version.toString())
                 .header(OIO_REQUEST_ID_HEADER, reqId).verifier(OBJECT_VERIFIER)
@@ -789,7 +791,8 @@ public class ProxyClient {
         String root = String.format("{\"properties\": %1$s}", props);
         http.post(
                 format(CONTAINER_SET_PROP, settings.url(), settings.ns(),
-                        url.account(), url.container()))
+                        Strings.urlEncode(url.account()),
+                        Strings.urlEncode(url.container())))
                 .header(OIO_REQUEST_ID_HEADER, reqId)
                 .verifier(CONTAINER_VERIFIER).body(root).execute().close();
     }
@@ -828,7 +831,8 @@ public class ProxyClient {
         checkArgument(null != url, INVALID_URL_MSG);
         OioHttpResponse resp = http
                 .post(format(CONTAINER_GET_PROP, settings.url(), settings.ns(),
-                        url.account(), url.container()))
+                        Strings.urlEncode(url.account()),
+                        Strings.urlEncode(url.container())))
                 .header(OIO_REQUEST_ID_HEADER, reqId)
                 .verifier(CONTAINER_VERIFIER).execute();
         try {
@@ -878,7 +882,8 @@ public class ProxyClient {
         checkArgument(null != keys && 0 < keys.length);
         http.post(
                 format(CONTAINER_DEL_PROP, settings.url(), settings.ns(),
-                        url.account(), url.container()))
+                        Strings.urlEncode(url.account()),
+                        Strings.urlEncode(url.container())))
                 .header(OIO_REQUEST_ID_HEADER, reqId).body(gson().toJson(keys))
                 .verifier(CONTAINER_VERIFIER).execute().close();
     }
@@ -919,7 +924,8 @@ public class ProxyClient {
         checkArgument(null != keys && 0 < keys.size());
         http.post(
                 format(CONTAINER_DEL_PROP, settings.url(), settings.ns(),
-                        url.account(), url.container()))
+                        Strings.urlEncode(url.account()),
+                        Strings.urlEncode(url.container())))
                 .header(OIO_REQUEST_ID_HEADER, reqId).body(gson().toJson(keys))
                 .verifier(CONTAINER_VERIFIER).execute().close();
     }
@@ -971,7 +977,9 @@ public class ProxyClient {
                 gson().toJson(properties));
         http.post(
                 format(OBJECT_SET_PROP, settings.url(), settings.ns(),
-                        url.account(), url.container(), url.object()))
+                        Strings.urlEncode(url.account()),
+                        Strings.urlEncode(url.container()),
+                        Strings.urlEncode(url.object())))
                 .header(OIO_REQUEST_ID_HEADER, reqId).verifier(OBJECT_VERIFIER)
                 .body(body).execute().close();
     }
@@ -1014,7 +1022,9 @@ public class ProxyClient {
         checkArgument(null != url && null != url.object(), INVALID_URL_MSG);
         OioHttpResponse resp = http
                 .post(format(OBJECT_GET_PROP, settings.url(), settings.ns(),
-                        url.account(), url.container(), url.object()))
+                        Strings.urlEncode(url.account()),
+                        Strings.urlEncode(url.container()),
+                        Strings.urlEncode(url.object())))
                 .header(OIO_REQUEST_ID_HEADER, reqId).verifier(OBJECT_VERIFIER)
                 .execute();
         try {
@@ -1065,7 +1075,9 @@ public class ProxyClient {
         checkArgument(null != keys && 0 < keys.length);
         http.post(
                 format(OBJECT_DEL_PROP, settings.url(), settings.ns(),
-                        url.account(), url.container(), url.object()))
+                        Strings.urlEncode(url.account()),
+                        Strings.urlEncode(url.container()),
+                        Strings.urlEncode(url.object())))
                 .header(OIO_REQUEST_ID_HEADER, reqId).body(gson().toJson(keys))
                 .verifier(CONTAINER_VERIFIER).execute().close();
     }
@@ -1110,7 +1122,9 @@ public class ProxyClient {
         checkArgument(null != keys && 0 < keys.size());
         http.post(
                 format(OBJECT_DEL_PROP, settings.url(), settings.ns(),
-                        url.account(), url.container(), url.object()))
+                        Strings.urlEncode(url.account()),
+                        Strings.urlEncode(url.container()),
+                        Strings.urlEncode(url.object())))
                 .header(OIO_REQUEST_ID_HEADER, reqId).body(gson().toJson(keys))
                 .verifier(CONTAINER_VERIFIER).execute().close();
     }
@@ -1225,18 +1239,6 @@ public class ProxyClient {
     private String versionHeader(ObjectInfo oinf, Long version) {
         return null == version ? null == oinf.version() ? null : oinf.version()
                 .toString() : version.toString();
-    }
-
-    private Map<String, String> propsToHeaders(Map<String, String> props) {
-        if (null == props || 0 == props.size())
-            return null;
-        HashMap<String, String> res = new HashMap<String, String>();
-        for (Entry<String, String> e : props.entrySet()) {
-            if (null != e.getKey() && null != e.getValue()) {
-                res.put(PROP_HEADER_PREFIX + e.getKey(), e.getValue());
-            }
-        }
-        return res;
     }
 
     private Map<String, String> propsFromHeaders(HashMap<String, String> headers) {
