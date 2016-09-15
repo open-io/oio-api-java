@@ -1,5 +1,6 @@
 package io.openio.sds.common;
 
+import java.net.InetSocketAddress;
 import java.net.Socket;
 
 /**
@@ -10,6 +11,7 @@ import java.net.Socket;
 public interface SocketProvider {
 
     public Socket getSocket(String host, int port);
+    public Socket getSocket(InetSocketAddress addr);
 
     public boolean reusableSocket();
 

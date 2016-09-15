@@ -15,10 +15,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.URI;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -35,7 +37,7 @@ import io.openio.sds.logging.SdsLoggerFactory;
  * Simple HTTP client
  * 
  * @author Christopher Dedeurwaerder
- *
+ * @author Florent Vennetier
  */
 public class OioHttp {
 
@@ -93,6 +95,7 @@ public class OioHttp {
 		private URI uri;
 		private OioHttpResponseVerifier verifier = null;
 		private boolean chunked;
+		private List<InetSocketAddress> alternatives = null;
 
 		public RequestBuilder post(String url) {
 			return req(POST_METHOD, url);
@@ -164,39 +167,74 @@ public class OioHttp {
 			return this;
 		}
 
-		public OioHttpResponse execute() throws OioException {
-			Socket sock = null;
-			try {
-				sock = socketProvider.getSocket(uri.getHost(), uri.getPort());
-				if (chunked)
-					sendRequestChunked(sock);
-				else
-					sendRequest(sock);
-				OioHttpResponse resp = readResponse(sock);
-				try {
-					if (null != verifier)
-						verifier.verify(resp);
-					return resp;
-				} catch (OioException e) {
-					resp.close(true);
-					throw e;
-				}
-			} catch (IOException e) {
-				if (null != sock)
-					try {
-						try {
-							sock.shutdownInput();
-						} catch (SocketException se) {
-							logger.debug("Socket input already shutdown");
-						}
-						sock.close();
-					} catch (IOException ioe) {
-						logger.warn("Unable to close socket, possible leak",
-						        ioe);
-					}
-				throw new OioSystemException("Http request execution error", e);
-			}
-		}
+        /**
+         * @param hosts
+         *            A list of hosts to contact to contact instead of the one
+         *            specified in URI.
+         * @return this
+         */
+        public RequestBuilder alternativeHosts(List<InetSocketAddress> hosts) {
+            this.alternatives = hosts;
+            return this;
+        }
+
+        public OioHttpResponse execute() throws OioException {
+            if (this.alternatives == null || this.alternatives.isEmpty()) {
+                return execute(new InetSocketAddress(uri.getHost(), uri.getPort()));
+            } else {
+                OioException lastExc = null;
+                // TODO: implement better fallback mechanism, with randomization
+                for (InetSocketAddress addr: this.alternatives) {
+                    try {
+                        if (lastExc != null)
+                            logger.info("Retrying on " + addr.toString());
+                        return execute(addr);
+                    } catch (OioException oioe) {
+                        // Retry only if the cause is network
+                        if (oioe.getCause() instanceof IOException) {
+                            logger.warn("Failed to perform request", oioe);
+                            lastExc = oioe;
+                        } else {
+                            throw oioe;
+                        }
+                    }
+                }
+                throw new OioSystemException("Http request execution error", lastExc);
+            }
+        }
+
+        private OioHttpResponse execute(InetSocketAddress addr) throws OioException {
+            Socket sock = null;
+            try {
+                sock = socketProvider.getSocket(addr);
+                if (chunked)
+                    sendRequestChunked(sock);
+                else
+                    sendRequest(sock);
+                OioHttpResponse resp = readResponse(sock);
+                try {
+                    if (null != verifier)
+                        verifier.verify(resp);
+                    return resp;
+                } catch (OioException e) {
+                    resp.close(true);
+                    throw e;
+                }
+            } catch (IOException e) {
+                if (null != sock)
+                    try {
+                        try {
+                            sock.shutdownInput();
+                        } catch (SocketException se) {
+                            logger.debug("Socket input already shutdown");
+                        }
+                        sock.close();
+                    } catch (IOException ioe) {
+                        logger.warn("Unable to close socket, possible leak", ioe);
+                    }
+                throw new OioSystemException("Http request execution error", e);
+            }
+        }
 
 		public <T> T execute(Class<T> c) {
 			OioHttpResponse resp = execute();

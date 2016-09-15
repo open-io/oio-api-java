@@ -17,10 +17,10 @@ public class TestHelper {
 
     private static final String TEST_ACCOUNT = "TEST";
     private static String ns = "OPENIO";
+    private static String rawProxyString = "192.168.150.95:6006";
     private static String proxyIp = "192.168.150.95";
     private static int proxyPort = 6006;
-    private static String ecdIp = "192.168.150.23";
-    private static int ecdPort = 5000;
+    private static String rawEcdString = "192.168.150.23:5000";
     private static boolean isLoaded = false;
 
     public static ProxySettings proxySettings() {
@@ -38,13 +38,14 @@ public class TestHelper {
     public static String proxyd() {
         if (!isLoaded)
             loadConfiguration();
-        return String.format("http://%s:%d", proxyIp, proxyPort);
+        System.out.println("proxy: " + rawProxyString);
+        return rawProxyString;
     }
 
     public static String ecd() {
         if (!isLoaded)
             loadConfiguration();
-        return String.format("http://%s:%d/", ecdIp, ecdPort);
+        return rawEcdString;
     }
 
     public static InetSocketAddress proxyAddr() {
@@ -104,18 +105,15 @@ public class TestHelper {
         if (!confFile.exists() || !confFile.isFile())
             throw new FileNotFoundException(confPath);
         try {
-            HierarchicalINIConfiguration conf = new HierarchicalINIConfiguration(
-                    confFile);
+            HierarchicalINIConfiguration conf = new HierarchicalINIConfiguration();
+            conf.setDelimiterParsingDisabled(true);
+            conf.load(confFile);
             SubnodeConfiguration nsSection = conf.getSection(myNs);
-            URL proxyUrl = parseUnprefixedUrl(nsSection.getString("proxy"));
+            rawProxyString = nsSection.getString("proxy");
+            URL proxyUrl = parseUnprefixedUrl(rawProxyString.split(",")[0]);
             proxyIp = proxyUrl.getHost();
             proxyPort = proxyUrl.getPort();
-            String ecdStr = nsSection.getString("ecd");
-            if (ecdStr != null) {
-                URL ecdUrl = parseUnprefixedUrl(ecdStr);
-                ecdIp = ecdUrl.getHost();
-                ecdPort = ecdUrl.getPort();
-            }
+            rawEcdString = nsSection.getString("ecd");
             ns = myNs;
             isLoaded = true;
         } catch (ConfigurationException e) {

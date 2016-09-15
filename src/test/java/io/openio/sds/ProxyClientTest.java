@@ -1,9 +1,12 @@
 package io.openio.sds;
 
+import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
-
 
 import io.openio.sds.http.OioHttp;
 import io.openio.sds.http.OioHttp.RequestBuilder;
@@ -57,6 +60,8 @@ public class ProxyClientTest {
                 .thenReturn(mockedBuilder);
         Mockito.when(mockedBuilder.execute((Class<ObjectList>) Mockito.any()))
                 .thenReturn(mockedList);
+        Mockito.when(mockedBuilder.alternativeHosts((List<InetSocketAddress>)Mockito.any()))
+                .thenReturn(mockedBuilder);
 
         OioHttp mockedHttp = Mockito.mock(OioHttp.class);
         Mockito.when(mockedHttp.get(Mockito.anyString()))
