@@ -27,22 +27,23 @@ import io.openio.sds.models.ECInfo;
 import io.openio.sds.models.ObjectInfo;
 import io.openio.sds.models.OioUrl;
 import io.openio.sds.models.Position;
+import io.openio.sds.proxy.ProxySettings;
 import io.openio.sds.storage.rawx.RawxSettings;
 
 public class EcdClientTest {
 
-	private static FakeEcd ecd;
-	private static String ecdUrl = "http://127.0.0.1:6789/";
+	private static FakeEcd fakeEcd;
+	private static String fakeEcdUrl = "http://127.0.0.1:6789/";
 
 	@BeforeClass
 	public static void setup() throws Exception {
-		ecd = new FakeEcd(6789);
-		ecd.start();
+		fakeEcd = new FakeEcd(6789);
+		fakeEcd.start();
 	}
 
 	@AfterClass
 	public static void teardown() throws Exception {
-		ecd.stop();
+		fakeEcd.stop();
 	}
 
 	@Test
@@ -53,7 +54,8 @@ public class EcdClientTest {
 		OioHttp http = OioHttp.http(new OioHttpSettings(),
 		        SocketProviders.directSocketProvider(new OioHttpSettings()));
 
-		EcdClient client = new EcdClient(http, new RawxSettings(), ecdUrl);
+		EcdClient client = new EcdClient(http, new RawxSettings(),
+		        new ProxySettings().ecd(fakeEcdUrl).allEcdHosts());
 
 		byte[] data = TestHelper.bytes(size);
 
@@ -96,7 +98,7 @@ public class EcdClientTest {
 
 		client.uploadChunks(mockedObject, data);
 
-		byte[] uploaded = ecd.getLastData();
+		byte[] uploaded = fakeEcd.getLastData();
 
 		Assert.assertEquals(data.length, uploaded.length);
 
@@ -110,13 +112,13 @@ public class EcdClientTest {
 	public void testRoundtrip() throws IOException {
 
 		Long size = 10 * 1000 * 1024L;
-		String realEcdUrl = "http://127.0.0.1:6001/";
 		String chunkMethod = "ec/algo=liberasurecode_rs_vand,k=6,m=3";
 
 		OioHttp http = OioHttp.http(new OioHttpSettings(),
 				SocketProviders.directSocketProvider(new OioHttpSettings()));
 
-		EcdClient client = new EcdClient(http, new RawxSettings(), realEcdUrl);
+		EcdClient client = new EcdClient(http, new RawxSettings(),
+		        new ProxySettings().ecd(TestHelper.ecd()).allEcdHosts());
 
 		byte[] dataIn = TestHelper.bytes(size);
 

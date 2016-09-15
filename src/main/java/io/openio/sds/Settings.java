@@ -6,9 +6,11 @@ import io.openio.sds.storage.rawx.RawxSettings;
 /**
  * 
  * @author Christopher Dedeurwaerder
- *
+ * @author Florent Vennetier
  */
 public class Settings {
+
+    public static String MULTI_VALUE_SEPARATOR = ",";
 
     private ProxySettings proxy = new ProxySettings();
     private RawxSettings rawx = new RawxSettings();
@@ -20,7 +22,7 @@ public class Settings {
     public ProxySettings proxy() {
         return proxy;
     }
-    
+
     /**
      * Specifies a proxyd connection configuration
      * @param proxy
@@ -31,7 +33,7 @@ public class Settings {
         this.proxy = proxy;
         return this;
     }
-    
+
     /**
      * Returns rawx services connection configuration
      * @return rawx services connection configuration
@@ -39,7 +41,7 @@ public class Settings {
     public RawxSettings rawx() {
         return rawx;
     }
-    
+
     /**
      * Specifies rawx connections configuration
      * @param rawx the configuration to set
@@ -48,5 +50,5 @@ public class Settings {
     public Settings rawx(RawxSettings rawx) {
         this.rawx = rawx;
         return this;
-    }    
+    }
 }
