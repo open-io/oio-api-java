@@ -337,9 +337,10 @@ public class OioHttp {
 				        .append("=")
 				        .append(h.getValue());
 			}
+			String uriPath = uri.getPath();
 			StringBuilder req = new StringBuilder(method)
 			        .append(" ")
-			        .append(uri.getPath())
+			        .append(uriPath != null && !uriPath.isEmpty()? uriPath : "/")
 			        .append(qbuilder.length() > 0 ? "?" : "")
 			        .append(qbuilder.length() > 0 ? (removeTrailindAnd
 			                ? qbuilder.substring(1) : qbuilder.toString()) : "")

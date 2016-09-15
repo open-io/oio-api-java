@@ -38,7 +38,6 @@ public class TestHelper {
     public static String proxyd() {
         if (!isLoaded)
             loadConfiguration();
-        System.out.println("proxy: " + rawProxyString);
         return rawProxyString;
     }
 

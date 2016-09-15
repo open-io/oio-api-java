@@ -113,26 +113,12 @@ import io.openio.sds.models.ServiceInfo;
 public class ProxyClient {
     private OioHttp http;
     private ProxySettings settings;
-    private ArrayList<InetSocketAddress> altProxies = null;
-    private static final SdsLogger logger = SdsLoggerFactory
-            .getLogger(ProxyClient.class);
+    private List<InetSocketAddress> altProxies = null;
 
     public ProxyClient(OioHttp http, ProxySettings settings) {
         this.http = http;
         this.settings = settings;
-        List<String> allProxies = this.settings.allUrls();
-        if (allProxies != null && allProxies.size() > 1) {
-            altProxies = new ArrayList<InetSocketAddress>();
-            for (String url: allProxies) {
-                URI proxyUri;
-                try {
-                    proxyUri = new URI(url);
-                    altProxies.add(new InetSocketAddress(proxyUri.getHost(), proxyUri.getPort()));
-                } catch (URISyntaxException e) {
-                    logger.warn("Invalid proxy URL: " + url, e);
-                }
-            }
-        }
+        this.altProxies = this.settings.allHosts();
     }
 
     /* -- CS -- */

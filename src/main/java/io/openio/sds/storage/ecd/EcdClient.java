@@ -21,6 +21,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetSocketAddress;
 import java.util.List;
 
 import io.openio.sds.common.Hex;
@@ -47,11 +48,14 @@ public class EcdClient implements StorageClient {
 	final OioHttp http;
 	private final RawxSettings settings;
 	private final String ecdUrl;
+	private final List<InetSocketAddress> ecdHosts;
 
-	public EcdClient(OioHttp http, RawxSettings settings, String ecdUrl) {
+	public EcdClient(OioHttp http, RawxSettings settings, List<InetSocketAddress> ecdHosts) {
 		this.http = http;
 		this.settings = settings;
-		this.ecdUrl = ecdUrl;
+		this.ecdHosts = ecdHosts;
+		this.ecdUrl = String.format("http://%1$s:%2$d",
+		        ecdHosts.get(0).getHostString(), ecdHosts.get(0).getPort());
 	}
 
 	@Override
@@ -128,17 +132,15 @@ public class EcdClient implements StorageClient {
 	public InputStream downloadObject(ObjectInfo oinf, String reqId) {
 		return downloadObject(oinf, null, reqId);
 	}
-	
-	@Override
-	public InputStream downloadObject(ObjectInfo oinf, Range range, String reqId) {
-		checkArgument(null != oinf);
-		List<Target> targets = DownloadHelper.loadTargets(oinf, range);
-		return new EcdInputStream(ecdUrl, 
-				targets,
-				oinf.chunkMethod(),
-				http, 
-				reqId);
-	}
+
+    @SuppressWarnings("resource")
+    @Override
+    public InputStream downloadObject(ObjectInfo oinf, Range range, String reqId) {
+        checkArgument(null != oinf);
+        List<Target> targets = DownloadHelper.loadTargets(oinf, range);
+        return new EcdInputStream(ecdUrl, targets, oinf.chunkMethod(), http, reqId)
+                .alternativeHosts(ecdHosts);
+    }
 
 	/* --- INTERNALS --- */
 
@@ -170,6 +172,7 @@ public class EcdClient implements StorageClient {
 		                String.valueOf(oinf.sortedChunks().get(pos).size()))
 		        .header(OIO_REQUEST_ID_HEADER, reqId)
 		        .body(data, size)
+		        .alternativeHosts(ecdHosts)
 		        .verifier(RAWX_VERIFIER);
 
 		for (ChunkInfo ci : oinf.sortedChunks().get(pos)) {

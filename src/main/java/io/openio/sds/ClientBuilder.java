@@ -18,7 +18,7 @@ import io.openio.sds.storage.rawx.RawxClient;
  * Builder for @link {@link Client} implementations
  * 
  * @author Christopher Dedeurwaerder
- *
+ * @author Florent Vennetier
  */
 public class ClientBuilder {
 
@@ -39,7 +39,7 @@ public class ClientBuilder {
 		RawxClient rawx = new RawxClient(rawxHttp, settings.rawx());
 		EcdClient ecd = null == settings.proxy().ecd() 
 				? null
-				: new EcdClient(rawxHttp, settings.rawx(), settings.proxy().ecd());
+				: new EcdClient(rawxHttp, settings.rawx(), settings.proxy().allEcdHosts());
 		return new DefaultClient(proxy, rawx, ecd);
 	}
 

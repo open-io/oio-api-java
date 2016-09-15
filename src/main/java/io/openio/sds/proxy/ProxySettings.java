@@ -1,10 +1,15 @@
 package io.openio.sds.proxy;
 
+import java.net.InetSocketAddress;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import io.openio.sds.Settings;
+import io.openio.sds.exceptions.OioException;
 import io.openio.sds.http.OioHttpSettings;
 import io.openio.sds.pool.PoolingSettings;
 
@@ -16,8 +21,8 @@ import io.openio.sds.pool.PoolingSettings;
 public class ProxySettings {
 
     private String ns;
-    private ArrayList<String> urls = new ArrayList<String>();
-    private ArrayList<String> ecds = new ArrayList<String>();
+    private ArrayList<InetSocketAddress> hosts = new ArrayList<InetSocketAddress>();
+    private ArrayList<InetSocketAddress> ecdHosts = new ArrayList<InetSocketAddress>();
     private boolean ecdrain = true; //not configurable atm cuz we can't do somehow else
     private boolean autocreate = true;
     private OioHttpSettings http = new OioHttpSettings();
@@ -27,27 +32,46 @@ public class ProxySettings {
     }
 
     /**
+     * Convert a comma-separated list of service addresses to a list of {@link InetSocketAddress}.
+     * @param urlv a comma-separated list of service addresses
+     * @return a list of {@link InetSocketAddress}
+     */
+    public static ArrayList<InetSocketAddress> strToSocketAddressList(String urlv) {
+        ArrayList<InetSocketAddress> addrs = new ArrayList<InetSocketAddress>();
+        for (String url: urlv.split(Settings.MULTI_VALUE_SEPARATOR)) {
+            String uriBase;
+            if (!url.contains("://"))
+                uriBase = "http://" + url;
+            else
+                uriBase = url;
+            try {
+                URI uri = new URI(uriBase);
+                addrs.add(new InetSocketAddress(uri.getHost(), uri.getPort()));
+            } catch (URISyntaxException e) {
+                throw new OioException("Could not parse [" + "" + "] as a URI", e);
+            }
+        }
+        return addrs;
+    }
+
+    /**
      * @return The first proxy URL
      */
     public String url() {
-        return urls.get(0);
+        return String.format("http://%1$s:%2$d",
+                hosts.get(0).getHostString(), hosts.get(0).getPort());
     }
 
     public ProxySettings url(String urlv) {
-        for (String url: urlv.split(Settings.MULTI_VALUE_SEPARATOR)) {
-            if (!url.contains("://"))
-                this.urls.add("http://" + url);
-            else
-                this.urls.add(url);
-        }
+        hosts = strToSocketAddressList(urlv);
         return this;
     }
 
     /**
-     * @return a read-only list of all known proxy URLs
+     * @return a read-only list of all known proxy hosts
      */
-    public List<String> allUrls() {
-        return Collections.unmodifiableList(this.urls);
+    public List<InetSocketAddress> allHosts() {
+        return Collections.unmodifiableList(this.hosts);
     }
 
     public String ns() {
@@ -81,23 +105,20 @@ public class ProxySettings {
      * @return the first ECD URL
      */
     public String ecd() {
-        return ecds.get(0);
+        return String.format("http://%1$s:%2$d",
+                ecdHosts.get(0).getHostString(), ecdHosts.get(0).getPort());
     }
 
     public ProxySettings ecd(String ecdv) {
-        for (String url: ecdv.split(Settings.MULTI_VALUE_SEPARATOR))
-            if (!url.contains("://"))
-                this.ecds.add("http://" + url);
-            else
-                this.ecds.add(url);
+        this.ecdHosts = strToSocketAddressList(ecdv);
         return this;
     }
 
     /**
-     * @return a read-only list of all known ECD URLs
+     * @return a read-only list of all known ECD hosts
      */
-    public List<String> allEcds() {
-        return Collections.unmodifiableList(this.ecds);
+    public List<InetSocketAddress> allEcdHosts() {
+        return Collections.unmodifiableList(this.ecdHosts);
     }
 
     public boolean ecdrain(){

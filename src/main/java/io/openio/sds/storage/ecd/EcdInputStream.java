@@ -5,6 +5,7 @@ import static io.openio.sds.http.Verifiers.RAWX_VERIFIER;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetSocketAddress;
 import java.util.List;
 
 import io.openio.sds.common.OioConstants;
@@ -34,6 +35,7 @@ public class EcdInputStream extends InputStream {
 	private OioHttpResponse current;
 	private String reqId;
 	private String ecdUrl;
+	private List<InetSocketAddress> ecdHosts = null;
 	private String chunkMethod;
 	private boolean eof = false;
 
@@ -47,6 +49,11 @@ public class EcdInputStream extends InputStream {
 		this.http = http;
 		this.chunkMethod = chunkMethod;
 		this.reqId = reqId;
+	}
+
+	public EcdInputStream alternativeHosts(List<InetSocketAddress> hosts) {
+	    this.ecdHosts = hosts;
+	    return this;
 	}
 
 	@Override
@@ -106,7 +113,8 @@ public class EcdInputStream extends InputStream {
 			        .header(OIO_REQUEST_ID_HEADER, reqId)
 			        .header(OioConstants.CHUNK_META_CONTENT_CHUNK_METHOD,
 			                chunkMethod)
-			        .verifier(RAWX_VERIFIER);
+			        .verifier(RAWX_VERIFIER)
+			        .alternativeHosts(ecdHosts);
 			for (ChunkInfo ci : targets.get(pos).getChunk()) {
 				builder.header(
 				        OioConstants.CHUNK_META_CHUNK_PREFIX + ci.pos().sub(),
