@@ -329,7 +329,7 @@ public class OioHttp {
 
 		private byte[] requestHead() {
 			StringBuilder qbuilder = new StringBuilder(
-			        null == uri.getQuery() ? "" : uri.getQuery());
+			        null == uri.getRawQuery() ? "" : uri.getRawQuery());
 			boolean removeTrailindAnd = 0 == qbuilder.length();
 			for (Entry<String, String> h : query.entrySet()) {
 				qbuilder.append("&")
@@ -337,7 +337,7 @@ public class OioHttp {
 				        .append("=")
 				        .append(h.getValue());
 			}
-			String uriPath = uri.getPath();
+			String uriPath = uri.getRawPath();
 			StringBuilder req = new StringBuilder(method)
 			        .append(" ")
 			        .append(uriPath != null && !uriPath.isEmpty()? uriPath : "/")
