@@ -156,4 +156,11 @@ public class ProxyClientITest {
         assertNotNull(ref);
         assertTrue(0 < ref.size());
     }
+
+    @Test
+    public void percentNamedContainer(){
+        OioUrl url = url("TEST", "test%percent");
+        proxy.createContainer(url);
+        proxy.deleteContainer(url);
+    }
 }
