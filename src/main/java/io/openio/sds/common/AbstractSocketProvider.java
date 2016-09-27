@@ -22,7 +22,7 @@ public abstract class AbstractSocketProvider implements SocketProvider {
      * @param sock A Socket instance
      * @param target The address to connect the socket to
      * @param http The settings to apply
-     * @throws OioException
+     * @throws OioException if an error occurs during connection
      */
     protected void configureAndConnect(Socket sock, InetSocketAddress target, OioHttpSettings http)
             throws OioException {

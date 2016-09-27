@@ -23,7 +23,8 @@ public class ProxySettings {
     private String ns;
     private ArrayList<InetSocketAddress> hosts = new ArrayList<InetSocketAddress>();
     private ArrayList<InetSocketAddress> ecdHosts = new ArrayList<InetSocketAddress>();
-    private boolean ecdrain = true; //not configurable atm cuz we can't do somehow else
+    private boolean ecdrain = true; // not configurable atm cuz we can't do
+                                    // somehow else
     private boolean autocreate = true;
     private OioHttpSettings http = new OioHttpSettings();
     private PoolingSettings pooling = new PoolingSettings();
@@ -32,13 +33,16 @@ public class ProxySettings {
     }
 
     /**
-     * Convert a comma-separated list of service addresses to a list of {@link InetSocketAddress}.
-     * @param urlv a comma-separated list of service addresses
+     * Convert a comma-separated list of service addresses to a list of
+     * {@link InetSocketAddress}.
+     *
+     * @param urlv
+     *            a comma-separated list of service addresses
      * @return a list of {@link InetSocketAddress}
      */
     public static ArrayList<InetSocketAddress> strToSocketAddressList(String urlv) {
         ArrayList<InetSocketAddress> addrs = new ArrayList<InetSocketAddress>();
-        for (String url: urlv.split(Settings.MULTI_VALUE_SEPARATOR)) {
+        for (String url : urlv.split(Settings.MULTI_VALUE_SEPARATOR)) {
             String uriBase;
             if (!url.contains("://"))
                 uriBase = "http://" + url;
@@ -105,12 +109,15 @@ public class ProxySettings {
      * @return the first ECD URL
      */
     public String ecd() {
+        if (null == ecdHosts || 0 >= ecdHosts.size())
+            return null;
         return String.format("http://%1$s:%2$d",
                 ecdHosts.get(0).getHostString(), ecdHosts.get(0).getPort());
     }
 
     public ProxySettings ecd(String ecdv) {
-        this.ecdHosts = strToSocketAddressList(ecdv);
+        if (null != ecdv)
+            this.ecdHosts = strToSocketAddressList(ecdv);
         return this;
     }
 
@@ -121,7 +128,7 @@ public class ProxySettings {
         return Collections.unmodifiableList(this.ecdHosts);
     }
 
-    public boolean ecdrain(){
+    public boolean ecdrain() {
         return ecdrain;
     }
 

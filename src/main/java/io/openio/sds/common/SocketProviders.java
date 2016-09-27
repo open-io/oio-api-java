@@ -17,10 +17,15 @@ public class SocketProviders {
     /**
      * Socket provider that reuses socket instances if possible.
      *
+     * @param poolSettings
+     *            pooling settings to use
+     * @param httpSettings
+     *            http settings to use
      * @param target
      *            The address that will be requested most of the time. A request
      *            to another address will create a new socket instead of taking
      *            it from the pool.
+     * @return new {@code SocketProvider} instance
      */
     public static SocketProvider pooledSocketProvider(PoolingSettings poolSettings,
             final OioHttpSettings httpSettings, final InetSocketAddress target) {

@@ -159,7 +159,7 @@ public class ProxyClientITest {
 
     @Test
     public void percentNamedContainer(){
-        OioUrl url = url("TEST", "test%percent");
+        OioUrl url = url("TEST", "test%percent"+System.currentTimeMillis(), UUID.randomUUID().toString());
         proxy.createContainer(url);
         proxy.deleteContainer(url);
     }
