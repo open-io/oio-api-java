@@ -413,12 +413,13 @@ public class ProxyClient {
         checkArgument(null != url, INVALID_URL_MSG);
         OioHttpResponse resp = http
                 .post(format(CREATE_CONTAINER_FORMAT, settings.url(),
-                        settings.ns(), Strings.urlEncode(url.account()), Strings.urlEncode(url.container())))
+                        settings.ns(), Strings.urlEncode(url.account()),
+                        Strings.urlEncode(url.container())))
                 .alternativeHosts(altProxies)
                 .header(OIO_ACTION_MODE_HEADER, "autocreate")
                 .header(OIO_REQUEST_ID_HEADER, reqId).body("{}")
                 .verifier(CONTAINER_VERIFIER).execute().close();
-        if (201 == resp.code())
+        if (204 == resp.code())
             throw new ContainerExistException("Container alreay present");
 
         return new ContainerInfo(url.container());
