@@ -9,7 +9,7 @@ public class PoolingSettings {
 
     private Boolean enabled = true;
     private Long cleanDelay = 1L;
-    private Long cleanRate = 1L;
+    private Long cleanRate = 5L;
     private Integer maxForEach = 1024;
     private Integer maxTotal = 8192;
     private Integer maxWait = 5000;

@@ -12,7 +12,7 @@ import io.openio.sds.logging.SdsLoggerFactory;
 /**
  * 
  * @author Christopher Dedeurwaerder
- *
+ * @author Florent Vennetier
  */
 public abstract class Pool<T extends Poolable> {
 
@@ -45,17 +45,42 @@ public abstract class Pool<T extends Poolable> {
             destroy(it.next());
     }
 
-    public T lease() {
+    /**
+     * @return Monotonic (always increasing) number of milliseconds since
+     *         "some fixed but arbitrary origin time".
+     */
+    public static long monotonicMillis() {
+        return System.nanoTime() / 1000000;
+    }
+
+    protected boolean timedOut(T item, long now) {
+        return now >= item.lastUsage() + settings.idleTimeout();
+    }
+
+    /**
+     * @return the first item of the queue that has not timed out.
+     */
+    protected T leaseLoop() {
+        long now = monotonicMillis();
         T item = q.poll();
-        if (null == item) {
+        while (item != null && this.timedOut(item, now)) {
+            destroy(item);
+            item = q.poll();
+        }
+        return item;
+    }
+
+    public T lease() {
+        T item = leaseLoop();
+        if (item == null) {
             item = tryCreate();
-            if (null == item) {
+            if (item == null) {
                 try {
                     item = q.poll(settings.maxWait(), TimeUnit.MILLISECONDS);
                 } catch (InterruptedException e) {
                     logger.debug("connection wait interrrupted");
                 }
-                if (null == item)
+                if (item == null)
                     throw new OioException(String.format("Unable to get pooled element"));
             }
         }
@@ -69,7 +94,7 @@ public abstract class Pool<T extends Poolable> {
         if (item.isPooled())
             return this;
         leased.decrementAndGet();
-        item.lastUsage(System.currentTimeMillis());
+        item.lastUsage(monotonicMillis());
         if (!item.reusable() || !q.offer(item)) {
             destroy(item);
         }
@@ -96,23 +121,14 @@ public abstract class Pool<T extends Poolable> {
         return 0 < settings.maxForEach() - leased.get();
     }
 
+    /**
+     * Clean all timed out items of the pool. Also cleans the first non timed
+     * out item.
+     */
     void clean() {
-        long t = System.currentTimeMillis();
-        T p = q.peek();
-        if (null == p)
-            return;
-        boolean stop = false;
-        if (t - p.lastUsage() > settings.idleTimeout()) {
-            while (!stop && null != (p = q.poll())) {
-                if (t - p.lastUsage() > settings.idleTimeout()) {
-                    destroy(p);
-                } else {
-                    stop = true;
-                    if (!q.offer(p))
-                        destroy(p);
-                }
-            }
-        }
+        T item = leaseLoop();
+        if (item != null)
+            destroy(item);
     }
 
     private class SelfCleaner extends Thread {
