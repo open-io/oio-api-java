@@ -21,7 +21,7 @@ task wrapper(type: Wrapper) {
 }
 
 group = 'io.openio.sds'
-version = '0.6.0'
+version = '0.6.1'
 
 dependencies {
     compile group: 'log4j', name: 'log4j', version: '1.2.17'
