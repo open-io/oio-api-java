@@ -21,7 +21,9 @@ import io.openio.sds.pool.PoolingSettings;
 public class ProxySettings {
 
     private String ns;
+    private String url;
     private ArrayList<InetSocketAddress> hosts = new ArrayList<InetSocketAddress>();
+    private String ecd;
     private ArrayList<InetSocketAddress> ecdHosts = new ArrayList<InetSocketAddress>();
     private boolean ecdrain = true; // not configurable atm cuz we can't do
                                     // somehow else
@@ -62,12 +64,19 @@ public class ProxySettings {
      * @return The first proxy URL
      */
     public String url() {
+        if ((this.hosts == null || this.hosts.size() == 0)) {
+            if (this.url != null)
+                this.hosts = strToSocketAddressList(this.url);
+            else
+                throw new OioException("Proxy url not defined");
+        }
         return String.format("http://%1$s:%2$d",
                 hosts.get(0).getHostString(), hosts.get(0).getPort());
     }
 
     public ProxySettings url(String urlv) {
-        hosts = strToSocketAddressList(urlv);
+        this.url = urlv;
+        this.hosts = strToSocketAddressList(this.url);
         return this;
     }
 
@@ -75,6 +84,8 @@ public class ProxySettings {
      * @return a read-only list of all known proxy hosts
      */
     public List<InetSocketAddress> allHosts() {
+        if ((this.hosts == null || this.hosts.size() == 0) && this.url != null)
+            this.hosts = strToSocketAddressList(this.url);
         return Collections.unmodifiableList(this.hosts);
     }
 
@@ -109,15 +120,16 @@ public class ProxySettings {
      * @return the first ECD URL
      */
     public String ecd() {
-        if (null == ecdHosts || 0 >= ecdHosts.size())
+        if (ecdHosts == null || ecdHosts.size() <= 0)
             return null;
         return String.format("http://%1$s:%2$d",
                 ecdHosts.get(0).getHostString(), ecdHosts.get(0).getPort());
     }
 
     public ProxySettings ecd(String ecdv) {
-        if (null != ecdv)
-            this.ecdHosts = strToSocketAddressList(ecdv);
+        if (ecdv != null)
+            this.ecd = ecdv;
+            this.ecdHosts = strToSocketAddressList(this.ecd);
         return this;
     }
 
@@ -125,6 +137,8 @@ public class ProxySettings {
      * @return a read-only list of all known ECD hosts
      */
     public List<InetSocketAddress> allEcdHosts() {
+        if ((this.ecdHosts == null || this.ecdHosts.size() == 0) && this.ecd != null)
+            this.ecdHosts = strToSocketAddressList(this.ecd);
         return Collections.unmodifiableList(this.ecdHosts);
     }
 
