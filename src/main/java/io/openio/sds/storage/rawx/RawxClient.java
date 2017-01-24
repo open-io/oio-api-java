@@ -376,7 +376,7 @@ public class RawxClient implements StorageClient {
 	        long size) {
 		ArrayList<FeedableInputStream> res = new ArrayList<FeedableInputStream>();
 		for (int i = 0; i < count; i++)
-			res.add(new FeedableInputStream(5, settings.http().readTimeout() / 5));
+			res.add(new FeedableInputStream(5, settings.http().readTimeout() / 5, 5));
 		return res;
 	}
 }
