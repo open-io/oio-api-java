@@ -22,9 +22,19 @@ public class FeedableInputStream extends InputStream {
     private LinkedBlockingQueue<DataPart> q;
     private DataPart current = null;
     private boolean failed = false;
+    private long pollDelayMillis = 10000;
+
+    /**
+     * @param qsize
+     * @param pollDelayMillis Delay between iterations of the read loop
+     */
+    public FeedableInputStream(int qsize, long pollDelayMillis) {
+        this.q = new LinkedBlockingQueue<FeedableInputStream.DataPart>(qsize);
+        this.pollDelayMillis = pollDelayMillis;
+    }
 
     public FeedableInputStream(int qsize) {
-        this.q = new LinkedBlockingQueue<FeedableInputStream.DataPart>(qsize);
+        this(qsize, 10000);
     }
 
     public void feed(ByteBuffer b, boolean last) {
@@ -61,7 +71,7 @@ public class FeedableInputStream extends InputStream {
             return 0;
         if (current == null) {
             try {
-                current = q.poll(10L, TimeUnit.SECONDS);
+                current = q.poll(this.pollDelayMillis, TimeUnit.MILLISECONDS);
             } catch (InterruptedException e) {
                 failed = true;
                 current = new DataPart(null, true);

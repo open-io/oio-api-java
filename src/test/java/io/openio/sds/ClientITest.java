@@ -9,6 +9,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.MessageDigest;
@@ -18,6 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -29,6 +31,7 @@ import io.openio.sds.common.Hex;
 import io.openio.sds.exceptions.ContainerExistException;
 import io.openio.sds.exceptions.ContainerNotFoundException;
 import io.openio.sds.exceptions.ObjectNotFoundException;
+import io.openio.sds.exceptions.OioException;
 import io.openio.sds.models.ContainerInfo;
 import io.openio.sds.models.ObjectInfo;
 import io.openio.sds.models.OioUrl;
@@ -42,12 +45,14 @@ import io.openio.sds.models.Range;
 public class ClientITest {
 
     private static Client client;
+    public static final int httpReadTimeout = 10000;
 
     @BeforeClass
     public static void setup() {
         Settings settings = new Settings();
         settings.proxy().ns(TestHelper.ns()).url(TestHelper.proxyd())
                 .ecd(TestHelper.ecd());
+        settings.rawx().http().readTimeout(httpReadTimeout);
         client = ClientBuilder.newClient(settings);
     }
 
@@ -312,6 +317,32 @@ public class ClientITest {
                 }
             }
 
+        } finally {
+            try {
+                client.deleteContainer(url);
+            } catch (Exception e) {
+            }
+        }
+    }
+
+    @Test
+    public void objectPutShorterInput() {
+        OioUrl url = url("TEST", UUID.randomUUID().toString(), UUID
+                .randomUUID().toString());
+        client.createContainer(url);
+        ByteArrayInputStream bis = new ByteArrayInputStream("0123456789".getBytes());
+        MissingByteInputStream mbis = new MissingByteInputStream(bis, 9, 0, httpReadTimeout + 1000);
+        try {
+            client.putObject(url, 10L, mbis);
+            try {
+                client.deleteObject(url);
+            } catch (Exception e) {
+            }
+        } catch (OioException e) {
+            if (e.getMessage().contains("jobs cancelled")) {
+                System.out.println("Some upload workers force killed -> probable infinite loop");
+                throw e;
+            }
         } finally {
             try {
                 client.deleteContainer(url);
