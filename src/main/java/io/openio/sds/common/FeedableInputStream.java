@@ -10,9 +10,9 @@ import io.openio.sds.logging.SdsLogger;
 import io.openio.sds.logging.SdsLoggerFactory;
 
 /**
- * 
- * @author Christopher Dedeurwaerder
  *
+ * @author Christopher Dedeurwaerder
+ * @author Florent Vennetier
  */
 public class FeedableInputStream extends InputStream {
 
@@ -22,9 +22,24 @@ public class FeedableInputStream extends InputStream {
     private LinkedBlockingQueue<DataPart> q;
     private DataPart current = null;
     private boolean failed = false;
+    private long pollDelayMillis = 10000;
+
+    /**
+     * @param qsize
+     * @param pollDelayMillis Delay between iterations of the read loop
+     * @param retries Maximum number of iterations of the read loop
+     */
+    public FeedableInputStream(int qsize, long pollDelayMillis, int retries) {
+        this.q = new LinkedBlockingQueue<FeedableInputStream.DataPart>(qsize);
+        this.pollDelayMillis = pollDelayMillis;
+    }
+
+    public FeedableInputStream(int qsize, long pollDelayMillis) {
+        this(qsize, pollDelayMillis, 3);
+    }
 
     public FeedableInputStream(int qsize) {
-        this.q = new LinkedBlockingQueue<FeedableInputStream.DataPart>(qsize);
+        this(qsize, 10000);
     }
 
     public void feed(ByteBuffer b, boolean last) {
@@ -59,23 +74,31 @@ public class FeedableInputStream extends InputStream {
     public int read(byte[] buf, int offset, int length) {
         if (0 >= length)
             return 0;
-        if (current == null) {
+        int retriesLeft = 5;
+        while (current == null && retriesLeft > 0) {
             try {
-                current = q.poll(10L, TimeUnit.SECONDS);
+                current = q.poll(this.pollDelayMillis, TimeUnit.MILLISECONDS);
             } catch (InterruptedException e) {
                 failed = true;
                 current = new DataPart(null, true);
             }
-            return read(buf, offset, length);
+            retriesLeft--;
+            if (current == null) {
+                logger.warn("Failed to read from client application, " +
+                        retriesLeft + " retries left");
+            } else if (current.buffer() == null ||
+                    !current.buffer().hasRemaining()) {
+                if (current.isLast())
+                    return -1;
+                current = null;
+            }
         }
 
-        if (current.buffer() == null ||
-                !current.buffer().hasRemaining()) {
-            if (current.isLast())
-                return -1;
-            current = null;
-            return read(buf, offset, length);
+        if (current == null) {
+            failed = true;
+            return -1;
         }
+
         int read = Math.min(current.buffer().remaining(),
                 Math.min(buf.length - offset, length));
         current.buffer().get(buf, offset, read);

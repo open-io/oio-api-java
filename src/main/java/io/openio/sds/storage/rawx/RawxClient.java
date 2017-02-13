@@ -96,6 +96,10 @@ public class RawxClient implements StorageClient {
 		return new RawxClient(http, settings);
 	}
 
+    public int getActiveUploadCount() {
+        return ((ThreadPoolExecutor)this.executors).getActiveCount();
+    }
+
 	/**
 	 * Uploads the chunks of the specified {@code ObjectInfo} asynchronously
 	 * 
@@ -341,9 +345,17 @@ public class RawxClient implements StorageClient {
 				}
 			} catch (IOException e) {
 				logger.error(e);
-				for (Future<OioException> f : futures)
+				// Count the number of jobs that did not detect the error by themselves
+				int notTerminated = 0;
+				for (Future<OioException> f : futures) {
+				    if (!f.isDone())
+				        notTerminated++;
 					f.cancel(true);
-				throw new OioException("Stream consumption error", e);
+				}
+				String message = "Stream consumption error";
+				if (notTerminated > 0)
+				    message += " (" + notTerminated + " upload jobs cancelled)";
+				throw new OioException(message, e);
 			}
 		}
 	}
@@ -364,7 +376,7 @@ public class RawxClient implements StorageClient {
 	        long size) {
 		ArrayList<FeedableInputStream> res = new ArrayList<FeedableInputStream>();
 		for (int i = 0; i < count; i++)
-			res.add(new FeedableInputStream(5));
+			res.add(new FeedableInputStream(5, settings.http().readTimeout() / 5, 5));
 		return res;
 	}
 }

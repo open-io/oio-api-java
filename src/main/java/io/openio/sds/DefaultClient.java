@@ -30,7 +30,7 @@ import io.openio.sds.storage.rawx.RawxClient;
 public class DefaultClient implements Client {
 
 	private final ProxyClient proxy;
-	private final RawxClient rawx;
+	protected final RawxClient rawx;
 	private final EcdClient ecd;
 
 	DefaultClient(ProxyClient proxy, 
