@@ -36,6 +36,16 @@ public class RangeTest {
         assertEquals(up, r.to());
     }
 
+    @Test
+    public void betweenHigherThanInteger() {
+        long from = Integer.MAX_VALUE + (long) (Math.random() * 1000);
+        long up = Integer.MAX_VALUE + from + (long) (Math.random() * 1000);
+        Range r = Range.between(from, up);
+        assertNotNull(r);
+        assertEquals(from, r.from());
+        assertEquals(up, r.to());
+    }
+
     @Test(expected = IllegalArgumentException.class)
     public void badFrom() {
         Range.from(-1);
@@ -60,52 +70,52 @@ public class RangeTest {
     public void betweenBadBoth() {
         Range.between(10, 1);
     }
-    
+
     @Test
-    public void parseOkWithFromAndTo(){
+    public void parseOkWithFromAndTo() {
         Range r = Range.parse("10-20");
         Assert.assertNotNull(r);
         Assert.assertEquals(10, r.from());
         Assert.assertEquals(20, r.to());
     }
-    
+
     @Test
-    public void parseOkWithFrom(){
+    public void parseOkWithFrom() {
         Range r = Range.parse("10-");
         Assert.assertNotNull(r);
         Assert.assertEquals(10, r.from());
         Assert.assertEquals(-1, r.to());
     }
-    
+
     @Test
-    public void parseOkWithTo(){
+    public void parseOkWithTo() {
         Range r = Range.parse("-20");
         Assert.assertNotNull(r);
         Assert.assertEquals(0, r.from());
         Assert.assertEquals(20, r.to());
     }
-    
-    @Test(expected=IllegalArgumentException.class)
-    public void parseInvalid1(){
+
+    @Test(expected = IllegalArgumentException.class)
+    public void parseInvalid1() {
         Range.parse("azuhepoaizeuh");
     }
-    
-    @Test(expected=IllegalArgumentException.class)
-    public void parseInvalid2(){
+
+    @Test(expected = IllegalArgumentException.class)
+    public void parseInvalid2() {
         Range.parse("-");
     }
-    
+
     @Test
-    public void stringify(){
+    public void stringify() {
         Range r = Range.between(10, 20);
         Assert.assertEquals("bytes=10-20", r.headerValue());
         Assert.assertEquals("10-20", r.rangeValue());
         Assert.assertNotNull(r.toString());
-        
+
         r = Range.from(10);
         Assert.assertEquals("bytes=10-", r.headerValue());
         Assert.assertEquals("10-", r.rangeValue());
-        
+
         r = Range.upTo(20);
         Assert.assertEquals("bytes=0-20", r.headerValue());
         Assert.assertEquals("0-20", r.rangeValue());

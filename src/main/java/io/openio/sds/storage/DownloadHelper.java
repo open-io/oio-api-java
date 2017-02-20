@@ -50,7 +50,7 @@ public class DownloadHelper {
 		return targets;
 	}
 
-	private static ObjectOffset findOffset(ObjectInfo oinf, int offset) {
+	private static ObjectOffset findOffset(ObjectInfo oinf, long offset) {
 		if (-1 == offset)
 			return new ObjectOffset()
 			        .pos(oinf.nbchunks() - 1)

@@ -420,7 +420,7 @@ public class ProxyClient {
                 .header(OIO_REQUEST_ID_HEADER, reqId).body("{}")
                 .verifier(CONTAINER_VERIFIER).execute().close();
         if (204 == resp.code())
-            throw new ContainerExistException("Container alreay present");
+            throw new ContainerExistException("Container already present");
 
         return new ContainerInfo(url.container());
     }

@@ -8,7 +8,7 @@ package io.openio.sds.storage;
 public class ObjectOffset {
 	
 	 private int pos;
-     private int offset;
+     private long offset;
 
      public ObjectOffset() {
      }
@@ -22,11 +22,11 @@ public class ObjectOffset {
          return this;
      }
 
-     public int offset() {
+     public long offset() {
          return offset;
      }
 
-     public ObjectOffset offset(int offset) {
+     public ObjectOffset offset(long offset) {
          this.offset = offset;
          return this;
      }

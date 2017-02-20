@@ -157,8 +157,7 @@ public class TestHelper {
         if (myNs == null || myNs.isEmpty())
             myNs = System.getProperty("OIO_NS");
         if (myNs == null || myNs.isEmpty())
-            throw new RuntimeException(
-                    "Please define OIO_NS variable to the name of the namespace");
+            myNs = ns;
         try {
             loadConfiguration(myNs);
         } catch (FileNotFoundException fnfe) {

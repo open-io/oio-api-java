@@ -31,7 +31,7 @@ public class ObjectInputStream extends InputStream {
 	private OioHttp http;
 	private List<Target> targets;
 	private int pos = 0;
-	private int currentRemaining;
+	private long currentRemaining;
 	private ChunkInfo currentChunk;
 	private OioHttpResponse current;
 	private String reqId;
@@ -72,8 +72,9 @@ public class ObjectInputStream extends InputStream {
 					return 0 == totRead ? -1 : totRead;
 				next(0);
 			}
+
 			int read = current.body().read(buf, offset + totRead,
-			        Math.min(currentRemaining,
+			        Math.min(remaining(),
 			                Math.min(length - totRead,
 			                        buf.length - offset + totRead)));
 			if (-1 == read)
@@ -93,7 +94,11 @@ public class ObjectInputStream extends InputStream {
 		return totRead;
 	}
 
-	private void next(int offset) {
+    private int remaining() {
+        return currentRemaining > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) currentRemaining;
+    }
+
+    private void next(int offset) {
 		Target t = targets.get(pos);
 		currentChunk = t.getChunk().get(offset);
 		if (logger.isDebugEnabled())

@@ -127,9 +127,10 @@ public class ProxySettings {
     }
 
     public ProxySettings ecd(String ecdv) {
-        if (ecdv != null)
+        if (ecdv != null) {
             this.ecd = ecdv;
             this.ecdHosts = strToSocketAddressList(this.ecd);
+        }
         return this;
     }
 
