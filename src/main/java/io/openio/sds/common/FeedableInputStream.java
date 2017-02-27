@@ -25,7 +25,7 @@ public class FeedableInputStream extends InputStream {
     private long pollDelayMillis = 10000;
 
     /**
-     * @param qsize
+     * @param qsize Queue size
      * @param pollDelayMillis Delay between iterations of the read loop
      * @param retries Maximum number of iterations of the read loop
      */
