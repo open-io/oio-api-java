@@ -14,6 +14,8 @@ import static io.openio.sds.common.OioConstants.CHUNK_META_CONTENT_PATH;
 import static io.openio.sds.common.OioConstants.CHUNK_META_CONTENT_POLICY;
 import static io.openio.sds.common.OioConstants.CHUNK_META_CONTENT_SIZE;
 import static io.openio.sds.common.OioConstants.CHUNK_META_CONTENT_VERSION;
+import static io.openio.sds.common.OioConstants.CHUNK_META_FULL_PATH;
+import static io.openio.sds.common.OioConstants.CHUNK_META_OIO_VERSION;
 import static io.openio.sds.common.OioConstants.OIO_REQUEST_ID_HEADER;
 import static io.openio.sds.http.Verifiers.RAWX_VERIFIER;
 import static java.nio.ByteBuffer.wrap;
@@ -256,6 +258,8 @@ public class RawxClient implements StorageClient {
                                 .header(CHUNK_META_CONTENT_PATH, oinf.url().object())
                                 .header(CHUNK_META_CHUNK_ID, ci.id())
                                 .header(CHUNK_META_CHUNK_POS, ci.pos().toString())
+                                .header(CHUNK_META_FULL_PATH, oinf.url().toFullPath())
+                                .header(CHUNK_META_OIO_VERSION, "4")
                                 .header(OIO_REQUEST_ID_HEADER, reqId).verifier(RAWX_VERIFIER);
                         if (null == gens)
                             builder.body("");

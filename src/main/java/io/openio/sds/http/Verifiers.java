@@ -4,6 +4,7 @@ import static io.openio.sds.common.JsonUtils.gson;
 import static io.openio.sds.common.OioConstants.OIO_CHARSET;
 import static java.lang.String.format;
 
+import java.io.IOException;
 import java.io.InputStreamReader;
 
 import com.google.gson.stream.JsonReader;
@@ -127,7 +128,14 @@ public class Verifiers {
             case 206:
                 return;
             case 400:
-                throw new BadRequestException(resp.msg());
+                char[] buf = new char[256];
+                try {
+                    new InputStreamReader(resp.body()).read(buf);
+                    throw new BadRequestException(resp.msg() + new String(buf));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    throw new BadRequestException(resp.msg());
+                }
             case 404:
                 throw new ChunkNotFoundException(resp.msg());
             case 500:

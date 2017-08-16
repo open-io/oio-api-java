@@ -170,6 +170,8 @@ public class EcdClient implements StorageClient {
 		                String.valueOf(pos))
 		        .header(OioConstants.CHUNK_META_CHUNKS_NB,
 		                String.valueOf(oinf.sortedChunks().get(pos).size()))
+		        .header(OioConstants.CHUNK_META_FULL_PATH, oinf.url().toFullPath())
+		        .header(OioConstants.CHUNK_META_OIO_VERSION, "4")
 		        .header(OIO_REQUEST_ID_HEADER, reqId)
 		        .body(data, size)
 		        .alternativeHosts(ecdHosts)

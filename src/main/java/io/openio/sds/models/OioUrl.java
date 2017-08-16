@@ -3,9 +3,9 @@ package io.openio.sds.models;
 import static io.openio.sds.common.Check.checkArgument;
 import static io.openio.sds.common.OioConstants.OIO_CHARSET;
 import static io.openio.sds.common.Strings.nullOrEmpty;
-
 import io.openio.sds.common.Hash;
 import io.openio.sds.common.MoreObjects;
+import io.openio.sds.common.Strings;
 
 /**
  * 
@@ -112,6 +112,22 @@ public class OioUrl {
                 .add("container", container)
                 .add("object", object)
                 .toString();
+    }
+
+    /**
+     * Generate a string suitable to be sent as {@code CHUNK_META_FULL_PATH} header value.
+     */
+    public String toFullPath() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(Strings.urlEncode(this.account));
+        sb.append('/');
+        sb.append(Strings.urlEncode(this.container));
+        sb.append('/');
+        sb.append(Strings.urlEncode(this.object));
+        sb.append('/');
+        // FIXME(KRA): append object version
+        sb.append(0);
+        return sb.toString();
     }
 
     /**

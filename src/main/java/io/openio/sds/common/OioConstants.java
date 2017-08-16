@@ -90,6 +90,8 @@ public class OioConstants {
     public static final String CHUNK_META_CHUNK_PREFIX = "X-oio-chunk-meta-chunk-";
     public static final String CHUNK_META_CHUNKS_NB = "X-oio-chunk-meta-chunks-nb";
     public static final String CHUNK_META_CHUNK_SIZE = "X-oio-chunk-meta-chunk-size";
+    public static final String CHUNK_META_FULL_PATH = "X-oio-chunk-meta-full-path";
+    public static final String CHUNK_META_OIO_VERSION = "X-oio-chunk-meta-oio-version";
 
     /* -- Common parameters names -- */
 

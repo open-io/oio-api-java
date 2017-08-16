@@ -28,6 +28,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import io.openio.sds.common.Hex;
+import io.openio.sds.exceptions.BadRequestException;
 import io.openio.sds.exceptions.ContainerExistException;
 import io.openio.sds.exceptions.ContainerNotFoundException;
 import io.openio.sds.exceptions.ObjectNotFoundException;
@@ -116,6 +117,8 @@ public class ClientITest {
             } finally {
                 client.deleteObject(url);
             }
+        } catch (BadRequestException exc) {
+            throw exc;
         } finally {
             client.deleteContainer(url);
         }
