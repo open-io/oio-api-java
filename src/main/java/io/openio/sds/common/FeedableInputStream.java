@@ -72,7 +72,7 @@ public class FeedableInputStream extends InputStream {
 
     @Override
     public int read(byte[] buf, int offset, int length) {
-        if (0 >= length)
+        if (length <= 0)
             return 0;
         int retriesLeft = 5;
         while (current == null && retriesLeft > 0) {
@@ -102,9 +102,17 @@ public class FeedableInputStream extends InputStream {
         int read = Math.min(current.buffer().remaining(),
                 Math.min(buf.length - offset, length));
         current.buffer().get(buf, offset, read);
-        if (read < length)
-            return read + Math.max(0, read(buf, offset + read, length - read));
-        return read;
+
+        int rc;
+        if (read < length) {
+            rc = read + Math.max(0, read(buf, offset + read, length - read));
+        } else {
+            rc = read;
+        }
+
+        if (current.buffer().remaining() == 0)
+            current = null;
+        return rc;
     }
 
     public static class DataPart {
