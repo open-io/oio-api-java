@@ -115,7 +115,7 @@ public class OioUrl {
     }
 
     /**
-     * Generate a string suitable to be sent as {@code CHUNK_META_FULL_PATH} header value.
+     * @return a string suitable to be sent as {@code CHUNK_META_FULL_PATH} header value.
      */
     public String toFullPath() {
         StringBuilder sb = new StringBuilder();
