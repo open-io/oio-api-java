@@ -108,6 +108,9 @@ public class TestHelper {
             conf.setDelimiterParsingDisabled(true);
             conf.load(confFile);
             SubnodeConfiguration nsSection = conf.getSection(myNs);
+            if (nsSection.isEmpty()) {
+                throw new FileNotFoundException();
+            }
             rawProxyString = nsSection.getString("proxy");
             URL proxyUrl = parseUnprefixedUrl(rawProxyString.split(",")[0]);
             proxyIp = proxyUrl.getHost();
@@ -138,10 +141,14 @@ public class TestHelper {
             loadConfiguration(myNs, confPath);
         } catch (FileNotFoundException fnfe) {
             try {
-                loadConfiguration(myNs, "/etc/oio/sds.conf");
+                loadConfiguration(myNs, "/etc/oio/sds.conf.d/" + myNs);
             } catch (FileNotFoundException fnfe2) {
-                throw new FileNotFoundException(
-                        "Neither /etc/oio/sds.conf nor " + confPath + " exist");
+                try {
+                    loadConfiguration(myNs, "/etc/oio/sds.conf");
+                } catch (FileNotFoundException fnfe3) {
+                    throw new FileNotFoundException(
+                            "Neither /etc/oio/sds.conf nor " + confPath + " exist");
+                }
             }
         }
     }

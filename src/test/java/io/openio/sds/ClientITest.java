@@ -6,6 +6,7 @@ import static io.openio.sds.models.OioUrl.url;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNotEquals;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -34,6 +35,7 @@ import io.openio.sds.exceptions.ContainerNotFoundException;
 import io.openio.sds.exceptions.ObjectNotFoundException;
 import io.openio.sds.exceptions.OioException;
 import io.openio.sds.models.ContainerInfo;
+import io.openio.sds.models.NamespaceInfo;
 import io.openio.sds.models.ObjectInfo;
 import io.openio.sds.models.OioUrl;
 import io.openio.sds.models.Range;
@@ -59,6 +61,15 @@ public class ClientITest {
 
     @AfterClass
     public static void teardown() {
+    }
+
+    @Test
+    public void getNamespaceInfo() {
+        NamespaceInfo nsi = client.getNamespaceInfo();
+        assertNotNull(nsi);
+        assertNotEquals(0L, (long)nsi.chunksize());
+        assertNotNull(nsi.options());
+        assertNotNull(nsi.storagePolicies());
     }
 
     @Test
