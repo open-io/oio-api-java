@@ -159,14 +159,24 @@ public class DefaultClient implements Client {
 
 	@Override
 	public ObjectInfo getObjectInfo(OioUrl url) {
-		return getObjectInfo(url, null);
+		return getObjectInfo(url, true);
+	}
+
+	@Override
+	public ObjectInfo getObjectInfo(OioUrl url, boolean loadProperties) {
+		return getObjectInfo(url, null, loadProperties);
 	}
 
 	@Override
 	public ObjectInfo getObjectInfo(OioUrl url, Long version) {
+		return getObjectInfo(url, version, true);
+	}
+
+	@Override
+	public ObjectInfo getObjectInfo(OioUrl url, Long version, boolean loadProperties) {
 		checkArgument(null != url, "url cannot be null");
 		checkArgument(null != url.object(), "url object cannot be null");
-		return proxy.getObjectInfo(url, version, requestId());
+		return proxy.getObjectInfo(url, version, requestId(), loadProperties);
 	}
 
 	@Override

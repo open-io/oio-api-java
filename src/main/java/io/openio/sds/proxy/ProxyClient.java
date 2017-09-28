@@ -668,7 +668,18 @@ public class ProxyClient {
      * @return an {@link ObjectInfo} containing informations about the object
      */
     public ObjectInfo getObjectInfo(OioUrl url) throws OioException {
-        return getObjectInfo(url, null, requestId());
+        return getObjectInfo(url, true);
+    }
+
+    /**
+     * Returns informations about the specified object
+     *
+     * @param url
+     *            the url of the object to look for
+     * @return an {@link ObjectInfo} containing informations about the object
+     */
+    public ObjectInfo getObjectInfo(OioUrl url, boolean loadProperties) throws OioException {
+        return getObjectInfo(url, null, loadProperties);
     }
 
     /**
@@ -682,7 +693,21 @@ public class ProxyClient {
      */
     public ObjectInfo getObjectInfo(OioUrl url, Long version)
             throws OioException {
-        return getObjectInfo(url, version, requestId());
+        return getObjectInfo(url, version, true);
+    }
+
+    /**
+     * Returns informations about the specified object
+     *
+     * @param url
+     *            the url of the object to look for
+     * @param version
+     *            the version of the content to get
+     * @return an {@link ObjectInfo} containing informations about the object
+     */
+    public ObjectInfo getObjectInfo(OioUrl url, Long version, boolean loadProperties)
+            throws OioException {
+        return getObjectInfo(url, version, requestId(), loadProperties);
     }
 
     /**
@@ -699,6 +724,23 @@ public class ProxyClient {
      */
     public ObjectInfo getObjectInfo(OioUrl url, Long version, String reqId)
             throws OioException {
+        return getObjectInfo(url, version, reqId, true);
+    }
+
+    /**
+     * Returns informations about the specified object
+     *
+     * @param url
+     *            the url of the object to look for
+     * @param version
+     *            the version to get (could be {@code null} to get latest
+     *            version)
+     * @param reqId
+     *            the id to use to identify the request
+     * @return an {@link ObjectInfo} containing informations about the object
+     */
+    public ObjectInfo getObjectInfo(OioUrl url, Long version, String reqId, boolean loadProperties)
+            throws OioException {
         checkArgument(null != url, INVALID_URL_MSG);
         OioHttpResponse resp = http
                 .get(format(GET_OBJECT_FORMAT, settings.url(), settings.ns(),
@@ -711,7 +753,9 @@ public class ProxyClient {
                 .alternativeHosts(altProxies)
                 .verifier(OBJECT_VERIFIER).execute();
         ObjectInfo info = objectShowObjectInfoAndClose(url, resp);
-        info.properties(getObjectProperties(url, reqId));
+        if (loadProperties) {
+            info.properties(getObjectProperties(url, reqId));
+        }
         return info;
     }
 

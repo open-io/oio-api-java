@@ -375,6 +375,24 @@ public interface Client {
 
     /**
      * Returns informations about the specified object
+     *
+     * @param url
+     *            the url of the object
+     * @param loadProperties if true, additional request is performed to get object properties assigned to
+     *            the specified object
+     * @return an {@code ObjectInfo}
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws ObjectNotFoundException
+     *             if the specified object doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public ObjectInfo getObjectInfo(OioUrl url, boolean loadProperties)
+            throws OioException;
+
+    /**
+     * Returns informations about the specified object
      * 
      * @param url
      *            the url of the object
@@ -390,6 +408,27 @@ public interface Client {
      *             if any error occurs during request execution
      */
     public ObjectInfo getObjectInfo(OioUrl url, Long version)
+            throws OioException;
+
+    /**
+     * Returns informations about the specified object
+     *
+     * @param url
+     *            the url of the object
+     * @param version
+     *            the version to get (could be {@code null} to get latest
+     *            version)
+     * @param loadProperties if true, additional request is performed to get object properties assigned to
+     *            the specified object
+     * @return an {@code ObjectInfo}
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws ObjectNotFoundException
+     *             if the specified object doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public ObjectInfo getObjectInfo(OioUrl url, Long version, boolean loadProperties)
             throws OioException;
 
     /**
