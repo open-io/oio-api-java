@@ -676,6 +676,7 @@ public class ProxyClient {
      *
      * @param url
      *            the url of the object to look for
+     * @param loadProperties Whether or not to load properties
      * @return an {@link ObjectInfo} containing informations about the object
      */
     public ObjectInfo getObjectInfo(OioUrl url, boolean loadProperties) throws OioException {
@@ -703,6 +704,7 @@ public class ProxyClient {
      *            the url of the object to look for
      * @param version
      *            the version of the content to get
+     * @param loadProperties Whether or not to load properties
      * @return an {@link ObjectInfo} containing informations about the object
      */
     public ObjectInfo getObjectInfo(OioUrl url, Long version, boolean loadProperties)
@@ -737,6 +739,7 @@ public class ProxyClient {
      *            version)
      * @param reqId
      *            the id to use to identify the request
+     * @param loadProperties Whether or not to load properties
      * @return an {@link ObjectInfo} containing informations about the object
      */
     public ObjectInfo getObjectInfo(OioUrl url, Long version, String reqId, boolean loadProperties)
