@@ -14,6 +14,9 @@ install:
   - git clone -b master https://github.com/open-io/oio-sds.git
   - pip install --upgrade -r oio-sds/all-requirements.txt
   - pip install --upgrade -r oio-sds/test-requirements.txt
+env:
+  - TEST_SUITE=EC
+  - TEST_SUITE=3COPIES-11RAWX
 script:
   - set -e
   - mkdir /tmp/oio
@@ -23,5 +26,5 @@ script:
   - python setup.py install
   - export G_DEBUG_LEVEL=D PATH="$PATH:/tmp/oio/bin" LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/tmp/oio/lib"
   - export OIO_NS="NS-${RANDOM}" OIO_ACCOUNT="ACCT-$RANDOM" OIO_USER=USER-$RANDOM OIO_PATH=PATH-$RANDOM
-  - test -f etc/bootstrap-preset-EC.yml && oio-reset.sh -v -v -N $OIO_NS -f etc/bootstrap-preset-EC.yml || oio-reset.sh -v -v -N $OIO_NS -f etc/bootstrap-EC.yml
+  - test -f etc/bootstrap-preset-${TEST_SUITE}.yml && oio-reset.sh -v -v -N $OIO_NS -f etc/bootstrap-preset-${TEST_SUITE}.yml || oio-reset.sh -v -v -N $OIO_NS -f etc/bootstrap-${TEST_SUITE}.yml
   - cd .. && ./gradlew test
