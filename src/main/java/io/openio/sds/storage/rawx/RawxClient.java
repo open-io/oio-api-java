@@ -135,6 +135,8 @@ public class RawxClient implements StorageClient {
 		long remaining = oinf.size();
 		for (int pos = 0; pos < oinf.nbchunks(); pos++) {
 			long csize = Math.min(remaining, oinf.chunksize(pos));
+			if (csize == 0 && pos != 0)
+				throw new OioException("Too many chunks prepared");
 			uploadPosition(oinf, pos, csize, wrapper, reqId);
 			remaining -= csize;
 		}

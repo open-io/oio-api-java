@@ -26,6 +26,7 @@ import java.util.List;
 
 import io.openio.sds.common.Hex;
 import io.openio.sds.common.OioConstants;
+import io.openio.sds.exceptions.OioException;
 import io.openio.sds.http.OioHttp;
 import io.openio.sds.http.OioHttp.RequestBuilder;
 import io.openio.sds.logging.SdsLogger;
@@ -70,8 +71,10 @@ public class EcdClient implements StorageClient {
 		StreamWrapper wrapper = new StreamWrapper(data);
 		long remaining = oinf.size();
 		for (int pos = 0; pos < oinf.sortedChunks().size(); pos++) {
-			StreamWrapper chunkwrapper = new StreamWrapper(wrapper);
 			long csize = Math.min(remaining, oinf.metachunksize(pos));
+			if (csize == 0 && pos != 0)
+				throw new OioException("Too many chunks prepared");
+			StreamWrapper chunkwrapper = new StreamWrapper(wrapper);
 			uploadPosition(oinf, pos, csize, chunkwrapper, reqId);
 			String hash = Hex.toHex(chunkwrapper.md5());
 			for(ChunkInfo ci : oinf.sortedChunks().get(pos)) {
