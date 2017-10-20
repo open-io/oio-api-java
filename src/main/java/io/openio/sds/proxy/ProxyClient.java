@@ -60,6 +60,7 @@ import static io.openio.sds.common.OioConstants.VERSION_MAIN_ALIASES_HEADER;
 import static io.openio.sds.common.OioConstants.VERSION_MAIN_CHUNKS_HEADER;
 import static io.openio.sds.common.OioConstants.VERSION_MAIN_CONTENTS_HEADER;
 import static io.openio.sds.common.OioConstants.VERSION_MAIN_PROPERTIES_HEADER;
+import static io.openio.sds.common.OioConstants.LIST_TRUNCATED_HEADER;
 import static io.openio.sds.common.Strings.nullOrEmpty;
 import static io.openio.sds.http.OioHttpHelper.longHeader;
 import static io.openio.sds.http.Verifiers.CONTAINER_VERIFIER;
@@ -71,9 +72,6 @@ import static java.lang.String.format;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.net.InetSocketAddress;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -92,8 +90,6 @@ import io.openio.sds.exceptions.OioException;
 import io.openio.sds.exceptions.OioSystemException;
 import io.openio.sds.http.OioHttp;
 import io.openio.sds.http.OioHttpResponse;
-import io.openio.sds.logging.SdsLogger;
-import io.openio.sds.logging.SdsLoggerFactory;
 import io.openio.sds.models.BeansRequest;
 import io.openio.sds.models.ChunkInfo;
 import io.openio.sds.models.ContainerInfo;
@@ -513,7 +509,7 @@ public class ProxyClient {
             String reqId) throws OioException {
         checkArgument(null != url, INVALID_URL_MSG);
         checkArgument(null != options, "Invalid options");
-        return http
+        OioHttpResponse resp = http
                 .get(format(LIST_OBJECTS_FORMAT, settings.url(), settings.ns(),
                         Strings.urlEncode(url.account()), Strings.urlEncode(url.container())))
                 .alternativeHosts(altProxies)
@@ -524,7 +520,21 @@ public class ProxyClient {
                 .query(DELIMITER_PARAM, options.delimiter())
                 .header(OIO_REQUEST_ID_HEADER, reqId)
                 .verifier(CONTAINER_VERIFIER)
-                .execute(ObjectList.class);
+                .execute();
+        boolean success = false;
+        try {
+            ObjectList objectList = gson().fromJson(
+                    new JsonReader(new InputStreamReader(resp.body(),
+                            OIO_CHARSET)),
+                    ObjectList.class);
+            String truncated = resp.header(LIST_TRUNCATED_HEADER);
+            if (truncated != null)
+                objectList.truncated(Boolean.parseBoolean(truncated));
+            success = true;
+            return objectList;
+        } finally {
+            resp.close(success);
+        }
     }
 
     /**
