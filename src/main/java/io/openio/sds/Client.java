@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import io.openio.sds.exceptions.ContainerExistException;
+import io.openio.sds.exceptions.ContainerNotEmptyException;
 import io.openio.sds.exceptions.ContainerNotFoundException;
 import io.openio.sds.exceptions.ObjectExistException;
 import io.openio.sds.exceptions.ObjectNotFoundException;
@@ -32,7 +33,7 @@ import io.openio.sds.models.Range;
  * Simple example:
  * 
  * <code>
- * Client client = ClientBuilder.newClient("http://127.0.0.1:6002");
+ * Client client = ClientBuilder.newClient("OPENIO", "http://127.0.0.1:6000");
  * </code>
  * 
  * </p>
@@ -109,6 +110,8 @@ public interface Client {
      *            the url of the container
      * @throws ContainerNotFoundException
      *             if the specified container doesn't exist
+     * @throws ContainerNotEmptyException
+     *             if the specified container isn't empty
      * 
      * @throws OioSystemException
      *             if any error occurs during request execution
