@@ -755,14 +755,16 @@ public class ProxyClient {
     public ObjectInfo getObjectInfo(OioUrl url, Long version, String reqId, boolean loadProperties)
             throws OioException {
         checkArgument(null != url, INVALID_URL_MSG);
+        String uri = format(GET_OBJECT_FORMAT, settings.url(), settings.ns(),
+                Strings.urlEncode(url.account()),
+                Strings.urlEncode(url.container()),
+                Strings.urlEncode(url.object()));
+        if (version != null) {
+            uri += "&version=" + version.toString();
+        }
         OioHttpResponse resp = http
-                .get(format(GET_OBJECT_FORMAT, settings.url(), settings.ns(),
-                        Strings.urlEncode(url.account()),
-                        Strings.urlEncode(url.container()),
-                        Strings.urlEncode(url.object())))
+                .get(uri)
                 .header(OIO_REQUEST_ID_HEADER, reqId)
-                .header(CONTENT_META_VERSION_HEADER,
-                        null == version ? null : version.toString())
                 .alternativeHosts(altProxies)
                 .verifier(OBJECT_VERIFIER).execute();
         ObjectInfo info = objectShowObjectInfoAndClose(url, resp);
