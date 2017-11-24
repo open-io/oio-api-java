@@ -13,16 +13,14 @@ import java.util.regex.Pattern;
 public class Position {
 
     private static final Pattern POSITION_PATTERN = Pattern
-            .compile("^([\\d]+)(\\.(p)?([\\d]+))?$");
+            .compile("^([\\d]+)(\\.([\\d]+))?$");
 
     private int meta;
-    private boolean parity;
     private int sub;
 
-    private Position(int meta, int sub, boolean parity) {
+    private Position(int meta, int sub) {
         this.meta = meta;
         this.sub = sub;
-        this.parity = parity;
     }
 
     public static Position parse(String pos) {
@@ -32,18 +30,18 @@ public class Position {
         if (null == m.group(2))
             return simple(Integer.parseInt(m.group(1)));
         return composed(Integer.parseInt(m.group(1)),
-                Integer.parseInt(m.group(4)), null != m.group(3));
+                Integer.parseInt(m.group(3)));
     }
 
     public static Position simple(int meta) {
         checkArgument(0 <= meta, "Invalid position");
-        return new Position(meta, -1, false);
+        return new Position(meta, -1);
     }
 
-    public static Position composed(int meta, int sub, boolean parity) {
+    public static Position composed(int meta, int sub) {
         checkArgument(0 <= meta, "Invalid meta position");
         checkArgument(0 <= sub, "Invalid sub position");
-        return new Position(meta, sub, parity);
+        return new Position(meta, sub);
     }
 
     public int meta() {
@@ -54,15 +52,11 @@ public class Position {
         return sub;
     }
 
-    public boolean parity() {
-        return parity;
-    }
-
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder().append(meta);
         if (-1 != sub)
-            sb.append(".").append(parity ? "p" : "").append(sub);
+            sb.append(".").append(sub);
         return sb.toString();
     }
 
@@ -70,8 +64,8 @@ public class Position {
      * Returns negative, 0 or positive int if the position is lower, equals or
      * higher than the specified one .
      * <p>
-     * This method compares the meta position, if equals, it compares parity
-     * boolean, if equals, it compares the sub position.
+     * This method compares the meta position, if equals,
+     * it compares the sub position.
      * 
      * @param pos
      *            the position to compare to
@@ -79,8 +73,7 @@ public class Position {
      * higher than the specified one .
      */
     public int compare(Position pos) {
-        return (meta == pos.meta())
-                ? ((parity == pos.parity()) ? sub - pos.sub() : parity ? 1 : -1)
-                : meta - pos.meta();
+        if (meta == pos.meta()) return sub - pos.sub();
+        else return meta - pos.meta();
     }
 }
