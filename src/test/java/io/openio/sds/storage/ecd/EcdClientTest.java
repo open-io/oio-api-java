@@ -69,7 +69,7 @@ public class EcdClientTest {
 		List<ChunkInfo> l = new ArrayList<ChunkInfo>();
 		for (int i = 0; i < 9; i++) {
 			ChunkInfo ci = new ChunkInfo()
-			        .pos(Position.composed(0, i, false))
+			        .pos(Position.composed(0, i))
 			        .size(size)
 			        .url("http://127.0.0.0.1:6010/" + Hash.sha256()
 			                .hashBytes(UUID.randomUUID().toString().getBytes())
@@ -132,7 +132,7 @@ public class EcdClientTest {
 		List<ChunkInfo> l = new ArrayList<ChunkInfo>();
 		for (int i = 0; i < 9; i++) {
 			ChunkInfo ci = new ChunkInfo()
-					.pos(Position.composed(0, i, false))
+					.pos(Position.composed(0, i))
 					.size(size)
 					.url("http://127.0.0.1:6010/"
 							+ Hash.sha256()
