@@ -662,6 +662,7 @@ public class ProxyClient {
                 .header(CONTENT_META_LENGTH_HEADER, String.valueOf(oinf.size()))
                 .header(CONTENT_META_HASH_HEADER, oinf.hash())
                 .header(OIO_REQUEST_ID_HEADER, reqId)
+                .header(CONTENT_META_POLICY_HEADER, oinf.policy())
                 .header(CONTENT_META_CHUNK_METHOD_HEADER, oinf.chunkMethod())
                 .header(CONTENT_META_VERSION_HEADER,
                         versionHeader(oinf, version)).body(body)
