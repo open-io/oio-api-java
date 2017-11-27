@@ -18,7 +18,7 @@ import io.openio.sds.models.ChunkInfo;
 import io.openio.sds.storage.Target;
 
 /**
- * For not rained items only
+ * For replicated policies only
  * 
  * @author Christopher Dedeurwaerder
  *
@@ -121,7 +121,7 @@ public class ObjectInputStream extends InputStream {
 		} catch (OioException e) {
 			if (offset + 1 >= targets.get(pos).getChunk().size())
 				throw new OioException(
-				        "Definitly fail to download chunk at pos " + pos, e);
+				        "Definitely failed to download chunk at pos " + pos, e);
 			logger.warn("Error while trying to download " + currentChunk.url(),
 			        e);
 			next(offset + 1);

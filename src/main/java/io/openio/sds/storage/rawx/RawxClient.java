@@ -300,7 +300,6 @@ public class RawxClient implements StorageClient {
 			for (Future<UploadResult> f : futures) {
 				UploadResult result = f.get();
 
-				// TODO: log the URL of the chunk that failed
 				if (null != result.exception()) {
 					logger.warn(format("Failed to upload chunk %s", result.chunkInfo()), result.exception());
 				} else {
