@@ -77,7 +77,7 @@ public class OioHttpResponse {
                 sock.shutdownInput();
             sock.close();
         } catch (Exception e) {
-            logger.warn("Socket close failure, possible leak", e);
+            logger.warn("Failed to close socket, possible leak", e);
         }
         return this;
     }
@@ -198,7 +198,7 @@ public class OioHttpResponse {
         public static StatusLine parse(String line) throws IOException {
             String[] tok = line.trim().split(" ", 3);
             if (3 != tok.length)
-                throw new IOException(format("Invalid status line (%s)", line));
+                throw new IOException(format("Invalid HTTP status line (%s)", line));
             return new StatusLine(tok[0], Integer.parseInt(tok[1].trim()),
                     tok[2].trim());
         }

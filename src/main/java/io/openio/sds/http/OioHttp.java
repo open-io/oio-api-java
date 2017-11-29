@@ -199,7 +199,7 @@ public class OioHttp {
                         }
                     }
                 }
-                throw new OioSystemException("Http request execution error", lastExc);
+                throw new OioSystemException("HTTP request execution error", lastExc);
             }
         }
 
@@ -230,9 +230,9 @@ public class OioHttp {
                         }
                         sock.close();
                     } catch (IOException ioe) {
-                        logger.warn("Unable to close socket, possible leak", ioe);
+                        logger.warn("Failed to close socket, possible leak", ioe);
                     }
-                throw new OioSystemException("Http request execution error", e);
+                throw new OioSystemException("HTTP request execution error", e);
             }
         }
 
