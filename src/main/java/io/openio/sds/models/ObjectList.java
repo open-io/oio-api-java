@@ -31,6 +31,18 @@ public class ObjectList {
     }
 
     /**
+     * Specifies the listing objects
+     *
+     * @param objects
+     *            the value to set
+     * @return this
+     */
+    public ObjectList objects(List<ObjectView> objects) {
+        this.objects = objects;
+        return this;
+    }
+
+    /**
      * Returns {@code true} if this listing does not contains all objects
      * matching the specified {@code ListOptions}, {@code false} otherwise
      * 

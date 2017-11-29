@@ -63,8 +63,8 @@ public class ChunkedStream extends InputStream {
 			out.write(b);
 		}
 		chunked.read(); // read \n
-		String line = new String(out.toString("utf-8"));
-		currentRemaining = Integer.parseInt(new String(out.toString("utf-8")),
+		String line = out.toString("utf-8");
+		currentRemaining = Integer.parseInt(out.toString("utf-8"),
 		        16);
 		if (0 == currentRemaining) { // EOF
 			readCRLF();

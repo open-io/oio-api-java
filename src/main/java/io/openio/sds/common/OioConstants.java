@@ -105,7 +105,6 @@ public class OioConstants {
     /* -- CS -- */
     public static final String CS_NSINFO_FORMAT = "%s/v3.0/%s/conscience/info";
     public static final String CS_GETSRV_FORMAT = "%s/v3.0/%s/conscience/list?type=%s";
-    public static final String CS_REGISTER_FORMAT = "%s/v3.0/%s/conscience/list?type=%s";
 
     /* -- DIR -- */
     public static final String DIR_REF_CREATE_FORMAT = "%s/v3.0/%s/reference/create?acct=%s&ref=%s";

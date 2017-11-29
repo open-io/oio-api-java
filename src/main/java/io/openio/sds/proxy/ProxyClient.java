@@ -109,12 +109,12 @@ import io.openio.sds.models.ServiceInfo;
 public class ProxyClient {
     private OioHttp http;
     private ProxySettings settings;
-    private List<InetSocketAddress> altProxies = null;
+    private List<InetSocketAddress> hosts = null;
 
     public ProxyClient(OioHttp http, ProxySettings settings) {
         this.http = http;
         this.settings = settings;
-        this.altProxies = this.settings.allHosts();
+        this.hosts = this.settings.allHosts();
     }
 
     /* -- CS -- */
@@ -127,7 +127,7 @@ public class ProxyClient {
     public NamespaceInfo getNamespaceInfo() throws OioException {
         return http
                 .get(format(CS_NSINFO_FORMAT, settings.url(), settings.ns()))
-                .alternativeHosts(altProxies)
+                .hosts(hosts)
                 .verifier(STANDALONE_VERIFIER).execute(NamespaceInfo.class);
     }
 
@@ -143,7 +143,7 @@ public class ProxyClient {
     public List<ServiceInfo> getServices(String type) throws OioException {
         OioHttpResponse resp = http
                 .get(format(CS_GETSRV_FORMAT, settings.url(), settings.ns(), type))
-                    .alternativeHosts(altProxies)
+                    .hosts(hosts)
                     .verifier(STANDALONE_VERIFIER).execute();
         return serviceInfoListAndClose(resp);
     }
@@ -176,7 +176,7 @@ public class ProxyClient {
         checkArgument(null != url, INVALID_URL_MSG);
         http.post(format(DIR_REF_CREATE_FORMAT, settings.url(), settings.ns(),
                         Strings.urlEncode(url.account()), Strings.urlEncode(url.container())))
-                .alternativeHosts(altProxies)
+                .hosts(hosts)
                 .header(OIO_REQUEST_ID_HEADER, reqId)
                 .verifier(REFERENCE_VERIFIER).execute().close();
     }
@@ -211,7 +211,7 @@ public class ProxyClient {
         return http
                 .get(format(DIR_REF_SHOW_FORMAT, settings.url(), settings.ns(),
                         Strings.urlEncode(url.account()), Strings.urlEncode(url.container())))
-                .alternativeHosts(altProxies)
+                .hosts(hosts)
                 .header(OIO_REQUEST_ID_HEADER, reqId)
                 .verifier(REFERENCE_VERIFIER).execute(ReferenceInfo.class);
     }
@@ -247,7 +247,7 @@ public class ProxyClient {
         http.post(
                 format(DIR_REF_DELETE_FORMAT, settings.url(), settings.ns(),
                         Strings.urlEncode(url.account()), Strings.urlEncode(url.container())))
-                .alternativeHosts(altProxies)
+                .hosts(hosts)
                 .header(OIO_REQUEST_ID_HEADER, reqId)
                 .verifier(REFERENCE_VERIFIER).execute().close();
     }
@@ -288,7 +288,7 @@ public class ProxyClient {
                 .post(format(DIR_LINK_SRV_FORMAT, settings.url(),
                         settings.ns(), 
                         Strings.urlEncode(url.account()), Strings.urlEncode(url.container()), type))
-                .alternativeHosts(altProxies)
+                .hosts(hosts)
                 .header(OIO_REQUEST_ID_HEADER, reqId)
                 .verifier(REFERENCE_VERIFIER).execute();
 
@@ -333,7 +333,7 @@ public class ProxyClient {
         return http
                 .get(format(DIR_LIST_SRV_FORMAT, settings.url(), settings.ns(),
                         Strings.urlEncode(url.account()), Strings.urlEncode(url.container()), type))
-                .alternativeHosts(altProxies)
+                .hosts(hosts)
                 .header(OIO_REQUEST_ID_HEADER, reqId)
                 .verifier(REFERENCE_VERIFIER).execute(ReferenceInfo.class)
                 .srv();
@@ -372,7 +372,7 @@ public class ProxyClient {
         http.post(
                 format(DIR_UNLINK_SRV_FORMAT, settings.url(), settings.ns(),
                         Strings.urlEncode(url.account()), Strings.urlEncode(url.container()), type))
-                .alternativeHosts(altProxies)
+                .hosts(hosts)
                 .header(OIO_REQUEST_ID_HEADER, reqId)
                 .verifier(REFERENCE_VERIFIER).execute().close();
 
@@ -411,7 +411,7 @@ public class ProxyClient {
                 .post(format(CREATE_CONTAINER_FORMAT, settings.url(),
                         settings.ns(), Strings.urlEncode(url.account()),
                         Strings.urlEncode(url.container())))
-                .alternativeHosts(altProxies)
+                .hosts(hosts)
                 .header(OIO_ACTION_MODE_HEADER, "autocreate")
                 .header(OIO_REQUEST_ID_HEADER, reqId).body("{}")
                 .verifier(CONTAINER_VERIFIER).execute().close();
@@ -452,7 +452,7 @@ public class ProxyClient {
                 .get(format(GET_CONTAINER_INFO_FORMAT, settings.url(),
                         settings.ns(),
                         Strings.urlEncode(url.account()), Strings.urlEncode(url.container())))
-                .alternativeHosts(altProxies)
+                .hosts(hosts)
                 .header(OIO_REQUEST_ID_HEADER, reqId)
                 .verifier(CONTAINER_VERIFIER).execute().close();
 
@@ -512,7 +512,7 @@ public class ProxyClient {
         OioHttpResponse resp = http
                 .get(format(LIST_OBJECTS_FORMAT, settings.url(), settings.ns(),
                         Strings.urlEncode(url.account()), Strings.urlEncode(url.container())))
-                .alternativeHosts(altProxies)
+                .hosts(hosts)
                 .query(MAX_PARAM,
                         options.limit() > 0 ? String.valueOf(options.limit())
                                 : null).query(PREFIX_PARAM, options.prefix())
@@ -566,7 +566,7 @@ public class ProxyClient {
         http.post(
                 format(DELETE_CONTAINER_FORMAT, settings.url(), settings.ns(),
                         Strings.urlEncode(url.account()), Strings.urlEncode(url.container())))
-                .alternativeHosts(altProxies)
+                .hosts(hosts)
                 .verifier(CONTAINER_VERIFIER)
                 .header(OIO_REQUEST_ID_HEADER, reqId).execute().close();
     }
@@ -611,7 +611,7 @@ public class ProxyClient {
                         Strings.urlEncode(url.container()),
                         Strings.urlEncode(url.object())))
                 .body(gson().toJson(new BeansRequest().size(size)))
-                .alternativeHosts(altProxies)
+                .hosts(hosts)
                 .header(ACTION_MODE_HEADER,
                         settings.autocreate() ? OioConstants.AUTOCREATE_ACTION_MODE
                                 : null).header(OIO_REQUEST_ID_HEADER, reqId)
@@ -666,7 +666,7 @@ public class ProxyClient {
                 .header(CONTENT_META_CHUNK_METHOD_HEADER, oinf.chunkMethod())
                 .header(CONTENT_META_VERSION_HEADER,
                         versionHeader(oinf, version)).body(body)
-                .alternativeHosts(altProxies)
+                .hosts(hosts)
                 .verifier(OBJECT_VERIFIER).execute().close();
         return oinf;
     }
@@ -766,7 +766,7 @@ public class ProxyClient {
         OioHttpResponse resp = http
                 .get(uri)
                 .header(OIO_REQUEST_ID_HEADER, reqId)
-                .alternativeHosts(altProxies)
+                .hosts(hosts)
                 .verifier(OBJECT_VERIFIER).execute();
         ObjectInfo info = objectShowObjectInfoAndClose(url, resp);
         if (loadProperties) {
@@ -826,7 +826,7 @@ public class ProxyClient {
                 .header(CONTENT_META_VERSION_HEADER,
                         null == version ? null : version.toString())
                 .header(OIO_REQUEST_ID_HEADER, reqId).verifier(OBJECT_VERIFIER)
-                .alternativeHosts(altProxies)
+                .hosts(hosts)
                 .execute().close();
     }
 
@@ -880,7 +880,7 @@ public class ProxyClient {
                         Strings.urlEncode(url.account()),
                         Strings.urlEncode(url.container())))
                 .header(OIO_REQUEST_ID_HEADER, reqId)
-                .alternativeHosts(altProxies)
+                .hosts(hosts)
                 .verifier(CONTAINER_VERIFIER).body(root).execute().close();
     }
 
@@ -921,7 +921,7 @@ public class ProxyClient {
                         Strings.urlEncode(url.account()),
                         Strings.urlEncode(url.container())))
                 .header(OIO_REQUEST_ID_HEADER, reqId)
-                .alternativeHosts(altProxies)
+                .hosts(hosts)
                 .verifier(CONTAINER_VERIFIER).execute();
         try {
             Map<String, Map<String, String>> res = JsonUtils.jsonToMapMap(resp
@@ -973,7 +973,7 @@ public class ProxyClient {
                         Strings.urlEncode(url.account()),
                         Strings.urlEncode(url.container())))
                 .header(OIO_REQUEST_ID_HEADER, reqId).body(gson().toJson(keys))
-                .alternativeHosts(altProxies)
+                .hosts(hosts)
                 .verifier(CONTAINER_VERIFIER).execute().close();
     }
 
@@ -1016,7 +1016,7 @@ public class ProxyClient {
                         Strings.urlEncode(url.account()),
                         Strings.urlEncode(url.container())))
                 .header(OIO_REQUEST_ID_HEADER, reqId).body(gson().toJson(keys))
-                .alternativeHosts(altProxies)
+                .hosts(hosts)
                 .verifier(CONTAINER_VERIFIER).execute().close();
     }
 
@@ -1071,7 +1071,7 @@ public class ProxyClient {
                         Strings.urlEncode(url.container()),
                         Strings.urlEncode(url.object())))
                 .header(OIO_REQUEST_ID_HEADER, reqId).verifier(OBJECT_VERIFIER)
-                .alternativeHosts(altProxies)
+                .hosts(hosts)
                 .body(body).execute().close();
     }
 
@@ -1116,7 +1116,7 @@ public class ProxyClient {
                         Strings.urlEncode(url.account()),
                         Strings.urlEncode(url.container()),
                         Strings.urlEncode(url.object())))
-                .alternativeHosts(altProxies)
+                .hosts(hosts)
                 .header(OIO_REQUEST_ID_HEADER, reqId).verifier(OBJECT_VERIFIER)
                 .execute();
         try {
@@ -1170,7 +1170,7 @@ public class ProxyClient {
                         Strings.urlEncode(url.account()),
                         Strings.urlEncode(url.container()),
                         Strings.urlEncode(url.object())))
-                .alternativeHosts(altProxies)
+                .hosts(hosts)
                 .header(OIO_REQUEST_ID_HEADER, reqId).body(gson().toJson(keys))
                 .verifier(CONTAINER_VERIFIER).execute().close();
     }
@@ -1218,7 +1218,7 @@ public class ProxyClient {
                         Strings.urlEncode(url.account()),
                         Strings.urlEncode(url.container()),
                         Strings.urlEncode(url.object())))
-                .alternativeHosts(altProxies)
+                .hosts(hosts)
                 .header(OIO_REQUEST_ID_HEADER, reqId).body(gson().toJson(keys))
                 .verifier(CONTAINER_VERIFIER).execute().close();
     }

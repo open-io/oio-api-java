@@ -10,15 +10,18 @@ import static io.openio.sds.common.OioConstants.POST_METHOD;
 import static io.openio.sds.common.OioConstants.PUT_METHOD;
 import static io.openio.sds.common.Strings.nullOrEmpty;
 
+import java.io.BufferedOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -66,22 +69,22 @@ public class OioHttp {
 
 	public RequestBuilder post(String uri) {
 		Check.checkArgument(!nullOrEmpty(uri));
-		return new RequestBuilder().post(uri);
+		return new RequestBuilder().req(POST_METHOD, uri);
 	}
 
 	public RequestBuilder put(String uri) {
 		Check.checkArgument(!nullOrEmpty(uri));
-		return new RequestBuilder().put(uri);
+		return new RequestBuilder().req(PUT_METHOD, uri);
 	}
 
 	public RequestBuilder get(String uri) {
 		Check.checkArgument(!nullOrEmpty(uri));
-		return new RequestBuilder().get(uri);
+		return new RequestBuilder().req(GET_METHOD, uri);
 	}
 
 	public RequestBuilder delete(String uri) {
 		Check.checkArgument(!nullOrEmpty(uri));
-		return new RequestBuilder().delete(uri);
+		return new RequestBuilder().req(DELETE_METHOD, uri);
 	}
 
 	public class RequestBuilder {
@@ -95,23 +98,7 @@ public class OioHttp {
 		private URI uri;
 		private OioHttpResponseVerifier verifier = null;
 		private boolean chunked;
-		private List<InetSocketAddress> alternatives = null;
-
-		public RequestBuilder post(String url) {
-			return req(POST_METHOD, url);
-		}
-
-		public RequestBuilder put(String url) {
-			return req(PUT_METHOD, url);
-		}
-
-		public RequestBuilder get(String url) {
-			return req(GET_METHOD, url);
-		}
-
-		public RequestBuilder delete(String url) {
-			return req(DELETE_METHOD, url);
-		}
+		private List<InetSocketAddress> hosts = null;
 
 		public RequestBuilder req(String method, String url) {
 			this.method = method;
@@ -138,7 +125,7 @@ public class OioHttp {
 		}
 
 		public RequestBuilder chunked() {
-			this.headers.put("transfer-encoding", "chunked");
+			this.headers.put("Transfer-Encoding", "chunked");
 			this.chunked = true;
 			return this;
 		}
@@ -156,7 +143,9 @@ public class OioHttp {
 			if (null == data)
 				return this;
 			headers.put(CONTENT_LENGTH_HEADER, String.valueOf(size));
-			headers.put(CONTENT_TYPE_HEADER, "application/octet-stream");
+			if (!headers.containsKey(CONTENT_TYPE_HEADER)) {
+				headers.put(CONTENT_TYPE_HEADER, "application/octet-stream");
+			}
 			this.data = data;
 			this.len = size;
 			return this;
@@ -169,22 +158,21 @@ public class OioHttp {
 
         /**
          * @param hosts
-         *            A list of hosts to contact to contact instead of the one
-         *            specified in URI.
+         *            An optional list of hosts to connect to.
          * @return this
          */
-        public RequestBuilder alternativeHosts(List<InetSocketAddress> hosts) {
-            this.alternatives = hosts;
+        public RequestBuilder hosts(List<InetSocketAddress> hosts) {
+            this.hosts = hosts;
             return this;
         }
 
         public OioHttpResponse execute() throws OioException {
-            if (this.alternatives == null || this.alternatives.isEmpty()) {
+            if (this.hosts == null || this.hosts.isEmpty()) {
                 return execute(new InetSocketAddress(uri.getHost(), uri.getPort()));
             } else {
                 OioException lastExc = null;
                 // TODO: implement better fallback mechanism, with randomization
-                for (InetSocketAddress addr: this.alternatives) {
+                for (InetSocketAddress addr: this.hosts) {
                     try {
                         if (lastExc != null)
                             logger.info("Retrying on " + addr.toString());
@@ -266,14 +254,17 @@ public class OioHttp {
 
 			if (!headers.containsKey("Content-Length"))
 				headers.put(CONTENT_LENGTH_HEADER, "0");
-			OutputStream sos = sock.getOutputStream();
-			sos.write(requestHead());
+
+			BufferedOutputStream bos = new BufferedOutputStream(
+					sock.getOutputStream(),
+					settings.sendBufferSize());
+			bos.write(requestHead());
 			if (null != data) {
-				stream(sos);
+				stream(bos);
 			} else if (null != body) {
-				sos.write(body.getBytes(OIO_CHARSET));
+				bos.write(body.getBytes(OIO_CHARSET));
 			}
-			sos.flush();
+			bos.flush();
 		}
 
 		private void sendRequestChunked(Socket sock) throws IOException {
@@ -287,15 +278,16 @@ public class OioHttp {
 
 			// ensure no content-length
 			headers.remove("Content-Length");
-			OutputStream sos = sock.getOutputStream();
+			BufferedOutputStream bos = new BufferedOutputStream(
+					sock.getOutputStream(),
+					settings.sendBufferSize());
 			byte[] requestHead = requestHead();
-			
-			sos.write(requestHead);
-			streamChunked(sos);
-			sos.flush();
+			bos.write(requestHead);
+			streamChunked(bos);
+			bos.flush();
 		}
 
-		private void streamChunked(OutputStream sos) throws IOException {
+		private void streamChunked(OutputStream os) throws IOException {
 			byte[] b = new byte[settings.sendBufferSize()];
 			int remaining = len.intValue();
 			while (remaining > 0) {
@@ -304,13 +296,13 @@ public class OioHttp {
 					throw new EOFException("Unexpected end of source stream");
 				remaining -= read;
 				if (read > 0) {
-					sos.write((Integer.toHexString(read) + CRLF)
+					os.write((Integer.toHexString(read) + CRLF)
 					        .getBytes(OIO_CHARSET));
-					sos.write(b, 0, read);
-					sos.write(CRLF_BYTES);
+					os.write(b, 0, read);
+					os.write(CRLF_BYTES);
 				}
 			}
-			sos.write(("0" + CRLF + CRLF)
+			os.write(("0" + CRLF + CRLF)
 			        .getBytes(OIO_CHARSET));
 		}
 
@@ -327,15 +319,15 @@ public class OioHttp {
 			}
 		}
 
-		private byte[] requestHead() {
+		private byte[] requestHead() throws UnsupportedEncodingException {
 			StringBuilder qbuilder = new StringBuilder(
 			        null == uri.getRawQuery() ? "" : uri.getRawQuery());
 			boolean removeTrailindAnd = 0 == qbuilder.length();
 			for (Entry<String, String> h : query.entrySet()) {
 				qbuilder.append("&")
-				        .append(h.getKey())
+				        .append(URLEncoder.encode(h.getKey(), "utf-8"))
 				        .append("=")
-				        .append(h.getValue());
+				        .append(URLEncoder.encode(h.getValue(),"utf-8"));
 			}
 			String uriPath = uri.getRawPath();
 			StringBuilder req = new StringBuilder(method)

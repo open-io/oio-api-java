@@ -177,7 +177,7 @@ public class EcdClient implements StorageClient {
 		        .header(OioConstants.CHUNK_META_OIO_VERSION, "4")
 		        .header(OIO_REQUEST_ID_HEADER, reqId)
 		        .body(data, size)
-		        .alternativeHosts(ecdHosts)
+		        .hosts(ecdHosts)
 		        .verifier(RAWX_VERIFIER);
 
 		for (ChunkInfo ci : oinf.sortedChunks().get(pos)) {

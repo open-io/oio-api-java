@@ -114,7 +114,7 @@ public class EcdInputStream extends InputStream {
 			        .header(OioConstants.CHUNK_META_CONTENT_CHUNK_METHOD,
 			                chunkMethod)
 			        .verifier(RAWX_VERIFIER)
-			        .alternativeHosts(ecdHosts);
+			        .hosts(ecdHosts);
 			for (ChunkInfo ci : targets.get(pos).getChunk()) {
 				builder.header(
 				        OioConstants.CHUNK_META_CHUNK_PREFIX + ci.pos().sub(),

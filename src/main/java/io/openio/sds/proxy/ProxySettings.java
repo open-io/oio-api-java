@@ -64,14 +64,12 @@ public class ProxySettings {
      * @return The first proxy URL
      */
     public String url() {
-        if ((this.hosts == null || this.hosts.size() == 0)) {
-            if (this.url != null)
-                this.hosts = strToSocketAddressList(this.url);
-            else
-                throw new OioException("Proxy url not defined");
-        }
+        if (null == this.url) {
+            throw new OioException("Proxy url not defined");
+        } else {
         return String.format("http://%1$s:%2$d",
                 hosts.get(0).getHostString(), hosts.get(0).getPort());
+        }
     }
 
     public ProxySettings url(String urlv) {
@@ -84,13 +82,18 @@ public class ProxySettings {
      * @return a read-only list of all known proxy hosts
      */
     public List<InetSocketAddress> allHosts() {
-        if ((this.hosts == null || this.hosts.size() == 0) && this.url != null)
-            this.hosts = strToSocketAddressList(this.url);
-        return Collections.unmodifiableList(this.hosts);
+        if (null == this.url) {
+            throw new OioException("Proxy url not defined");
+        } else {
+            return Collections.unmodifiableList(this.hosts);
+        }
     }
 
     public String ns() {
-        return ns;
+        if (null != ns) {
+            return ns;
+        }
+        throw new OioException("Namespace not defined");
     }
 
     public ProxySettings ns(String ns) {
