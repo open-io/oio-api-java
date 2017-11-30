@@ -163,7 +163,7 @@ public class RawxClient implements StorageClient {
 				try {
 					fin.close();
 				} catch (IOException e) {
-					logger.warn("Fail to close Inputstream, possible leak", e);
+					logger.warn("Failed to close Inputstream, possible leak", e);
 				}
 			}
 		} catch (FileNotFoundException e) {
@@ -271,15 +271,15 @@ public class RawxClient implements StorageClient {
 					} catch (RejectedExecutionException ree) {
 						if (retry < 5) {
 							int delay = 1 << retry;
-							logger.warn("Failed to start rawx upload, retry in " + delay + "s",
+							logger.warn("Failed to start chunk upload, retry in " + delay + "s",
 									ree);
 							try {
 								Thread.sleep(delay * 1000);
 							} catch (InterruptedException e) {
-								throw new OioException("Failed to retry rawx upload", e);
+								throw new OioException("Failed to retry chunk upload", e);
 							}
 						} else {
-							throw new OioException("Failed to schedule rawx upload", ree);
+							throw new OioException("Failed to schedule chunk upload", ree);
 						}
 						retry++;
 					}

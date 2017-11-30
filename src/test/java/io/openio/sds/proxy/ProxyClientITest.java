@@ -1,4 +1,4 @@
-package io.openio.sds;
+package io.openio.sds.proxy;
 
 import static io.openio.sds.models.OioUrl.url;
 import static org.junit.Assert.assertEquals;
@@ -8,6 +8,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 import java.util.UUID;
 
+import io.openio.sds.TestHelper;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;

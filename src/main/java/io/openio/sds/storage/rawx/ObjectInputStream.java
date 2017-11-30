@@ -1,12 +1,5 @@
 package io.openio.sds.storage.rawx;
 
-import static io.openio.sds.common.OioConstants.OIO_REQUEST_ID_HEADER;
-import static io.openio.sds.http.Verifiers.RAWX_VERIFIER;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.List;
-
 import io.openio.sds.common.OioConstants;
 import io.openio.sds.exceptions.OioException;
 import io.openio.sds.http.OioHttp;
@@ -17,16 +10,23 @@ import io.openio.sds.logging.SdsLoggerFactory;
 import io.openio.sds.models.ChunkInfo;
 import io.openio.sds.storage.Target;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+
+import static io.openio.sds.common.OioConstants.OIO_REQUEST_ID_HEADER;
+import static io.openio.sds.http.Verifiers.RAWX_VERIFIER;
+import static java.lang.String.format;
+
 /**
  * For replicated policies only
- * 
- * @author Christopher Dedeurwaerder
  *
+ * @author Christopher Dedeurwaerder
  */
 public class ObjectInputStream extends InputStream {
 
 	private static final SdsLogger logger = SdsLoggerFactory
-	        .getLogger(ObjectInputStream.class);
+			.getLogger(ObjectInputStream.class);
 
 	private OioHttp http;
 	private List<Target> targets;
@@ -66,6 +66,7 @@ public class ObjectInputStream extends InputStream {
 		if (0 >= length)
 			return 0;
 		int totRead = 0;
+
 		while (totRead < length) {
 			if (null == current || 0 >= currentRemaining) {
 				if (pos >= targets.size())
@@ -74,17 +75,22 @@ public class ObjectInputStream extends InputStream {
 			}
 
 			int read = current.body().read(buf, offset + totRead,
-			        Math.min(remaining(),
-			                Math.min(length - totRead,
-			                        buf.length - offset + totRead)));
-			if (-1 == read)
-				throw new IOException(
-				        String.format(
-				                "Error during download, unexpected end of chunk stream (url: %s, read: %d, size: %d)",
-				                currentChunk.url(),
-				                currentChunk.size() - currentRemaining,
-				                currentChunk.size()));
-			currentRemaining -= read;
+					Math.min(remaining(),
+							Math.min(length - totRead,
+									buf.length - offset + totRead)));
+
+			if (currentRemaining != 0) {
+				if (-1 == read) {
+					throw new IOException(
+							format(
+									"Error during download, unexpected end of chunk stream (url: %s, read: %d, size: %d)",
+									currentChunk.url(),
+									currentChunk.size() - currentRemaining,
+									currentChunk.size()));
+				}
+
+				currentRemaining -= read;
+			}
 			if (0 == currentRemaining) {
 				current.close();
 				current = null;
@@ -94,36 +100,36 @@ public class ObjectInputStream extends InputStream {
 		return totRead;
 	}
 
-    private int remaining() {
-        return currentRemaining > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) currentRemaining;
-    }
+	private int remaining() {
+		return currentRemaining > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) currentRemaining;
+	}
 
-    private void next(int offset) {
+	private void next(int offset) {
 		Target t = targets.get(pos);
 		currentChunk = t.getChunk().get(offset);
 		if (logger.isDebugEnabled())
-			logger.debug("dl from " + currentChunk.url());
+			logger.debug("download from " + currentChunk.url());
 		try {
 			RequestBuilder builder = http.get(currentChunk.url())
-			        .header(OIO_REQUEST_ID_HEADER, reqId)
-			        .verifier(RAWX_VERIFIER);
+					.header(OIO_REQUEST_ID_HEADER, reqId)
+					.verifier(RAWX_VERIFIER);
 
 			if (null != targets.get(pos).getRange())
 				builder.header(OioConstants.RANGE_HEADER,
-				        targets.get(pos).getRange().headerValue());
+						targets.get(pos).getRange().headerValue());
 
 			current = builder.execute();
 
 			currentRemaining = null != targets.get(pos).getRange()
-			        ? t.getRange().to() - t.getRange().from()
-			        : currentChunk.size().intValue();
+					? t.getRange().to() - t.getRange().from()
+					: currentChunk.size().intValue();
 			pos++;
 		} catch (OioException e) {
 			if (offset + 1 >= targets.get(pos).getChunk().size())
 				throw new OioException(
-				        "Definitely failed to download chunk at pos " + pos, e);
+						"Definitely failed to download chunk at pos " + pos, e);
 			logger.warn("Error while trying to download " + currentChunk.url(),
-			        e);
+					e);
 			next(offset + 1);
 		}
 	}
