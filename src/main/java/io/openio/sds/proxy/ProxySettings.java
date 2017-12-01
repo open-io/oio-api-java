@@ -1,17 +1,16 @@
 package io.openio.sds.proxy;
 
+import io.openio.sds.Settings;
+import io.openio.sds.exceptions.OioException;
+import io.openio.sds.http.OioHttpSettings;
+import io.openio.sds.pool.PoolingSettings;
+
 import java.net.InetSocketAddress;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import io.openio.sds.Settings;
-import io.openio.sds.exceptions.OioException;
-import io.openio.sds.http.OioHttpSettings;
-import io.openio.sds.pool.PoolingSettings;
 
 /**
  * 
@@ -64,12 +63,15 @@ public class ProxySettings {
      * @return The first proxy URL
      */
     public String url() {
-        if (null == this.url) {
-            throw new OioException("Proxy url not defined");
-        } else {
+        if ((null == hosts || hosts.size() == 0)) {
+            if (null == this.url) {
+                throw new OioException("Proxy url not defined");
+            } else {
+                hosts = strToSocketAddressList(url);
+            }
+        }
         return String.format("http://%1$s:%2$d",
                 hosts.get(0).getHostString(), hosts.get(0).getPort());
-        }
     }
 
     public ProxySettings url(String urlv) {
