@@ -36,9 +36,8 @@ public class ProxyClientITest {
 
     @BeforeClass
     public static void setup() {
-        SocketProvider prov = SocketProviders.pooledSocketProvider(
-                new PoolingSettings(), new OioHttpSettings(),
-                TestHelper.proxyAddr());
+        SocketProvider prov = SocketProviders.pooledSocketProvider(new PoolingSettings(),
+                new OioHttpSettings(), TestHelper.proxyAddr());
         proxy = new ProxyClient(OioHttp.http(new OioHttpSettings(), prov),
                 TestHelper.proxySettings());
     }
@@ -76,7 +75,7 @@ public class ProxyClientITest {
             System.out.println(si);
     }
 
-    @Test(expected=ContainerNotFoundException.class)
+    @Test(expected = ContainerNotFoundException.class)
     public void containerNominal() {
         String container = UUID.randomUUID().toString();
         System.out.println(container);
@@ -98,8 +97,7 @@ public class ProxyClientITest {
             proxy.getContainerInfo(url("TEST", UUID.randomUUID().toString()));
         } catch (OioException e) {
             try {
-                proxy.deleteReference(
-                        url("TEST", UUID.randomUUID().toString()));
+                proxy.deleteReference(url("TEST", UUID.randomUUID().toString()));
             } catch (OioException e1) {
                 e1.printStackTrace();
             }
@@ -110,9 +108,8 @@ public class ProxyClientITest {
 
     @Test
     public void getBeansNominal() {
-        OioUrl url = url("TEST", UUID.randomUUID().toString(),
-                UUID.randomUUID().toString());
-        //proxy.createContainer(url);
+        OioUrl url = url("TEST", UUID.randomUUID().toString(), UUID.randomUUID().toString());
+        // proxy.createContainer(url);
         try {
             ObjectInfo oinf = proxy.getBeans(url, 1024);
             assertNotNull(oinf);
@@ -159,8 +156,9 @@ public class ProxyClientITest {
     }
 
     @Test
-    public void percentNamedContainer(){
-        OioUrl url = url("TEST", "test%percent"+System.currentTimeMillis(), UUID.randomUUID().toString());
+    public void percentNamedContainer() {
+        OioUrl url = url("TEST", "test%percent" + System.currentTimeMillis(), UUID.randomUUID()
+                .toString());
         proxy.createContainer(url);
         proxy.deleteContainer(url);
     }

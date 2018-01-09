@@ -100,8 +100,7 @@ public interface Client {
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
-    public ObjectList listContainer(OioUrl url,
-            final ListOptions listOptions) throws OioException;
+    public ObjectList listContainer(OioUrl url, final ListOptions listOptions) throws OioException;
 
     /**
      * Deletes the specified container
@@ -133,8 +132,7 @@ public interface Client {
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
-    public void setContainerProperties(OioUrl url, Map<String, String> props)
-            throws OioException;
+    public void setContainerProperties(OioUrl url, Map<String, String> props) throws OioException;
 
     /**
      * Retrieves user properties of the specified container
@@ -148,8 +146,7 @@ public interface Client {
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
-    public Map<String, String> getContainerProperties(OioUrl url)
-            throws OioException;
+    public Map<String, String> getContainerProperties(OioUrl url) throws OioException;
 
     /**
      * Deletes user properties from the specified container
@@ -163,8 +160,7 @@ public interface Client {
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
-    public void deleteContainerProperties(OioUrl url, String... keys)
-            throws OioException;
+    public void deleteContainerProperties(OioUrl url, String... keys) throws OioException;
 
     /**
      * Deletes user properties from the specified container
@@ -178,7 +174,45 @@ public interface Client {
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
-    public void deleteContainerProperties(OioUrl url, List<String> keys)
+    public void deleteContainerProperties(OioUrl url, List<String> keys) throws OioException;
+
+    /**
+     * Push an object into the oio namespace
+     * 
+     * @param url
+     *            the url of the object to create
+     * @param size
+     *            the size of the object
+     * @param data
+     *            the file to read the data from
+     * @return informations about the uploaded object
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public ObjectInfo putObject(OioUrl url, Long size, File data) throws OioException;
+
+    /**
+     * Push an object into the oio namespace
+     * 
+     * @param url
+     *            the url of the object to create
+     * @param size
+     *            the size of the object
+     * @param data
+     *            the file to read the data from
+     * @param properties
+     *            the properties to set to the object. Note that the properties
+     *            are case insensitive and will always be returned in lower
+     *            case.
+     * @return informations about the uploaded object
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public ObjectInfo putObject(OioUrl url, Long size, File data, Map<String, String> properties)
             throws OioException;
 
     /**
@@ -190,13 +224,103 @@ public interface Client {
      *            the size of the object
      * @param data
      *            the file to read the data from
+     * @param version
+     *            the version of content to upload
      * @return informations about the uploaded object
      * @throws ContainerNotFoundException
      *             if the specified container doesn't exist
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
-    public ObjectInfo putObject(OioUrl url, Long size, File data)
+    public ObjectInfo putObject(OioUrl url, Long size, File data, Long version) throws OioException;
+
+    /**
+     * Push an object into the oio namespace
+     * 
+     * @param url
+     *            the url of the object to create
+     * @param size
+     *            the size of the object
+     * @param data
+     *            the file to read the data from
+     * @param version
+     *            the version of content to upload
+     * @param properties
+     *            the properties to set to the object. Note that the properties
+     *            are case insensitive and will always be returned in lower
+     *            case.
+     * @return informations about the uploaded object
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public ObjectInfo putObject(OioUrl url, Long size, File data, Long version,
+            Map<String, String> properties) throws OioException;
+
+    /**
+     * Push an object into the oio namespace
+     * 
+     * @param url
+     *            the url of the object to create
+     * @param size
+     *            the size of the object
+     * @param data
+     *            the InputStream to read the data from
+     * @return informations about the uploaded object
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws ObjectExistException
+     *             if the specified object alreadeay exist in the container
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public ObjectInfo putObject(OioUrl url, Long size, InputStream data) throws OioException;
+
+    /**
+     * Push an object into the oio namespace
+     * 
+     * @param url
+     *            the url of the object to create
+     * @param size
+     *            the size of the object
+     * @param data
+     *            the InputStream to read the data from
+     * @param properties
+     *            the properties to set to the object. Note that the properties
+     *            are case insensitive and will always be returned in lower
+     *            case.
+     * @return informations about the uploaded object
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws ObjectExistException
+     *             if the specified object alreadeay exist in the container
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public ObjectInfo putObject(OioUrl url, Long size, InputStream data,
+            Map<String, String> properties) throws OioException;
+
+    /**
+     * Push an object into the oio namespace
+     * 
+     * @param url
+     *            the url of the object to create
+     * @param size
+     *            the size of the object
+     * @param data
+     *            the InputStream to read the data from
+     * @param version
+     *            the version of content to upload
+     * @return informations about the uploaded object
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws ObjectExistException
+     *             if the specified object alreadeay exist in the container
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public ObjectInfo putObject(OioUrl url, Long size, InputStream data, Long version)
             throws OioException;
 
     /**
@@ -207,140 +331,6 @@ public interface Client {
      * @param size
      *            the size of the object
      * @param data
-     *            the file to read the data from
-     * @param properties
-     *            the properties to set to the object. Note that the properties
-     *            are case insensitive and will always be returned in lower
-     *            case.
-     * @return informations about the uploaded object
-     * @throws ContainerNotFoundException
-     *             if the specified container doesn't exist
-     * @throws OioSystemException
-     *             if any error occurs during request execution
-     */
-    public ObjectInfo putObject(OioUrl url, Long size, File data,
-            Map<String, String> properties)
-                    throws OioException;
-
-    /**
-     * Push an object into the oio namespace
-     * 
-     * @param url
-     *            the url of the object to create
-     * @param size
-     *            the size of the object
-     * @param data
-     *            the file to read the data from
-     * @param version
-     *            the version of content to upload
-     * @return informations about the uploaded object
-     * @throws ContainerNotFoundException
-     *             if the specified container doesn't exist
-     * @throws OioSystemException
-     *             if any error occurs during request execution
-     */
-    public ObjectInfo putObject(OioUrl url, Long size, File data,
-            Long version) throws OioException;
-
-    /**
-     * Push an object into the oio namespace
-     * 
-     * @param url
-     *            the url of the object to create
-     * @param size
-     *            the size of the object
-     * @param data
-     *            the file to read the data from
-     * @param version
-     *            the version of content to upload
-     * @param properties
-     *            the properties to set to the object. Note that the properties
-     *            are case insensitive and will always be returned in lower
-     *            case.
-     * @return informations about the uploaded object
-     * @throws ContainerNotFoundException
-     *             if the specified container doesn't exist
-     * @throws OioSystemException
-     *             if any error occurs during request execution
-     */
-    public ObjectInfo putObject(OioUrl url, Long size, File data,
-            Long version, Map<String, String> properties) throws OioException;
-
-    /**
-     * Push an object into the oio namespace
-     * 
-     * @param url
-     *            the url of the object to create
-     * @param size
-     *            the size of the object
-     * @param data
-     *            the InputStream to read the data from
-     * @return informations about the uploaded object
-     * @throws ContainerNotFoundException
-     *             if the specified container doesn't exist
-     * @throws ObjectExistException
-     *             if the specified object alreadeay exist in the container
-     * @throws OioSystemException
-     *             if any error occurs during request execution
-     */
-    public ObjectInfo putObject(OioUrl url, Long size,
-            InputStream data) throws OioException;
-
-    /**
-     * Push an object into the oio namespace
-     * 
-     * @param url
-     *            the url of the object to create
-     * @param size
-     *            the size of the object
-     * @param data
-     *            the InputStream to read the data from
-     * @param properties
-     *            the properties to set to the object. Note that the properties
-     *            are case insensitive and will always be returned in lower
-     *            case.
-     * @return informations about the uploaded object
-     * @throws ContainerNotFoundException
-     *             if the specified container doesn't exist
-     * @throws ObjectExistException
-     *             if the specified object alreadeay exist in the container
-     * @throws OioSystemException
-     *             if any error occurs during request execution
-     */
-    public ObjectInfo putObject(OioUrl url, Long size,
-            InputStream data, Map<String, String> properties)
-                    throws OioException;
-
-    /**
-     * Push an object into the oio namespace
-     * 
-     * @param url
-     *            the url of the object to create
-     * @param size
-     *            the size of the object
-     * @param data
-     *            the InputStream to read the data from
-     * @param version
-     *            the version of content to upload
-     * @return informations about the uploaded object
-     * @throws ContainerNotFoundException
-     *             if the specified container doesn't exist
-     * @throws ObjectExistException
-     *             if the specified object alreadeay exist in the container
-     * @throws OioSystemException
-     *             if any error occurs during request execution
-     */
-    public ObjectInfo putObject(OioUrl url, Long size,
-            InputStream data, Long version) throws OioException;
-
-    /**
-     * Push an object into the oio namespace
-     * 
-     * @param url
-     *            the url of the object to create
-     * @param size
-     *            the size of the object
-     * @param data
      *            the InputStream to read the data from
      * @param version
      *            the version of content to upload
@@ -356,9 +346,8 @@ public interface Client {
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
-    public ObjectInfo putObject(OioUrl url, Long size,
-            InputStream data, Long version, Map<String, String> properties)
-                    throws OioException;
+    public ObjectInfo putObject(OioUrl url, Long size, InputStream data, Long version,
+            Map<String, String> properties) throws OioException;
 
     /**
      * Returns informations about the specified object
@@ -373,16 +362,16 @@ public interface Client {
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
-    public ObjectInfo getObjectInfo(OioUrl url)
-            throws OioException;
+    public ObjectInfo getObjectInfo(OioUrl url) throws OioException;
 
     /**
      * Returns informations about the specified object
      *
      * @param url
      *            the url of the object
-     * @param loadProperties if true, additional request is performed to get object properties assigned to
-     *            the specified object
+     * @param loadProperties
+     *            if true, additional request is performed to get object
+     *            properties assigned to the specified object
      * @return an {@code ObjectInfo}
      * @throws ContainerNotFoundException
      *             if the specified container doesn't exist
@@ -391,8 +380,7 @@ public interface Client {
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
-    public ObjectInfo getObjectInfo(OioUrl url, boolean loadProperties)
-            throws OioException;
+    public ObjectInfo getObjectInfo(OioUrl url, boolean loadProperties) throws OioException;
 
     /**
      * Returns informations about the specified object
@@ -410,8 +398,7 @@ public interface Client {
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
-    public ObjectInfo getObjectInfo(OioUrl url, Long version)
-            throws OioException;
+    public ObjectInfo getObjectInfo(OioUrl url, Long version) throws OioException;
 
     /**
      * Returns informations about the specified object
@@ -421,8 +408,9 @@ public interface Client {
      * @param version
      *            the version to get (could be {@code null} to get latest
      *            version)
-     * @param loadProperties if true, additional request is performed to get object properties assigned to
-     *            the specified object
+     * @param loadProperties
+     *            if true, additional request is performed to get object
+     *            properties assigned to the specified object
      * @return an {@code ObjectInfo}
      * @throws ContainerNotFoundException
      *             if the specified container doesn't exist
@@ -444,16 +432,15 @@ public interface Client {
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
-    public InputStream downloadObject(ObjectInfo oinf)
-            throws OioException;
-    
+    public InputStream downloadObject(ObjectInfo oinf) throws OioException;
+
     /**
      * Returns object's data between specified range
      * 
      * @param oinf
      *            the informations about object to download
      * @param range
-     * 			  the wanted data range
+     *            the wanted data range
      * 
      * @return the data in InputStream format
      * 
@@ -511,8 +498,7 @@ public interface Client {
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
-    public void setObjectProperties(OioUrl url, Map<String, String> props)
-            throws OioException;
+    public void setObjectProperties(OioUrl url, Map<String, String> props) throws OioException;
 
     /**
      * Retrieves user properties of the specified object
@@ -528,8 +514,7 @@ public interface Client {
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
-    public Map<String, String> getObjectProperties(OioUrl url)
-            throws OioException;
+    public Map<String, String> getObjectProperties(OioUrl url) throws OioException;
 
     /**
      * Deletes the specified properties from the object
@@ -545,8 +530,7 @@ public interface Client {
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
-    public void deleteObjectProperties(OioUrl url, String... keys)
-            throws OioException;
+    public void deleteObjectProperties(OioUrl url, String... keys) throws OioException;
 
     /**
      * Deletes the specified properties from the object
@@ -562,6 +546,5 @@ public interface Client {
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
-    public void deleteObjectProperties(OioUrl url, List<String> keys)
-            throws OioException;
+    public void deleteObjectProperties(OioUrl url, List<String> keys) throws OioException;
 }

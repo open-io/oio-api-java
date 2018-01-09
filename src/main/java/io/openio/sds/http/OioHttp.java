@@ -44,117 +44,115 @@ import io.openio.sds.logging.SdsLoggerFactory;
  */
 public class OioHttp {
 
-	private static final SdsLogger logger = SdsLoggerFactory
-	        .getLogger(SdsLogger.class);
+    private static final SdsLogger logger = SdsLoggerFactory.getLogger(SdsLogger.class);
 
-	private static final String CRLF = "\r\n";
+    private static final String CRLF = "\r\n";
 
-	private static final byte[] CRLF_BYTES = { '\r', '\n' };
+    private static final byte[] CRLF_BYTES = { '\r', '\n' };
 
-	private OioHttpSettings settings;
+    private OioHttpSettings settings;
 
-	private SocketProvider socketProvider;
+    private SocketProvider socketProvider;
 
-	private OioHttp(OioHttpSettings settings, SocketProvider socketProvider) {
-		this.settings = settings;
-		this.socketProvider = socketProvider;
-	}
+    private OioHttp(OioHttpSettings settings, SocketProvider socketProvider) {
+        this.settings = settings;
+        this.socketProvider = socketProvider;
+    }
 
-	public static OioHttp http(OioHttpSettings settings,
-	        SocketProvider socketProvider) {
-		Check.checkArgument(null != settings);
-		Check.checkArgument(null != socketProvider);
-		return new OioHttp(settings, socketProvider);
-	}
+    public static OioHttp http(OioHttpSettings settings, SocketProvider socketProvider) {
+        Check.checkArgument(null != settings);
+        Check.checkArgument(null != socketProvider);
+        return new OioHttp(settings, socketProvider);
+    }
 
-	public RequestBuilder post(String uri) {
-		Check.checkArgument(!nullOrEmpty(uri));
-		return new RequestBuilder().req(POST_METHOD, uri);
-	}
+    public RequestBuilder post(String uri) {
+        Check.checkArgument(!nullOrEmpty(uri));
+        return new RequestBuilder().req(POST_METHOD, uri);
+    }
 
-	public RequestBuilder put(String uri) {
-		Check.checkArgument(!nullOrEmpty(uri));
-		return new RequestBuilder().req(PUT_METHOD, uri);
-	}
+    public RequestBuilder put(String uri) {
+        Check.checkArgument(!nullOrEmpty(uri));
+        return new RequestBuilder().req(PUT_METHOD, uri);
+    }
 
-	public RequestBuilder get(String uri) {
-		Check.checkArgument(!nullOrEmpty(uri));
-		return new RequestBuilder().req(GET_METHOD, uri);
-	}
+    public RequestBuilder get(String uri) {
+        Check.checkArgument(!nullOrEmpty(uri));
+        return new RequestBuilder().req(GET_METHOD, uri);
+    }
 
-	public RequestBuilder delete(String uri) {
-		Check.checkArgument(!nullOrEmpty(uri));
-		return new RequestBuilder().req(DELETE_METHOD, uri);
-	}
+    public RequestBuilder delete(String uri) {
+        Check.checkArgument(!nullOrEmpty(uri));
+        return new RequestBuilder().req(DELETE_METHOD, uri);
+    }
 
-	public class RequestBuilder {
+    public class RequestBuilder {
 
-		private String method;
-		private HashMap<String, String> headers = new HashMap<String, String>();
-		private HashMap<String, String> query = new HashMap<String, String>();
-		private String body;
-		private InputStream data;
-		private Long len;
-		private URI uri;
-		private OioHttpResponseVerifier verifier = null;
-		private boolean chunked;
-		private List<InetSocketAddress> hosts = null;
+        private String method;
+        private HashMap<String, String> headers = new HashMap<String, String>();
+        private HashMap<String, String> query = new HashMap<String, String>();
+        private String body;
+        private InputStream data;
+        private Long len;
+        private URI uri;
+        private OioHttpResponseVerifier verifier = null;
+        private boolean chunked;
+        private List<InetSocketAddress> hosts = null;
 
-		public RequestBuilder req(String method, String url) {
-			this.method = method;
-			this.uri = URI.create(url);
-			return this;
-		}
+        public RequestBuilder req(String method, String url) {
+            this.method = method;
+            this.uri = URI.create(url);
+            return this;
+        }
 
-		public RequestBuilder header(String name, String value) {
-			if (!nullOrEmpty(name) && !nullOrEmpty(value))
-				headers.put(name, value);
-			return this;
-		}
+        public RequestBuilder header(String name, String value) {
+            if (!nullOrEmpty(name) && !nullOrEmpty(value))
+                headers.put(name, value);
+            return this;
+        }
 
-		public RequestBuilder headers(Map<String, String> headers) {
-			if (null != headers)
-				this.headers.putAll(headers);
-			return this;
-		}
+        public RequestBuilder headers(Map<String, String> headers) {
+            if (null != headers)
+                this.headers.putAll(headers);
+            return this;
+        }
 
-		public RequestBuilder query(String name, String value) {
-			if (!nullOrEmpty(name) && !nullOrEmpty(value))
-				this.query.put(name, value);
-			return this;
-		}
+        public RequestBuilder query(String name, String value) {
+            if (!nullOrEmpty(name) && !nullOrEmpty(value))
+                this.query.put(name, value);
+            return this;
+        }
 
-		public RequestBuilder chunked() {
-			this.headers.put("Transfer-Encoding", "chunked");
-			this.chunked = true;
-			return this;
-		}
+        public RequestBuilder chunked() {
+            this.headers.put("Transfer-Encoding", "chunked");
+            this.chunked = true;
+            return this;
+        }
 
-		public RequestBuilder body(String body) {
-			if (nullOrEmpty(body))
-				return this;
-			headers.put(CONTENT_LENGTH_HEADER, String.valueOf(body.length()));
-			headers.put(CONTENT_TYPE_HEADER, "application/json");
-			this.body = body;
-			return this;
-		}
+        public RequestBuilder body(String body) {
+            if (nullOrEmpty(body))
+                return this;
+            headers.put(CONTENT_LENGTH_HEADER, String.valueOf(body.length()));
+            headers.put(CONTENT_TYPE_HEADER, "application/json");
+            this.body = body;
+            return this;
+        }
 
-		public RequestBuilder body(InputStream data, Long size) {
-			if (null == data)
-				return this;
-			headers.put(CONTENT_LENGTH_HEADER, String.valueOf(size));
-			if (!headers.containsKey(CONTENT_TYPE_HEADER)) {
-				headers.put(CONTENT_TYPE_HEADER, "application/octet-stream");
-			}
-			this.data = data;
-			this.len = size;
-			return this;
-		}
+        public RequestBuilder body(InputStream data, Long size) {
+            if (null == data)
+                return this;
+            headers.put(CONTENT_LENGTH_HEADER, String.valueOf(size));
+            if (!headers.containsKey(CONTENT_TYPE_HEADER)) {
+                headers.put(CONTENT_TYPE_HEADER, "application/octet-stream");
+            }
+            this.data = data;
+            this.len = size;
+            return this;
+        }
 
-		public RequestBuilder verifier(OioHttpResponseVerifier verifier) {
-			this.verifier = verifier;
-			return this;
-		}
+        public RequestBuilder verifier(OioHttpResponseVerifier verifier) {
+            this.verifier = verifier;
+            return this;
+        }
 
         /**
          * @param hosts
@@ -172,7 +170,7 @@ public class OioHttp {
             } else {
                 OioException lastExc = null;
                 // TODO: implement better fallback mechanism, with randomization
-                for (InetSocketAddress addr: this.hosts) {
+                for (InetSocketAddress addr : this.hosts) {
                     try {
                         if (lastExc != null)
                             logger.info("Retrying on " + addr.toString());
@@ -224,128 +222,114 @@ public class OioHttp {
             }
         }
 
-		public <T> T execute(Class<T> c) {
-			OioHttpResponse resp = execute();
-			boolean success = false;
-			try {
-				T t = gson().fromJson(
-				        new JsonReader(new InputStreamReader(resp.body(),
-				                OIO_CHARSET)),
-				        c);
-				success = true;
-				return t;
-			} finally {
-				resp.close(success);
-			}
-		}
+        public <T> T execute(Class<T> c) {
+            OioHttpResponse resp = execute();
+            boolean success = false;
+            try {
+                T t = gson().fromJson(
+                        new JsonReader(new InputStreamReader(resp.body(), OIO_CHARSET)), c);
+                success = true;
+                return t;
+            } finally {
+                resp.close(success);
+            }
+        }
 
-		private OioHttpResponse readResponse(Socket sock) throws IOException {
-			return OioHttpResponse.build(sock);
-		}
+        private OioHttpResponse readResponse(Socket sock) throws IOException {
+            return OioHttpResponse.build(sock);
+        }
 
-		private void sendRequest(Socket sock) throws IOException {
-			headers.put("Host", sock.getLocalAddress().toString().substring(1)
-			        + ":" + sock.getLocalPort());
-			headers.put("Connection", socketProvider.reusableSocket()
-			        ? "keep-alive" : "close");
-			headers.put("Accept", "*/*");
-			headers.put("Accept-Encoding", "gzip, deflate");
-			headers.put("User-Agent", "oio-http");
+        private void sendRequest(Socket sock) throws IOException {
+            headers.put("Host",
+                    sock.getLocalAddress().toString().substring(1) + ":" + sock.getLocalPort());
+            headers.put("Connection", socketProvider.reusableSocket() ? "keep-alive" : "close");
+            headers.put("Accept", "*/*");
+            headers.put("Accept-Encoding", "gzip, deflate");
+            headers.put("User-Agent", "oio-http");
 
-			if (!headers.containsKey("Content-Length"))
-				headers.put(CONTENT_LENGTH_HEADER, "0");
+            if (!headers.containsKey("Content-Length"))
+                headers.put(CONTENT_LENGTH_HEADER, "0");
 
-			BufferedOutputStream bos = new BufferedOutputStream(
-					sock.getOutputStream(),
-					settings.sendBufferSize());
-			bos.write(requestHead());
-			if (null != data) {
-				stream(bos);
-			} else if (null != body) {
-				bos.write(body.getBytes(OIO_CHARSET));
-			}
-			bos.flush();
-		}
+            BufferedOutputStream bos = new BufferedOutputStream(sock.getOutputStream(),
+                    settings.sendBufferSize());
+            bos.write(requestHead());
+            if (null != data) {
+                stream(bos);
+            } else if (null != body) {
+                bos.write(body.getBytes(OIO_CHARSET));
+            }
+            bos.flush();
+        }
 
-		private void sendRequestChunked(Socket sock) throws IOException {
-			headers.put("Host", sock.getLocalAddress().toString().substring(1)
-			        + ":" + sock.getLocalPort());
-			headers.put("Connection", socketProvider.reusableSocket()
-			        ? "keep-alive" : "close");
-			headers.put("Accept", "*/*");
-			headers.put("Accept-Encoding", "gzip, deflate");
-			headers.put("User-Agent", "oio-http");
+        private void sendRequestChunked(Socket sock) throws IOException {
+            headers.put("Host",
+                    sock.getLocalAddress().toString().substring(1) + ":" + sock.getLocalPort());
+            headers.put("Connection", socketProvider.reusableSocket() ? "keep-alive" : "close");
+            headers.put("Accept", "*/*");
+            headers.put("Accept-Encoding", "gzip, deflate");
+            headers.put("User-Agent", "oio-http");
 
-			// ensure no content-length
-			headers.remove("Content-Length");
-			BufferedOutputStream bos = new BufferedOutputStream(
-					sock.getOutputStream(),
-					settings.sendBufferSize());
-			byte[] requestHead = requestHead();
-			bos.write(requestHead);
-			streamChunked(bos);
-			bos.flush();
-		}
+            // ensure no content-length
+            headers.remove("Content-Length");
+            BufferedOutputStream bos = new BufferedOutputStream(sock.getOutputStream(),
+                    settings.sendBufferSize());
+            byte[] requestHead = requestHead();
+            bos.write(requestHead);
+            streamChunked(bos);
+            bos.flush();
+        }
 
-		private void streamChunked(OutputStream os) throws IOException {
-			byte[] b = new byte[settings.sendBufferSize()];
-			int remaining = len.intValue();
-			while (remaining > 0) {
-				int read = data.read(b, 0, Math.min(remaining, b.length));
-				if (-1 == read)
-					throw new EOFException("Unexpected end of source stream");
-				remaining -= read;
-				if (read > 0) {
-					os.write((Integer.toHexString(read) + CRLF)
-					        .getBytes(OIO_CHARSET));
-					os.write(b, 0, read);
-					os.write(CRLF_BYTES);
-				}
-			}
-			os.write(("0" + CRLF + CRLF)
-			        .getBytes(OIO_CHARSET));
-		}
+        private void streamChunked(OutputStream os) throws IOException {
+            byte[] b = new byte[settings.sendBufferSize()];
+            int remaining = len.intValue();
+            while (remaining > 0) {
+                int read = data.read(b, 0, Math.min(remaining, b.length));
+                if (-1 == read)
+                    throw new EOFException("Unexpected end of source stream");
+                remaining -= read;
+                if (read > 0) {
+                    os.write((Integer.toHexString(read) + CRLF).getBytes(OIO_CHARSET));
+                    os.write(b, 0, read);
+                    os.write(CRLF_BYTES);
+                }
+            }
+            os.write(("0" + CRLF + CRLF).getBytes(OIO_CHARSET));
+        }
 
-		private void stream(OutputStream sos) throws IOException {
-			byte[] b = new byte[settings.sendBufferSize()];
-			int remaining = len.intValue();
+        private void stream(OutputStream sos) throws IOException {
+            byte[] b = new byte[settings.sendBufferSize()];
+            int remaining = len.intValue();
 
-			while (remaining > 0) {
-				int read = data.read(b, 0, Math.min(remaining, b.length));
-				if (-1 == read)
-					throw new EOFException("Unexpected end of source stream");
-				remaining -= read;
-				sos.write(b, 0, read);
-			}
-		}
+            while (remaining > 0) {
+                int read = data.read(b, 0, Math.min(remaining, b.length));
+                if (-1 == read)
+                    throw new EOFException("Unexpected end of source stream");
+                remaining -= read;
+                sos.write(b, 0, read);
+            }
+        }
 
-		private byte[] requestHead() throws UnsupportedEncodingException {
-			StringBuilder qbuilder = new StringBuilder(
-			        null == uri.getRawQuery() ? "" : uri.getRawQuery());
-			boolean removeTrailindAnd = 0 == qbuilder.length();
-			for (Entry<String, String> h : query.entrySet()) {
-				qbuilder.append("&")
-				        .append(URLEncoder.encode(h.getKey(), "utf-8"))
-				        .append("=")
-				        .append(URLEncoder.encode(h.getValue(),"utf-8"));
-			}
-			String uriPath = uri.getRawPath();
-			StringBuilder req = new StringBuilder(method)
-			        .append(" ")
-			        .append(uriPath != null && !uriPath.isEmpty()? uriPath : "/")
-			        .append(qbuilder.length() > 0 ? "?" : "")
-			        .append(qbuilder.length() > 0 ? (removeTrailindAnd
-			                ? qbuilder.substring(1) : qbuilder.toString()) : "")
-			        .append(" ")
-			        .append("HTTP/1.1").append(CRLF);
-			for (Entry<String, String> h : headers.entrySet()) {
-				req.append(h.getKey()).append(": ").append(h.getValue())
-				        .append(CRLF);
-			}
-			byte[] res = req.append(CRLF)
-			        .toString()
-			        .getBytes(OIO_CHARSET);
-			return res;
-		}
-	}
+        private byte[] requestHead() throws UnsupportedEncodingException {
+            StringBuilder qbuilder = new StringBuilder(null == uri.getRawQuery() ? ""
+                    : uri.getRawQuery());
+            boolean removeTrailindAnd = 0 == qbuilder.length();
+            for (Entry<String, String> h : query.entrySet()) {
+                qbuilder.append("&").append(URLEncoder.encode(h.getKey(), "utf-8")).append("=")
+                        .append(URLEncoder.encode(h.getValue(), "utf-8"));
+            }
+            String uriPath = uri.getRawPath();
+            StringBuilder req = new StringBuilder(method)
+                    .append(" ")
+                    .append(uriPath != null && !uriPath.isEmpty() ? uriPath : "/")
+                    .append(qbuilder.length() > 0 ? "?" : "")
+                    .append(qbuilder.length() > 0 ? (removeTrailindAnd ? qbuilder.substring(1)
+                            : qbuilder.toString()) : "").append(" ").append("HTTP/1.1")
+                    .append(CRLF);
+            for (Entry<String, String> h : headers.entrySet()) {
+                req.append(h.getKey()).append(": ").append(h.getValue()).append(CRLF);
+            }
+            byte[] res = req.append(CRLF).toString().getBytes(OIO_CHARSET);
+            return res;
+        }
+    }
 }

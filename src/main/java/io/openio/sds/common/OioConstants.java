@@ -29,7 +29,7 @@ public class OioConstants {
 
     public static final String PROP_HEADER_PREFIX = "X-oio-content-meta-x-";
     public static final int PROP_HEADER_PREFIX_LEN = PROP_HEADER_PREFIX.length();
-    
+
     public static final String CONTENT_LENGTH_HEADER = "Content-Length";
     public static final String CONTENT_TYPE_HEADER = "Content-Type";
 
@@ -67,8 +67,8 @@ public class OioConstants {
 
     public static final String OIO_ACTION_MODE_HEADER = "X-oio-action-mode";
     public static final String OIO_REQUEST_ID_HEADER = "X-oio-req-id";
-    
-	public static final String RANGE_HEADER = "Range";
+
+    public static final String RANGE_HEADER = "Range";
 
     /* -- RAWX common headers -- */
 
@@ -84,9 +84,9 @@ public class OioConstants {
     public static final String CHUNK_META_CHUNK_ID = "X-oio-chunk-meta-chunk-id";
     public static final String CHUNK_META_CHUNK_POS = "X-oio-chunk-meta-chunk-pos";
     public static final String CHUNK_META_CHUNK_HASH = "X-oio-chunk-meta-chunk-hash";
-    
+
     /* -- ECD common headers -- */
-    
+
     public static final String CHUNK_META_CHUNK_PREFIX = "X-oio-chunk-meta-chunk-";
     public static final String CHUNK_META_CHUNKS_NB = "X-oio-chunk-meta-chunks-nb";
     public static final String CHUNK_META_CHUNK_SIZE = "X-oio-chunk-meta-chunk-size";
@@ -144,7 +144,7 @@ public class OioConstants {
 
     public static final String CHUNK_METHOD_PLAIN = "plain";
     public static final String AUTOCREATE_ACTION_MODE = "autocreate";
-    
-    public static final String EC_PREFIX ="ec/";
+
+    public static final String EC_PREFIX = "ec/";
 
 }
