@@ -6,6 +6,7 @@ import static io.openio.sds.common.OioConstants.CONTENT_TYPE_HEADER;
 import static io.openio.sds.common.OioConstants.DELETE_METHOD;
 import static io.openio.sds.common.OioConstants.GET_METHOD;
 import static io.openio.sds.common.OioConstants.OIO_CHARSET;
+import static io.openio.sds.common.OioConstants.OIO_TIMEOUT_HEADER;
 import static io.openio.sds.common.OioConstants.POST_METHOD;
 import static io.openio.sds.common.OioConstants.PUT_METHOD;
 import static io.openio.sds.common.Strings.nullOrEmpty;
@@ -31,6 +32,7 @@ import com.google.gson.stream.JsonReader;
 
 import io.openio.sds.common.Check;
 import io.openio.sds.common.SocketProvider;
+import io.openio.sds.common.DeadlineManager;
 import io.openio.sds.exceptions.OioException;
 import io.openio.sds.exceptions.OioSystemException;
 import io.openio.sds.logging.SdsLogger;
@@ -97,6 +99,7 @@ public class OioHttp {
         private OioHttpResponseVerifier verifier = null;
         private boolean chunked;
         private List<InetSocketAddress> hosts = null;
+        private Integer deadline = null;
 
         public RequestBuilder req(String method, String url) {
             this.method = method;
@@ -155,6 +158,21 @@ public class OioHttp {
         }
 
         /**
+         * Set an execution deadline on the request.
+         *
+         * The deadline applies on the overall request treatment (first request and retries).
+         * It is reduced by 1% before being transferred to the server, so the server should
+         * reach its deadline before us.
+         *
+         * @param deadline the deadline for the request, in monotonic milliseconds
+         * @return this
+         */
+        public RequestBuilder withDeadline(int deadline) {
+            this.deadline = Integer.valueOf(deadline);
+            return this;
+        }
+
+        /**
          * @param hosts
          *            An optional list of hosts to connect to.
          * @return this
@@ -189,10 +207,29 @@ public class OioHttp {
             }
         }
 
+        /**
+         * If a deadline has been set on the request:
+         * - check it;
+         * - set the socket timeout accordingly;
+         * - add a header so the server will check it too (99% of the actual deadline).
+         */
+        private void applyDeadline(Socket sock) throws SocketException {
+            if (this.deadline != null) {
+                DeadlineManager dlm = DeadlineManager.instance();
+                int now = dlm.now();
+                dlm.checkDeadline(this.deadline, now);
+                int timeout = dlm.deadlineToTimeout(this.deadline, now);
+                sock.setSoTimeout(timeout);
+                // oio-proxy wants microseconds, and we remove 1% for the parsing overhead.
+                headers.put(OIO_TIMEOUT_HEADER, String.valueOf(timeout * 990));
+            }
+        }
+
         private OioHttpResponse execute(InetSocketAddress addr) throws OioException {
             Socket sock = null;
             try {
                 sock = socketProvider.getSocket(addr);
+                applyDeadline(sock);
                 if (chunked)
                     sendRequestChunked(sock);
                 else

@@ -2,11 +2,17 @@ package io.openio.sds.http;
 
 import io.openio.sds.TestHelper;
 import io.openio.sds.TestSocketProvider;
+import io.openio.sds.common.DeadlineManager;
+import io.openio.sds.common.DeadlineManager.ClockSource;
+import io.openio.sds.exceptions.DeadlineReachedException;
+import io.openio.sds.exceptions.OioException;
+
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -202,5 +208,60 @@ public class OioHttpTest {
             e.printStackTrace();
             fail("Failed to read HTTP response");
         }
+    }
+
+    @Test(expected=DeadlineReachedException.class)
+    public void immediateDeadline() {
+        List<ByteArrayInputStream> inputs = new ArrayList<ByteArrayInputStream>();
+        String input = "HTTP/1.0 200 OK\r\n" + "Content-Length: 0\r\n" + "\r\n";
+        inputs.add(new ByteArrayInputStream(input.getBytes()));
+        TestSocketProvider socketProvider = new TestSocketProvider(inputs);
+        OioHttpSettings httpSettings = new OioHttpSettings();
+        OioHttp http = OioHttp.http(httpSettings, socketProvider);
+
+        int deadline = DeadlineManager.instance().now();
+        OioHttp.RequestBuilder req = http.post("http://127.0.0.1:8080/testPath");
+        req = req.withDeadline(deadline);
+        req.execute();
+    }
+
+    @Test(expected=DeadlineReachedException.class)
+    public void overallDeadline() {
+        List<ByteArrayInputStream> inputs = new ArrayList<ByteArrayInputStream>();
+        String input = "HTTP/1.0 503 Unavailable\r\n" + "Content-Length: 0\r\n" + "\r\n";
+        String input2 = "HTTP/1.0 200 OK\r\n" + "Content-Length: 0\r\n" + "\r\n";
+        inputs.add(new ByteArrayInputStream(input.getBytes()));
+        inputs.add(new ByteArrayInputStream(input2.getBytes()));
+        TestSocketProvider socketProvider = new TestSocketProvider(inputs);
+        OioHttpSettings httpSettings = new OioHttpSettings();
+        OioHttp http = OioHttp.http(httpSettings, socketProvider);
+        List<InetSocketAddress> hosts = new ArrayList<InetSocketAddress>();
+        hosts.add(new InetSocketAddress("127.0.0.1", 6000));
+        hosts.add(new InetSocketAddress("127.0.0.2", 6000));
+
+        DeadlineManager dm = DeadlineManager.instance();
+        dm.useMockedClockSource(new ClockSource() {
+            int now = 0;
+
+            @Override
+            public int now() {
+                return now++;
+            }
+        });
+
+        // First call will return 1 => ok, second call (retry) will return 2 => DeadlineReached
+        int deadline = dm.now() + 2;
+        OioHttp.RequestBuilder req = http.post("http://127.0.0.1:8080/testPath");
+        req = req.withDeadline(deadline)
+                .hosts(hosts)
+                .verifier(new OioHttpResponseVerifier() {
+            @Override
+            public void verify(OioHttpResponse response) throws OioException {
+                // The IOException simulates a network error and will make the client retry
+                if (response.code() == 503)
+                    throw new OioException("Unavailable", new IOException());
+            }
+        });
+        req.execute();
     }
 }

@@ -612,7 +612,13 @@ public class ProxyClient {
      * @throws OioException
      *             if any error occurs during request execution
      */
-    public ObjectInfo putObject(ObjectInfo oinf, String reqId, Long version) throws OioException {
+    public ObjectInfo putObject(ObjectInfo oinf, String reqId, Long version)
+            throws OioException {
+        return putObject(oinf, reqId, version, null);
+    }
+
+    public ObjectInfo putObject(ObjectInfo oinf, String reqId, Long version, Long deadline)
+            throws OioException {
         checkArgument(null != oinf, "Invalid objectInfo");
         Map<String, String> props = oinf.properties();
         String body = String.format("{\"chunks\": %1$s, \"properties\": %2$s}",

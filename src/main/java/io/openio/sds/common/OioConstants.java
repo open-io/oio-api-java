@@ -69,6 +69,8 @@ public class OioConstants {
     public static final String OIO_REQUEST_ID_HEADER = "X-oio-req-id";
 
     public static final String RANGE_HEADER = "Range";
+    public static final String OIO_TIMEOUT_HEADER = "X-oio-timeout";
+
 
     /* -- RAWX common headers -- */
 
