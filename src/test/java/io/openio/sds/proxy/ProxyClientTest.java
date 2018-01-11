@@ -39,8 +39,9 @@ public class ProxyClientTest {
 
         String expectedOutput = method + " " + path + " HTTP/1.1\r\n" + "X-oio-req-id: " + reqID
                 + "\r\n" + "Accept: */*\r\n" + "Connection: close\r\n" + "User-Agent: oio-http\r\n"
-                + "Host: 127.0.0.1:8080\r\n" + "Accept-Encoding: gzip, deflate\r\n"
-                + "Content-Length: " + data.length() + "\r\n";
+                + "X-oio-timeout: 0\r\n" + "Host: 127.0.0.1:8080\r\n"
+                + "Accept-Encoding: gzip, deflate\r\n" + "Content-Length: " + data.length()
+                + "\r\n";
         if (data.length() != 0) {
             expectedOutput = expectedOutput + "Content-Type: application/json\r\n";
         }

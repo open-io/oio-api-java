@@ -50,6 +50,7 @@ public class OioHttpTest {
         String expectedOutput = "POST /testPath?%40=%3D&testKey=testValue HTTP/1.1\r\n"
                 + "TestHeaderKey2: testHeaderValue2\r\n" + "TestHeaderKey: testHeaderValue\r\n"
                 + "Accept: */*\r\n" + "Connection: close\r\n" + "User-Agent: oio-http\r\n"
+                + "X-oio-timeout: 0\r\n"
                 + "Host: 127.0.0.1:8080\r\n" + "Accept-Encoding: gzip, deflate\r\n"
                 + "Content-Length: 2\r\n" + "Content-Type: application/json\r\n" + "\r\n" + "{}";
 
@@ -90,6 +91,7 @@ public class OioHttpTest {
 
         String expectedOutput = "POST /testPath HTTP/1.1\r\n" + "Transfer-Encoding: chunked\r\n"
                 + "Accept: */*\r\n" + "Connection: close\r\n" + "User-Agent: oio-http\r\n"
+                + "X-oio-timeout: 0\r\n"
                 + "Host: 127.0.0.1:8080\r\n" + "Accept-Encoding: gzip, deflate\r\n"
                 + "Content-Type: application/octet-stream\r\n" + "\r\n" + "3\r\n" + "tes\r\n"
                 + "1\r\n" + "t\r\n" + "0\r\n\r\n";
@@ -121,7 +123,9 @@ public class OioHttpTest {
         ByteArrayOutputStream output = outputs.get(0);
 
         String expectedOutput = "POST /testPath HTTP/1.1\r\n" + "Accept: */*\r\n"
-                + "Connection: close\r\n" + "User-Agent: oio-http\r\n" + "Host: 127.0.0.1:8080\r\n"
+                + "Connection: close\r\n" + "User-Agent: oio-http\r\n"
+                + "X-oio-timeout: 0\r\n"
+                + "Host: 127.0.0.1:8080\r\n"
                 + "Accept-Encoding: gzip, deflate\r\n" + "Content-Length: 4\r\n"
                 + "Content-Type: application/octet-stream\r\n" + "\r\n" + "test";
 
@@ -226,7 +230,7 @@ public class OioHttpTest {
     }
 
     @Test(expected=DeadlineReachedException.class)
-    public void overallDeadline() {
+    public void deadlineWhenRetrying() {
         List<ByteArrayInputStream> inputs = new ArrayList<ByteArrayInputStream>();
         String input = "HTTP/1.0 503 Unavailable\r\n" + "Content-Length: 0\r\n" + "\r\n";
         String input2 = "HTTP/1.0 200 OK\r\n" + "Content-Length: 0\r\n" + "\r\n";

@@ -97,16 +97,23 @@ public class DefaultClient implements Client {
     public ObjectInfo putObject(OioUrl url, Long size, File data, Long version,
             Map<String, String> properties) throws OioException {
         checkArgument(null != url, "url cannot be null");
-        checkArgument(null != url.object(), "url object cannot be null");
-        String reqId = requestId();
-        ObjectInfo oinf = proxy.getBeans(url, size, reqId);
+        return putObject(url, size, data, version, properties, new RequestContext());
+    }
+
+    @Override
+    public ObjectInfo putObject(OioUrl url, Long size, File data, Long version,
+            Map<String, String> properties, RequestContext reqCtx) throws OioException {
+        checkArgument(url != null, "url cannot be null");
+        checkArgument(url.object() != null, "object part of URL cannot be null");
+        reqCtx.startTiming();
+        ObjectInfo oinf = proxy.preparePutObject(url, size, reqCtx);
         oinf.properties(properties);
         try {
             if (oinf.isEC())
-                ecd.uploadChunks(oinf, data, reqId);
+                ecd.uploadChunks(oinf, data, reqCtx.requestId());
             else
-                rawx.uploadChunks(oinf, data, reqId);
-            proxy.putObject(oinf, reqId, version);
+                rawx.uploadChunks(oinf, data, reqCtx.requestId());
+            proxy.putObject(oinf, version, reqCtx);
         } catch (OioException e) {
             // TODO improve by knowing which chunk is uploaded
             rawx.deleteChunks(oinf.chunks());
@@ -133,17 +140,24 @@ public class DefaultClient implements Client {
     @Override
     public ObjectInfo putObject(OioUrl url, Long size, InputStream data, Long version,
             Map<String, String> properties) throws OioException {
-        checkArgument(null != url, "url cannot be null");
-        checkArgument(null != url.object(), "url object cannot be null");
-        String reqId = requestId();
-        ObjectInfo oinf = proxy.getBeans(url, size, reqId);
+        checkArgument(url != null, "url cannot be null");
+        return putObject(url, size, data, version, properties, new RequestContext());
+    }
+
+    @Override
+    public ObjectInfo putObject(OioUrl url, Long size, InputStream data, Long version,
+            Map<String, String> properties, RequestContext reqCtx) throws OioException {
+        checkArgument(url != null, "url cannot be null");
+        checkArgument(url.object() != null, "object part of URL cannot be null");
+        reqCtx.startTiming();
+        ObjectInfo oinf = proxy.preparePutObject(url, size, reqCtx);
         oinf.properties(properties);
         try {
             if (oinf.isEC())
-                ecd.uploadChunks(oinf, data, reqId);
+                ecd.uploadChunks(oinf, data, reqCtx.requestId());
             else
-                rawx.uploadChunks(oinf, data, reqId);
-            proxy.putObject(oinf, reqId, version);
+                rawx.uploadChunks(oinf, data, reqCtx.requestId());
+            proxy.putObject(oinf, version, reqCtx);
         } catch (OioException oioe) {
             // TODO improve by knowing which chunk is uploaded
             rawx.deleteChunks(oinf.chunks());

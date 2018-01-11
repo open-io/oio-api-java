@@ -62,7 +62,7 @@ public interface Client {
      * 
      * @param url
      *            the url of the container
-     * @return a {@code ContainerInfo} with informations about the created
+     * @return a {@code ContainerInfo} with information about the created
      *         container
      * @throws ContainerExistException
      *             if the specified container is alreay present
@@ -72,11 +72,11 @@ public interface Client {
     public ContainerInfo createContainer(OioUrl url) throws OioException;
 
     /**
-     * Returns informations about the specified container
+     * Returns information about the specified container
      * 
      * @param url
      *            the url of the container
-     * @return a {@code ContainerInfo} with informations about the created
+     * @return a {@code ContainerInfo} with information about the created
      *         container
      * @throws ContainerNotFoundException
      *             if the specified container doesn't exist
@@ -185,7 +185,7 @@ public interface Client {
      *            the size of the object
      * @param data
      *            the file to read the data from
-     * @return informations about the uploaded object
+     * @return information about the uploaded object
      * @throws ContainerNotFoundException
      *             if the specified container doesn't exist
      * @throws OioSystemException
@@ -206,7 +206,7 @@ public interface Client {
      *            the properties to set to the object. Note that the properties
      *            are case insensitive and will always be returned in lower
      *            case.
-     * @return informations about the uploaded object
+     * @return information about the uploaded object
      * @throws ContainerNotFoundException
      *             if the specified container doesn't exist
      * @throws OioSystemException
@@ -226,7 +226,7 @@ public interface Client {
      *            the file to read the data from
      * @param version
      *            the version of content to upload
-     * @return informations about the uploaded object
+     * @return information about the uploaded object
      * @throws ContainerNotFoundException
      *             if the specified container doesn't exist
      * @throws OioSystemException
@@ -249,7 +249,7 @@ public interface Client {
      *            the properties to set to the object. Note that the properties
      *            are case insensitive and will always be returned in lower
      *            case.
-     * @return informations about the uploaded object
+     * @return information about the uploaded object
      * @throws ContainerNotFoundException
      *             if the specified container doesn't exist
      * @throws OioSystemException
@@ -267,7 +267,7 @@ public interface Client {
      *            the size of the object
      * @param data
      *            the InputStream to read the data from
-     * @return informations about the uploaded object
+     * @return information about the uploaded object
      * @throws ContainerNotFoundException
      *             if the specified container doesn't exist
      * @throws ObjectExistException
@@ -290,7 +290,7 @@ public interface Client {
      *            the properties to set to the object. Note that the properties
      *            are case insensitive and will always be returned in lower
      *            case.
-     * @return informations about the uploaded object
+     * @return information about the uploaded object
      * @throws ContainerNotFoundException
      *             if the specified container doesn't exist
      * @throws ObjectExistException
@@ -312,7 +312,7 @@ public interface Client {
      *            the InputStream to read the data from
      * @param version
      *            the version of content to upload
-     * @return informations about the uploaded object
+     * @return information about the uploaded object
      * @throws ContainerNotFoundException
      *             if the specified container doesn't exist
      * @throws ObjectExistException
@@ -338,7 +338,7 @@ public interface Client {
      *            the properties to set to the object. Note that the properties
      *            are case insensitive and will always be returned in lower
      *            case.
-     * @return informations about the uploaded object
+     * @return information about the uploaded object
      * @throws ContainerNotFoundException
      *             if the specified container doesn't exist
      * @throws ObjectExistException
@@ -350,7 +350,61 @@ public interface Client {
             Map<String, String> properties) throws OioException;
 
     /**
-     * Returns informations about the specified object
+     * Push an object into the OpenIO-SDS namespace.
+     *
+     * @param url
+     *            the URL of the object to create
+     * @param size
+     *            the size of the object
+     * @param data
+     *            the InputStream to read the data from
+     * @param version
+     *            the version of content to upload
+     * @param properties
+     *            the properties to set to the object. Note that the properties
+     *            are case insensitive and will always be returned in lower
+     *            case.
+     * @param reqCtx
+     *            Common parameters to all requests
+     * @return information about the uploaded object
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws ObjectExistException
+     *             if the specified object already exist in the container
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public ObjectInfo putObject(OioUrl url, Long size, InputStream data, Long version,
+            Map<String, String> properties, RequestContext reqCtx) throws OioException;
+
+    /**
+     * Push an object into the OpenIO-SDS namespace.
+     *
+     * @param url
+     *            the URL of the object to create
+     * @param reqCtx
+     *            Common parameters to all requests
+     * @param size
+     *            the size of the object
+     * @param data
+     *            the file to read the data from
+     * @param version
+     *            the version of content to upload
+     * @param properties
+     *            the properties to set to the object. Note that the properties
+     *            are case insensitive and will always be returned in lower
+     *            case.
+     * @return information about the uploaded object
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public ObjectInfo putObject(OioUrl url, Long size, File data, Long version,
+            Map<String, String> properties, RequestContext reqCtx) throws OioException;
+
+    /**
+     * Returns information about the specified object
      * 
      * @param url
      *            the url of the object
@@ -365,7 +419,7 @@ public interface Client {
     public ObjectInfo getObjectInfo(OioUrl url) throws OioException;
 
     /**
-     * Returns informations about the specified object
+     * Returns information about the specified object
      *
      * @param url
      *            the url of the object
@@ -383,7 +437,7 @@ public interface Client {
     public ObjectInfo getObjectInfo(OioUrl url, boolean loadProperties) throws OioException;
 
     /**
-     * Returns informations about the specified object
+     * Returns information about the specified object
      * 
      * @param url
      *            the url of the object
@@ -401,7 +455,7 @@ public interface Client {
     public ObjectInfo getObjectInfo(OioUrl url, Long version) throws OioException;
 
     /**
-     * Returns informations about the specified object
+     * Returns information about the specified object
      *
      * @param url
      *            the url of the object
@@ -426,7 +480,7 @@ public interface Client {
      * Returns the data of the specified object
      * 
      * @param oinf
-     *            the informations about object to download
+     *            the information about object to download
      * @return the data in InputStream format
      * 
      * @throws OioSystemException
@@ -438,7 +492,7 @@ public interface Client {
      * Returns object's data between specified range
      * 
      * @param oinf
-     *            the informations about object to download
+     *            the information about object to download
      * @param range
      *            the wanted data range
      * 

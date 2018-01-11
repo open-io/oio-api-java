@@ -8,7 +8,9 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 import java.util.UUID;
 
+import io.openio.sds.RequestContext;
 import io.openio.sds.TestHelper;
+
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -111,7 +113,7 @@ public class ProxyClientITest {
         OioUrl url = url("TEST", UUID.randomUUID().toString(), UUID.randomUUID().toString());
         // proxy.createContainer(url);
         try {
-            ObjectInfo oinf = proxy.getBeans(url, 1024);
+            ObjectInfo oinf = proxy.preparePutObject(url, 1024, new RequestContext());
             assertNotNull(oinf);
             assertNotNull(oinf.url());
             assertEquals(url.account(), oinf.url().account());

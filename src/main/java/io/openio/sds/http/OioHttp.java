@@ -6,6 +6,7 @@ import static io.openio.sds.common.OioConstants.CONTENT_TYPE_HEADER;
 import static io.openio.sds.common.OioConstants.DELETE_METHOD;
 import static io.openio.sds.common.OioConstants.GET_METHOD;
 import static io.openio.sds.common.OioConstants.OIO_CHARSET;
+import static io.openio.sds.common.OioConstants.OIO_REQUEST_ID_HEADER;
 import static io.openio.sds.common.OioConstants.OIO_TIMEOUT_HEADER;
 import static io.openio.sds.common.OioConstants.POST_METHOD;
 import static io.openio.sds.common.OioConstants.PUT_METHOD;
@@ -173,6 +174,17 @@ public class OioHttp {
         }
 
         /**
+         * Set a request ID.
+         *
+         * @param reqId the request ID to set
+         * @return this
+         */
+        public RequestBuilder withRequestId(String reqId) {
+            headers.put(OIO_REQUEST_ID_HEADER, reqId);
+            return this;
+        }
+
+        /**
          * @param hosts
          *            An optional list of hosts to connect to.
          * @return this
@@ -211,18 +223,22 @@ public class OioHttp {
          * If a deadline has been set on the request:
          * - check it;
          * - set the socket timeout accordingly;
-         * - add a header so the server will check it too (99% of the actual deadline).
+         * Whether a deadline has been set or not, add a timeout header
+         * so the server will limit itself (99% of the timeout set on the socket).
          */
         private void applyDeadline(Socket sock) throws SocketException {
+            int timeout;
             if (this.deadline != null) {
                 DeadlineManager dlm = DeadlineManager.instance();
                 int now = dlm.now();
                 dlm.checkDeadline(this.deadline, now);
-                int timeout = dlm.deadlineToTimeout(this.deadline, now);
+                timeout = dlm.deadlineToTimeout(this.deadline, now);
                 sock.setSoTimeout(timeout);
-                // oio-proxy wants microseconds, and we remove 1% for the parsing overhead.
-                headers.put(OIO_TIMEOUT_HEADER, String.valueOf(timeout * 990));
+            } else {
+                timeout = sock.getSoTimeout();
             }
+            // oio-proxy wants microseconds, and we remove 1% for the parsing overhead.
+            headers.put(OIO_TIMEOUT_HEADER, String.valueOf(timeout * 990));
         }
 
         private OioHttpResponse execute(InetSocketAddress addr) throws OioException {

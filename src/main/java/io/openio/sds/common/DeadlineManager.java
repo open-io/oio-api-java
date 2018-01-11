@@ -3,7 +3,7 @@ package io.openio.sds.common;
 import io.openio.sds.exceptions.DeadlineReachedException;
 
 /**
- * Various time, timeout and deadline utilities.
+ * Various utility methods to manage deadlines and timeouts.
  *
  * @author Florent Vennetier
  *
@@ -40,7 +40,7 @@ public class DeadlineManager {
 
     /**
      * Get the single instance of {@link DeadlineManager}.
-     * @return
+     * @return the single instance of {@link DeadlineManager}
      */
     public static DeadlineManager instance() {
         if (instance == null) {
@@ -58,18 +58,14 @@ public class DeadlineManager {
      * @param clockSource The new clock source to use
      */
     public void useMockedClockSource(ClockSource clockSource) {
-        synchronized (DeadlineManager.class) {
-            this.clock = clockSource;
-        }
+        this.clock = clockSource;
     }
 
     /**
-     * Force the DeadlineManager to use the system clock source.
+     * Force the DeadlineManager to use the system monotonic clock source.
      */
     public void useSystemClockSource() {
-        synchronized (DeadlineManager.class) {
-            this.clock = this.new SystemClockSource();
-        }
+        this.clock = this.new SystemClockSource();
     }
 
     /**
