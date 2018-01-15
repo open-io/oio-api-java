@@ -49,32 +49,37 @@ public class DefaultClient implements Client {
 
     @Override
     public NamespaceInfo getNamespaceInfo() {
-        return proxy.getNamespaceInfo();
+        return this.getNamespaceInfo(new RequestContext());
+    }
+
+    @Override
+    public NamespaceInfo getNamespaceInfo(RequestContext reqCtx) {
+        return proxy.getNamespaceInfo(reqCtx);
     }
 
     @Override
     public ContainerInfo createContainer(OioUrl url) {
         checkArgument(null != url, "url cannot be null");
-        return proxy.createContainer(url, requestId());
+        return proxy.createContainer(url, new RequestContext());
     }
 
     @Override
     public ContainerInfo getContainerInfo(OioUrl url) {
         checkArgument(null != url, "url cannot be null");
-        return proxy.getContainerInfo(url, requestId());
+        return proxy.getContainerInfo(url, new RequestContext());
     }
 
     @Override
     public ObjectList listContainer(OioUrl url, ListOptions listOptions) {
         checkArgument(null != url, "url cannot be null");
         checkArgument(null != listOptions, "listOptions cannot be null");
-        return proxy.listContainer(url, listOptions, requestId());
+        return proxy.listContainer(url, listOptions, new RequestContext());
     }
 
     @Override
     public void deleteContainer(OioUrl url) {
         checkArgument(null != url, "url cannot be null");
-        proxy.deleteContainer(url, requestId());
+        proxy.deleteContainer(url, new RequestContext());
     }
 
     @Override
@@ -185,7 +190,7 @@ public class DefaultClient implements Client {
     public ObjectInfo getObjectInfo(OioUrl url, Long version, boolean loadProperties) {
         checkArgument(null != url, "url cannot be null");
         checkArgument(null != url.object(), "url object cannot be null");
-        return proxy.getObjectInfo(url, version, requestId(), loadProperties);
+        return proxy.getObjectInfo(url, version, new RequestContext(), loadProperties);
     }
 
     @Override
@@ -211,47 +216,47 @@ public class DefaultClient implements Client {
     public void deleteObject(OioUrl url, Long version) {
         checkArgument(null != url, "url cannot be null");
         checkArgument(null != url.object(), "url object cannot be null");
-        proxy.deleteObject(url, version, requestId());
+        proxy.deleteObject(url, version, new RequestContext());
     }
 
     @Override
     public void setContainerProperties(OioUrl url, Map<String, String> props) throws OioException {
-        proxy.setContainerProperties(url, props, requestId());
+        proxy.setContainerProperties(url, props, new RequestContext());
     }
 
     @Override
     public Map<String, String> getContainerProperties(OioUrl url) throws OioException {
-        return proxy.getContainerProperties(url, requestId());
+        return proxy.getContainerProperties(url, new RequestContext());
     }
 
     @Override
     public void deleteContainerProperties(OioUrl url, String... keys) throws OioException {
-        proxy.deleteContainerProperties(requestId(), url, keys);
+        proxy.deleteContainerProperties(new RequestContext(), url, keys);
     }
 
     @Override
     public void deleteContainerProperties(OioUrl url, List<String> keys) throws OioException {
-        proxy.deleteContainerProperties(url, keys, requestId());
+        proxy.deleteContainerProperties(url, keys, new RequestContext());
     }
 
     @Override
     public void setObjectProperties(OioUrl url, Map<String, String> props) throws OioException {
-        proxy.setObjectProperties(url, props, requestId());
+        proxy.setObjectProperties(url, props, new RequestContext());
     }
 
     @Override
     public Map<String, String> getObjectProperties(OioUrl url) throws OioException {
-        return proxy.getObjectProperties(url, requestId());
+        return proxy.getObjectProperties(url, new RequestContext());
     }
 
     @Override
     public void deleteObjectProperties(OioUrl url, String... keys) throws OioException {
-        proxy.deleteObjectProperties(requestId(), url, keys);
+        proxy.deleteObjectProperties(new RequestContext(), url, keys);
     }
 
     @Override
     public void deleteObjectProperties(OioUrl url, List<String> keys) throws OioException {
-        proxy.deleteObjectProperties(url, keys, requestId());
+        proxy.deleteObjectProperties(url, keys, new RequestContext());
     }
 
 }

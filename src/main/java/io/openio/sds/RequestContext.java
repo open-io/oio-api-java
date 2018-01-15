@@ -14,10 +14,10 @@ public class RequestContext {
 
     private DeadlineManager dm;
 
-    private String reqId = null;
-    private int reqStart = -1;
-    private int timeout = 30 * 1000;
-    private int deadline = -1;
+    protected String reqId = null;
+    protected int reqStart = -1;
+    protected int timeout = 30 * 1000;
+    protected int deadline = -1;
 
     public RequestContext() {
         this.dm = DeadlineManager.instance();

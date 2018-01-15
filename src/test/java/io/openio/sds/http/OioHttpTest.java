@@ -1,5 +1,6 @@
 package io.openio.sds.http;
 
+import io.openio.sds.RequestContext;
 import io.openio.sds.TestHelper;
 import io.openio.sds.TestSocketProvider;
 import io.openio.sds.common.DeadlineManager;
@@ -224,9 +225,9 @@ public class OioHttpTest {
         OioHttp http = OioHttp.http(httpSettings, socketProvider);
 
         int deadline = DeadlineManager.instance().now();
+        RequestContext reqCtx = new RequestContext().withDeadline(deadline);
         OioHttp.RequestBuilder req = http.post("http://127.0.0.1:8080/testPath");
-        req = req.withDeadline(deadline);
-        req.execute();
+        req.withRequestContext(reqCtx).execute();
     }
 
     @Test(expected=DeadlineReachedException.class)
@@ -255,8 +256,9 @@ public class OioHttpTest {
 
         // First call will return 1 => ok, second call (retry) will return 2 => DeadlineReached
         int deadline = dm.now() + 2;
+        RequestContext reqCtx = new RequestContext().withDeadline(deadline);
         OioHttp.RequestBuilder req = http.post("http://127.0.0.1:8080/testPath");
-        req = req.withDeadline(deadline)
+        req = req.withRequestContext(reqCtx)
                 .hosts(hosts)
                 .verifier(new OioHttpResponseVerifier() {
             @Override

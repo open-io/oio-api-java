@@ -44,13 +44,25 @@ import io.openio.sds.models.Range;
 public interface Client {
 
     /**
-     * Returns namespace configuration
-     * 
+     * Get OpenIO-SDS namespace configuration.
+     *
      * @return the namespace configuration
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
     public NamespaceInfo getNamespaceInfo() throws OioException;
+
+    /**
+     * Get OpenIO-SDS namespace configuration.
+     *
+     * @param reqCtx
+     *            Common parameters to all requests
+     *
+     * @return the namespace configuration
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public NamespaceInfo getNamespaceInfo(RequestContext reqCtx) throws OioException;
 
     /**
      * Creates a container using the specified {@link OioUrl}. OioUrl are built

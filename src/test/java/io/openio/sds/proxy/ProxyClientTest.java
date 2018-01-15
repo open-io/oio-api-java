@@ -1,5 +1,6 @@
 package io.openio.sds.proxy;
 
+import io.openio.sds.RequestContext;
 import io.openio.sds.TestSocketProvider;
 import io.openio.sds.http.OioHttp;
 import io.openio.sds.http.OioHttpSettings;
@@ -7,6 +8,7 @@ import io.openio.sds.models.ListOptions;
 import io.openio.sds.models.ObjectList;
 import io.openio.sds.models.OioUrl;
 import io.openio.sds.models.ReferenceInfo;
+
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -31,24 +33,32 @@ public class ProxyClientTest {
     String CONTAINER_NAME = "testcontainer";
     String OBJECT_NAME = "testobject";
 
+    class FixedTimeoutRequestContext extends RequestContext {
+        @Override
+        public int timeout() {
+            return this.timeout;
+        }
+    }
+
     void verifyRequest(TestSocketProvider socketProvider, String method, String path, String data,
-            String reqID) {
+            RequestContext reqCtx) {
         List<ByteArrayOutputStream> outputs = socketProvider.outputs();
         assertEquals(outputs.size(), 1);
         ByteArrayOutputStream output = outputs.get(0);
 
-        String expectedOutput = method + " " + path + " HTTP/1.1\r\n" + "X-oio-req-id: " + reqID
-                + "\r\n" + "Accept: */*\r\n" + "Connection: close\r\n" + "User-Agent: oio-http\r\n"
-                + "X-oio-timeout: 0\r\n" + "Host: 127.0.0.1:8080\r\n"
-                + "Accept-Encoding: gzip, deflate\r\n" + "Content-Length: " + data.length()
-                + "\r\n";
+        String expectedOutput = method + " " + path + " HTTP/1.1\r\n" + "X-oio-req-id: "
+                + reqCtx.requestId() + "\r\n" + "Accept: */*\r\n" + "Connection: close\r\n"
+                + "User-Agent: oio-http\r\n" + "X-oio-timeout: "
+                + OioHttp.timeoutMillisToStringMicros(reqCtx.timeout()) + "\r\n"
+                + "Host: 127.0.0.1:8080\r\n" + "Accept-Encoding: gzip, deflate\r\n"
+                + "Content-Length: " + data.length() + "\r\n";
         if (data.length() != 0) {
             expectedOutput = expectedOutput + "Content-Type: application/json\r\n";
         }
 
         expectedOutput = expectedOutput + "\r\n" + data;
 
-        assertEquals(new String(output.toByteArray()), expectedOutput);
+        assertEquals(expectedOutput, new String(output.toByteArray()));
     }
 
     ProxyClient newTestProxyClient(OioHttp http) {
@@ -91,12 +101,12 @@ public class ProxyClientTest {
 
         OioUrl oioURL = newContainerOioUrl();
 
-        String reqId = requestId();
-        ReferenceInfo resp = proxy.showReference(oioURL, reqId);
+        RequestContext reqCtx = new FixedTimeoutRequestContext();
+        ReferenceInfo resp = proxy.showReference(oioURL, reqCtx);
 
         String expectedPath = "/v3.0/" + NAMESPACE + "/reference/show?acct=" + ACCOUNT_NAME
                 + "&ref=" + CONTAINER_NAME;
-        verifyRequest(socketProvider, "GET", expectedPath, "", reqId);
+        verifyRequest(socketProvider, "GET", expectedPath, "", reqCtx);
 
         assertNotNull(resp);
     }
@@ -137,7 +147,7 @@ public class ProxyClientTest {
         OioHttp http = OioHttp.http(new OioHttpSettings(), socketProvider);
         ProxyClient proxy = newTestProxyClient(http);
 
-        String reqId = requestId();
+        RequestContext reqCtx = new FixedTimeoutRequestContext();
         OioUrl url = newContainerOioUrl();
         String delimiter = "/";
         String marker = "marker";
@@ -146,13 +156,13 @@ public class ProxyClientTest {
         ListOptions listOptions = new ListOptions().delimiter(delimiter).marker(marker)
                 .prefix(prefix).limit(limit);
 
-        ObjectList resp = proxy.listContainer(url, listOptions, reqId);
+        ObjectList resp = proxy.listContainer(url, listOptions, reqCtx);
 
         String expectedPath = "/v3.0/" + NAMESPACE + "/container/list?" + "acct=" + ACCOUNT_NAME
                 + "&ref=" + CONTAINER_NAME + "&max=" + limit + "&prefix=" + prefix + "&marker="
                 + marker + "&delimiter=" + "%2F";
 
-        verifyRequest(socketProvider, "GET", expectedPath, "", reqId);
+        verifyRequest(socketProvider, "GET", expectedPath, "", reqCtx);
 
         assertNotNull(resp);
         assertEquals(resp.truncated(), false);

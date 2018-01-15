@@ -46,7 +46,7 @@ public class ProxyClientITest {
 
     @Test
     public void namespaceInfo() {
-        NamespaceInfo ni = proxy.getNamespaceInfo();
+        NamespaceInfo ni = proxy.getNamespaceInfo(new RequestContext());
         assertNotNull(ni);
         assertNotNull(ni.ns());
         assertNotNull(ni.options());
@@ -55,7 +55,7 @@ public class ProxyClientITest {
 
     @Test
     public void listServicesWithType() {
-        List<ServiceInfo> rawx = proxy.getServices("rawx");
+        List<ServiceInfo> rawx = proxy.getServices("rawx", new RequestContext());
         assertNotNull(rawx);
         for (ServiceInfo si : rawx)
             System.out.println(si);
@@ -63,7 +63,7 @@ public class ProxyClientITest {
 
     @Test(expected = OioException.class)
     public void listServicesWithUnknownType() {
-        List<ServiceInfo> rawx = proxy.getServices("unknown");
+        List<ServiceInfo> rawx = proxy.getServices("unknown", new RequestContext());
         assertNotNull(rawx);
         for (ServiceInfo si : rawx)
             System.out.println(si);
@@ -71,7 +71,7 @@ public class ProxyClientITest {
 
     @Test(expected = OioException.class)
     public void listServicesWithNullType() {
-        List<ServiceInfo> rawx = proxy.getServices(null);
+        List<ServiceInfo> rawx = proxy.getServices(null, new RequestContext());
         assertNotNull(rawx);
         for (ServiceInfo si : rawx)
             System.out.println(si);

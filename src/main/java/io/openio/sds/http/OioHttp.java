@@ -31,6 +31,7 @@ import java.util.Map.Entry;
 
 import com.google.gson.stream.JsonReader;
 
+import io.openio.sds.RequestContext;
 import io.openio.sds.common.Check;
 import io.openio.sds.common.SocketProvider;
 import io.openio.sds.common.DeadlineManager;
@@ -88,6 +89,12 @@ public class OioHttp {
         return new RequestBuilder().req(DELETE_METHOD, uri);
     }
 
+
+    public static String timeoutMillisToStringMicros(int timeout) {
+        // oio-proxy wants microseconds, and we remove 1% for the parsing overhead.
+        return String.valueOf(timeout * 990);
+    }
+
     public class RequestBuilder {
 
         private String method;
@@ -100,7 +107,7 @@ public class OioHttp {
         private OioHttpResponseVerifier verifier = null;
         private boolean chunked;
         private List<InetSocketAddress> hosts = null;
-        private Integer deadline = null;
+        private RequestContext reqCtx = null;
 
         public RequestBuilder req(String method, String url) {
             this.method = method;
@@ -159,28 +166,17 @@ public class OioHttp {
         }
 
         /**
-         * Set an execution deadline on the request.
+         * Shortcut for
+         * {@code .withDeadline(reqCtx.deadline()).withRequestId(reqCtx.requestId())}
+         * .
          *
-         * The deadline applies on the overall request treatment (first request and retries).
-         * It is reduced by 1% before being transferred to the server, so the server should
-         * reach its deadline before us.
-         *
-         * @param deadline the deadline for the request, in monotonic milliseconds
-         * @return this
+         * @param reqCtx
+         *            the context to get deadline and request ID from
+         * @return {@code this}
          */
-        public RequestBuilder withDeadline(int deadline) {
-            this.deadline = Integer.valueOf(deadline);
-            return this;
-        }
-
-        /**
-         * Set a request ID.
-         *
-         * @param reqId the request ID to set
-         * @return this
-         */
-        public RequestBuilder withRequestId(String reqId) {
-            headers.put(OIO_REQUEST_ID_HEADER, reqId);
+        public RequestBuilder withRequestContext(RequestContext reqCtx) {
+            this.reqCtx = reqCtx;
+            headers.put(OIO_REQUEST_ID_HEADER, reqCtx.requestId());
             return this;
         }
 
@@ -228,17 +224,14 @@ public class OioHttp {
          */
         private void applyDeadline(Socket sock) throws SocketException {
             int timeout;
-            if (this.deadline != null) {
-                DeadlineManager dlm = DeadlineManager.instance();
-                int now = dlm.now();
-                dlm.checkDeadline(this.deadline, now);
-                timeout = dlm.deadlineToTimeout(this.deadline, now);
+            if (this.reqCtx != null) {
+                DeadlineManager.instance().checkDeadline(this.reqCtx.deadline());
+                timeout = this.reqCtx.timeout();
                 sock.setSoTimeout(timeout);
             } else {
                 timeout = sock.getSoTimeout();
             }
-            // oio-proxy wants microseconds, and we remove 1% for the parsing overhead.
-            headers.put(OIO_TIMEOUT_HEADER, String.valueOf(timeout * 990));
+            headers.put(OIO_TIMEOUT_HEADER, timeoutMillisToStringMicros(timeout));
         }
 
         private OioHttpResponse execute(InetSocketAddress addr) throws OioException {
