@@ -63,6 +63,7 @@ public class OioConstants {
     public static final String CONTENT_META_VERSION_HEADER = "X-oio-content-meta-version";
 
     public static final String NS_CHUNK_SIZE_HEADER = "X-oio-ns-chunk-size";
+    public static final String LIST_MARKER_HEADER = "X-oio-list-marker";
     public static final String LIST_TRUNCATED_HEADER = "X-oio-list-truncated";
 
     public static final String OIO_ACTION_MODE_HEADER = "X-oio-action-mode";

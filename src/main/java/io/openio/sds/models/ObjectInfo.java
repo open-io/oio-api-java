@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.openio.sds.RequestContext;
 import io.openio.sds.common.Hash;
 import io.openio.sds.common.MoreObjects;
 import io.openio.sds.common.OioConstants;
@@ -29,8 +30,9 @@ public class ObjectInfo {
     private Map<String, String> properties;
     private List<ChunkInfo> chunks;
     private ECInfo ecinfo;
-    
-	private transient Map<Integer, List<ChunkInfo>> sortedChunks;
+    private RequestContext reqCtx;
+
+    private transient Map<Integer, List<ChunkInfo>> sortedChunks;
 
     private static final Comparator<ChunkInfo> comparator = new Comparator<ChunkInfo>() {
 
@@ -162,11 +164,9 @@ public class ObjectInfo {
         return isEC() ? chunks.size() : sortedChunks.size();
     }
 
-    // FIXME Not good for RAIN
     public Long chunksize(Integer pos) {
         return sortedChunks.get(pos).get(0).size();
     }
-    
 
     public Map<String, String> properties() {
         return properties;
@@ -176,24 +176,23 @@ public class ObjectInfo {
         this.properties = properties;
         return this;
     }
-    
+
     public ECInfo ecinfo(){
     	return ecinfo;
     }
-        
+
     public boolean isEC(){
     	return null != ecinfo;
     }
-    
-    public int metachunksize(int pos){
-    	if(!isEC())
-    		return -1;
-    	int maxmcsize = (int) (ecinfo.k() 
-    			* sortedChunks.get(pos).get(0).size());
-    	int remaining = (int) (size - (pos * maxmcsize));
-    	return Math.min(maxmcsize, remaining);
+
+    public int metachunksize(int pos) {
+        if (!isEC())
+            return -1;
+        int maxmcsize = (int) (ecinfo.k() * sortedChunks.get(pos).get(0).size());
+        int remaining = (int) (size - (pos * maxmcsize));
+        return Math.min(maxmcsize, remaining);
     }
-    
+
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
@@ -211,6 +210,22 @@ public class ObjectInfo {
                 .add("props", properties)
                 .add("chunks", chunks)
                 .toString();
+    }
+
+    public RequestContext requestContext() {
+        return this.reqCtx;
+    }
+
+    /**
+     * Set the context of the request that lead to this object's creation.
+     *
+     * @param reqCtx
+     *            the request context
+     * @return {@code this}
+     */
+    public ObjectInfo withRequestContext(RequestContext reqCtx) {
+        this.reqCtx = reqCtx;
+        return this;
     }
 
     /* -- INTERNAL -- */

@@ -14,6 +14,7 @@ public class ObjectList {
     private List<String> prefixes;
     private ListOptions listOptions;
     private boolean truncated;
+    private String nextMarker;
 
     /**
      * 
@@ -73,6 +74,19 @@ public class ObjectList {
     }
 
     /**
+     * When a listing is {@link #truncated()}, to get the rest of the list, you
+     * have to run the request again with a marker. This method returns this
+     * marker (usually the last element of the previous listing).
+     *
+     * @return the {@link String} to use as {@link ListOptions#marker(String)}
+     *         input to get the next page of results
+     * @since 1.0.0
+     */
+    public String nextMarker() {
+        return this.nextMarker;
+    }
+
+    /**
      * Specifies the listing prefixes
      * 
      * @param prefixes
@@ -93,6 +107,19 @@ public class ObjectList {
      */
     public ObjectList listOptions(ListOptions listOptions) {
         this.listOptions = listOptions;
+        return this;
+    }
+
+    /**
+     * Specify the next marker.
+     *
+     * @param nextMarker
+     *            the value to set
+     * @return this
+     * @since 1.0.0
+     */
+    public ObjectList nextMarker(String nextMarker) {
+        this.nextMarker = nextMarker;
         return this;
     }
 

@@ -166,9 +166,7 @@ public class OioHttp {
         }
 
         /**
-         * Shortcut for
-         * {@code .withDeadline(reqCtx.deadline()).withRequestId(reqCtx.requestId())}
-         * .
+         * Set the context associated to the current request.
          *
          * @param reqCtx
          *            the context to get deadline and request ID from
@@ -282,7 +280,7 @@ public class OioHttp {
         }
 
         private OioHttpResponse readResponse(Socket sock) throws IOException {
-            return OioHttpResponse.build(sock);
+            return OioHttpResponse.build(sock, this.reqCtx);
         }
 
         private void sendRequest(Socket sock) throws IOException {

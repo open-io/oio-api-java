@@ -5,7 +5,8 @@ import io.openio.sds.common.DeadlineManager;
 import io.openio.sds.common.IdGen;
 
 /**
- * Generic parameters and context for all OpenIO SDS requests.
+ * Generic parameters and context for all OpenIO SDS requests,
+ * including a request ID, a timeout (or deadline), etc.
  *
  * @author Florent Vennetier
  *
@@ -16,7 +17,7 @@ public class RequestContext {
 
     protected String reqId = null;
     protected int reqStart = -1;
-    protected int timeout = 30 * 1000;
+    protected int rawTimeout = 30 * 1000;
     protected int deadline = -1;
 
     public RequestContext() {
@@ -89,13 +90,24 @@ public class RequestContext {
     }
 
     /**
+     * Reset the deadline set on this request. This must be called when reusing
+     * a context only for its timeout and request ID.
+     *
+     * @return {@code this}
+     */
+    public RequestContext resetDeadline() {
+        this.deadline = -1;
+        return this;
+    }
+
+    /**
      * Start timing this request. If no deadline has been set, compute one from
      * the {@link #timeout()}.
      */
     void startTiming() {
         this.reqStart = dm.now();
         if (!this.hasDeadline())
-            this.deadline = dm.timeoutToDeadline(this.timeout, this.reqStart);
+            this.deadline = dm.timeoutToDeadline(this.rawTimeout, this.reqStart);
     }
 
     /**
@@ -110,13 +122,14 @@ public class RequestContext {
     public int timeout() {
         if (this.hasDeadline())
             return this.dm.deadlineToTimeout(this.deadline);
-        return this.timeout;
+        return this.rawTimeout;
     }
 
     /**
      * Set a deadline on the whole request.
      *
-     * This will override any previous timeout set with {@link #withTimeout(int)}.
+     * This will reset any previous timeout set with {@link #withTimeout(int)} to the duration
+     * from now to the deadline.
      *
      * @param deadline the deadline in milliseconds
      * @return this
@@ -124,6 +137,7 @@ public class RequestContext {
     public RequestContext withDeadline(int deadline) {
         checkArgument(deadline >= 0, "deadline cannot be negative");
         this.deadline = deadline;
+        this.rawTimeout = this.dm.deadlineToTimeout(deadline);
         return this;
     }
 
@@ -141,8 +155,8 @@ public class RequestContext {
      */
     public RequestContext withTimeout(int timeout) {
         checkArgument(timeout > 0, "timeout cannot be negative");
-        this.timeout = timeout;
-        this.deadline = -1;
+        this.rawTimeout = timeout;
+        this.resetDeadline();
         return this;
     }
 }

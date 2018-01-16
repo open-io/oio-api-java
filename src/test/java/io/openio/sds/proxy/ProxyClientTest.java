@@ -36,7 +36,7 @@ public class ProxyClientTest {
     class FixedTimeoutRequestContext extends RequestContext {
         @Override
         public int timeout() {
-            return this.timeout;
+            return this.rawTimeout;
         }
     }
 
@@ -156,7 +156,7 @@ public class ProxyClientTest {
         ListOptions listOptions = new ListOptions().delimiter(delimiter).marker(marker)
                 .prefix(prefix).limit(limit);
 
-        ObjectList resp = proxy.listContainer(url, listOptions, reqCtx);
+        ObjectList resp = proxy.listObjects(url, listOptions, reqCtx);
 
         String expectedPath = "/v3.0/" + NAMESPACE + "/container/list?" + "acct=" + ACCOUNT_NAME
                 + "&ref=" + CONTAINER_NAME + "&max=" + limit + "&prefix=" + prefix + "&marker="

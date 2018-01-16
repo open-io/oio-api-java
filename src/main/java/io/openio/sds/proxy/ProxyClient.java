@@ -33,6 +33,7 @@ import static io.openio.sds.common.OioConstants.GET_BEANS_FORMAT;
 import static io.openio.sds.common.OioConstants.GET_CONTAINER_INFO_FORMAT;
 import static io.openio.sds.common.OioConstants.GET_OBJECT_FORMAT;
 import static io.openio.sds.common.OioConstants.INVALID_URL_MSG;
+import static io.openio.sds.common.OioConstants.LIST_MARKER_HEADER;
 import static io.openio.sds.common.OioConstants.LIST_OBJECTS_FORMAT;
 import static io.openio.sds.common.OioConstants.LIST_TRUNCATED_HEADER;
 import static io.openio.sds.common.OioConstants.M2_CTIME_HEADER;
@@ -472,7 +473,7 @@ public class ProxyClient {
      */
     @Deprecated
     public ObjectList listContainer(OioUrl url, ListOptions options) throws OioException {
-        return listContainer(url, options, new RequestContext());
+        return listObjects(url, options, new RequestContext());
     }
 
     /**
@@ -489,7 +490,7 @@ public class ProxyClient {
      * @throws OioException
      *             if any error occurs during request execution
      */
-    public ObjectList listContainer(OioUrl url, ListOptions options, RequestContext reqCtx)
+    public ObjectList listObjects(OioUrl url, ListOptions options, RequestContext reqCtx)
             throws OioException {
         checkArgument(null != url, INVALID_URL_MSG);
         checkArgument(null != options, "Invalid options");
@@ -507,8 +508,10 @@ public class ProxyClient {
                     new JsonReader(new InputStreamReader(resp.body(), OIO_CHARSET)),
                     ObjectList.class);
             String truncated = resp.header(LIST_TRUNCATED_HEADER);
-            if (truncated != null)
+            if (truncated != null) {
                 objectList.truncated(Boolean.parseBoolean(truncated));
+                objectList.nextMarker(resp.header(LIST_MARKER_HEADER));
+            }
             success = true;
             return objectList;
         } finally {
@@ -1198,7 +1201,8 @@ public class ProxyClient {
                 .hash(r.header(OioConstants.CONTENT_META_HASH_HEADER))
                 .hashMethod(r.header(CONTENT_META_HASH_METHOD_HEADER))
                 .mtype(r.header(CONTENT_META_MIME_TYPE_HEADER))
-                .properties(propsFromHeaders(r.headers()));
+                .properties(propsFromHeaders(r.headers()))
+                .withRequestContext(r.requestContext());
     }
 
     private List<ChunkInfo> bodyChunk(OioHttpResponse resp) throws OioException {

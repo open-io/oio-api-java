@@ -54,32 +54,63 @@ public class DefaultClient implements Client {
 
     @Override
     public NamespaceInfo getNamespaceInfo(RequestContext reqCtx) {
+        reqCtx.startTiming();
         return proxy.getNamespaceInfo(reqCtx);
     }
 
     @Override
     public ContainerInfo createContainer(OioUrl url) {
-        checkArgument(null != url, "url cannot be null");
-        return proxy.createContainer(url, new RequestContext());
+        return this.createContainer(url, new RequestContext());
+    }
+
+    @Override
+    public ContainerInfo createContainer(OioUrl url, RequestContext reqCtx) throws OioException {
+        checkArgument(url != null, "url cannot be null");
+        reqCtx.startTiming();
+        return proxy.createContainer(url, reqCtx);
     }
 
     @Override
     public ContainerInfo getContainerInfo(OioUrl url) {
-        checkArgument(null != url, "url cannot be null");
-        return proxy.getContainerInfo(url, new RequestContext());
+        return this.getContainerInfo(url, new RequestContext());
+    }
+
+    @Override
+    public ContainerInfo getContainerInfo(OioUrl url, RequestContext reqCtx) throws OioException {
+        checkArgument(url != null, "url cannot be null");
+        reqCtx.startTiming();
+        return proxy.getContainerInfo(url, reqCtx);
     }
 
     @Override
     public ObjectList listContainer(OioUrl url, ListOptions listOptions) {
-        checkArgument(null != url, "url cannot be null");
-        checkArgument(null != listOptions, "listOptions cannot be null");
-        return proxy.listContainer(url, listOptions, new RequestContext());
+        return this.listObjects(url, listOptions, new RequestContext());
+    }
+
+    @Override
+    public ObjectList listObjects(OioUrl url, final ListOptions listOptions) throws OioException {
+        return this.listObjects(url, listOptions, new RequestContext());
+    }
+
+    @Override
+    public ObjectList listObjects(OioUrl url, ListOptions listOptions, RequestContext reqCtx)
+            throws OioException {
+        checkArgument(url != null, "url cannot be null");
+        checkArgument(listOptions != null, "listOptions cannot be null");
+        reqCtx.startTiming();
+        return proxy.listObjects(url, listOptions, reqCtx);
     }
 
     @Override
     public void deleteContainer(OioUrl url) {
-        checkArgument(null != url, "url cannot be null");
-        proxy.deleteContainer(url, new RequestContext());
+        this.deleteContainer(url, new RequestContext());
+    }
+
+    @Override
+    public void deleteContainer(OioUrl url, RequestContext reqCtx) {
+        checkArgument(url != null, "url cannot be null");
+        reqCtx.startTiming();
+        proxy.deleteContainer(url, reqCtx);
     }
 
     @Override
@@ -188,75 +219,158 @@ public class DefaultClient implements Client {
 
     @Override
     public ObjectInfo getObjectInfo(OioUrl url, Long version, boolean loadProperties) {
-        checkArgument(null != url, "url cannot be null");
-        checkArgument(null != url.object(), "url object cannot be null");
-        return proxy.getObjectInfo(url, version, new RequestContext(), loadProperties);
+        return this.getObjectInfo(url, version, loadProperties, new RequestContext());
+    }
+
+    @Override
+    public ObjectInfo getObjectInfo(OioUrl url, Long version, boolean loadProperties,
+            RequestContext reqCtx) throws OioException {
+        checkArgument(url != null, "url cannot be null");
+        checkArgument(url.object() != null, "url object cannot be null");
+        reqCtx.startTiming();
+        return proxy.getObjectInfo(url, version, reqCtx, loadProperties);
     }
 
     @Override
     public InputStream downloadObject(ObjectInfo oinf) {
-        checkArgument(null != oinf, "ObjectInfo cannot be null");
-        return oinf.isEC() ? ecd.downloadObject(oinf, requestId()) : rawx.downloadObject(oinf,
-                requestId());
+        checkArgument(oinf != null, "ObjectInfo cannot be null");
+        RequestContext reqCtx = oinf.requestContext().resetDeadline();
+        reqCtx.startTiming();
+        return oinf.isEC() ? ecd.downloadObject(oinf, reqCtx.requestId()) : rawx.downloadObject(
+                oinf, reqCtx.requestId());
     }
 
     @Override
     public InputStream downloadObject(ObjectInfo oinf, Range range) {
-        checkArgument(null != oinf, "ObjectInfo cannot be null");
-        return oinf.isEC() ? ecd.downloadObject(oinf, range, requestId()) : rawx.downloadObject(
-                oinf, range, requestId());
+        RequestContext reqCtx = oinf.requestContext().resetDeadline();
+        return this.downloadObject(oinf, range,
+                new RequestContext().withRequestId(reqCtx.requestId()));
+    }
+
+    @Override
+    public InputStream downloadObject(ObjectInfo oinf, Range range, RequestContext reqCtx) {
+        checkArgument(oinf != null, "ObjectInfo cannot be null");
+        reqCtx.startTiming();
+        return oinf.isEC() ? ecd.downloadObject(oinf, range, reqCtx.requestId()) : rawx
+                .downloadObject(oinf, range, reqCtx.requestId());
     }
 
     @Override
     public void deleteObject(OioUrl url) {
-        deleteObject(url, null);
+        this.deleteObject(url, null, new RequestContext());
+    }
+
+    @Override
+    public void deleteObject(OioUrl url, RequestContext reqCtx) throws OioException {
+        this.deleteObject(url, null, reqCtx);
     }
 
     @Override
     public void deleteObject(OioUrl url, Long version) {
-        checkArgument(null != url, "url cannot be null");
-        checkArgument(null != url.object(), "url object cannot be null");
-        proxy.deleteObject(url, version, new RequestContext());
+        this.deleteObject(url, version, new RequestContext());
+    }
+
+    @Override
+    public void deleteObject(OioUrl url, Long version, RequestContext reqCtx) throws OioException {
+        checkArgument(url != null, "url cannot be null");
+        checkArgument(url.object() != null, "url object cannot be null");
+        reqCtx.startTiming();
+        proxy.deleteObject(url, version, reqCtx);
     }
 
     @Override
     public void setContainerProperties(OioUrl url, Map<String, String> props) throws OioException {
-        proxy.setContainerProperties(url, props, new RequestContext());
+        this.setContainerProperties(url, props, new RequestContext());
+    }
+
+    @Override
+    public void setContainerProperties(OioUrl url, Map<String, String> props, RequestContext reqCtx)
+            throws OioException {
+        reqCtx.startTiming();
+        proxy.setContainerProperties(url, props, reqCtx);
     }
 
     @Override
     public Map<String, String> getContainerProperties(OioUrl url) throws OioException {
-        return proxy.getContainerProperties(url, new RequestContext());
+        return this.getContainerProperties(url, new RequestContext());
+    }
+
+    @Override
+    public Map<String, String> getContainerProperties(OioUrl url, RequestContext reqCtx)
+            throws OioException {
+        reqCtx.startTiming();
+        return proxy.getContainerProperties(url, reqCtx);
     }
 
     @Override
     public void deleteContainerProperties(OioUrl url, String... keys) throws OioException {
-        proxy.deleteContainerProperties(new RequestContext(), url, keys);
+        this.deleteContainerProperties(url, new RequestContext(), keys);
+    }
+
+    @Override
+    public void deleteContainerProperties(OioUrl url, RequestContext reqCtx, String... keys)
+            throws OioException {
+        reqCtx.startTiming();
+        proxy.deleteContainerProperties(reqCtx, url, keys);
     }
 
     @Override
     public void deleteContainerProperties(OioUrl url, List<String> keys) throws OioException {
-        proxy.deleteContainerProperties(url, keys, new RequestContext());
+        this.deleteContainerProperties(url, keys, new RequestContext());
+    }
+
+    @Override
+    public void deleteContainerProperties(OioUrl url, List<String> keys, RequestContext reqCtx)
+            throws OioException {
+        reqCtx.startTiming();
+        proxy.deleteContainerProperties(url, keys, reqCtx);
     }
 
     @Override
     public void setObjectProperties(OioUrl url, Map<String, String> props) throws OioException {
-        proxy.setObjectProperties(url, props, new RequestContext());
+        this.setObjectProperties(url, props, new RequestContext());
+    }
+
+    @Override
+    public void setObjectProperties(OioUrl url, Map<String, String> props, RequestContext reqCtx)
+            throws OioException {
+        reqCtx.startTiming();
+        proxy.setObjectProperties(url, props, reqCtx);
     }
 
     @Override
     public Map<String, String> getObjectProperties(OioUrl url) throws OioException {
-        return proxy.getObjectProperties(url, new RequestContext());
+        return this.getObjectProperties(url, new RequestContext());
+    }
+
+    @Override
+    public Map<String, String> getObjectProperties(OioUrl url, RequestContext reqCtx)
+            throws OioException {
+        reqCtx.startTiming();
+        return proxy.getObjectProperties(url, reqCtx);
     }
 
     @Override
     public void deleteObjectProperties(OioUrl url, String... keys) throws OioException {
-        proxy.deleteObjectProperties(new RequestContext(), url, keys);
+        this.deleteObjectProperties(url, new RequestContext(), keys);
     }
 
     @Override
     public void deleteObjectProperties(OioUrl url, List<String> keys) throws OioException {
-        proxy.deleteObjectProperties(url, keys, new RequestContext());
+        this.deleteObjectProperties(url, keys, new RequestContext());
     }
 
+    @Override
+    public void deleteObjectProperties(OioUrl url, RequestContext reqCtx, String... keys)
+            throws OioException {
+        reqCtx.startTiming();
+        proxy.deleteObjectProperties(reqCtx, url, keys);
+    }
+
+    @Override
+    public void deleteObjectProperties(OioUrl url, List<String> keys, RequestContext reqCtx)
+            throws OioException {
+        reqCtx.startTiming();
+        proxy.deleteObjectProperties(url, keys, reqCtx);
+    }
 }

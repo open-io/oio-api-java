@@ -1,6 +1,8 @@
 package io.openio.sds.http;
 
+import io.openio.sds.RequestContext;
 import io.openio.sds.TestHelper;
+
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
@@ -17,26 +19,29 @@ import static org.mockito.Mockito.when;
 public class OioHttpResponseTest {
 
 
-	private OioHttpResponse testResponse(String data, int expectedCode, String expectedMsg, int nbHeaders) {
-		OioHttpResponse resp = null;
-		Socket sock = mock(Socket.class);
-		try {
-			when(sock.getInputStream()).thenReturn(new ByteArrayInputStream(data.getBytes()));
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		try {
-			resp = OioHttpResponse.build(sock);
+    private OioHttpResponse testResponse(String data, int expectedCode, String expectedMsg,
+            int nbHeaders) {
+        OioHttpResponse resp = null;
+        Socket sock = mock(Socket.class);
+        try {
+            when(sock.getInputStream()).thenReturn(new ByteArrayInputStream(data.getBytes()));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        try {
+            RequestContext reqCtx = new RequestContext();
+            resp = OioHttpResponse.build(sock, reqCtx);
 
-			assertEquals(resp.code(), expectedCode);
-			assertEquals(resp.msg(), expectedMsg);
-			assertEquals(resp.headers().size(), nbHeaders);
-		} catch (IOException e) {
-			e.printStackTrace();
-			fail("Failed to read HTTP response");
-		}
-		return resp;
-	}
+            assertEquals(resp.code(), expectedCode);
+            assertEquals(resp.msg(), expectedMsg);
+            assertEquals(resp.headers().size(), nbHeaders);
+            assertEquals(reqCtx, resp.requestContext());
+        } catch (IOException e) {
+            e.printStackTrace();
+            fail("Failed to read HTTP response");
+        }
+        return resp;
+    }
 
 	@Test
 	public void simpleNoHeaders200() {
@@ -109,7 +114,7 @@ public class OioHttpResponseTest {
 			e.printStackTrace();
 		}
 		try {
-			OioHttpResponse.build(sock);
+			OioHttpResponse.build(sock, null);
 			fail("Expected IOException");
 		} catch (IOException e) {
 			assertTrue(e.getMessage().contains("Invalid HTTP status line"));

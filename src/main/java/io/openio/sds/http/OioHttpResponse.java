@@ -1,5 +1,6 @@
 package io.openio.sds.http;
 
+import io.openio.sds.RequestContext;
 import io.openio.sds.logging.SdsLogger;
 import io.openio.sds.logging.SdsLoggerFactory;
 
@@ -33,16 +34,18 @@ public class OioHttpResponse {
 
     private ResponseHead head;
 
+    private RequestContext reqCtx;
     private Socket sock;
 
     private InputStream sis;
 
-    private OioHttpResponse(Socket sock) {
+    private OioHttpResponse(Socket sock, RequestContext reqCtx) {
+        this.reqCtx = reqCtx;
         this.sock = sock;
     }
 
-    public static OioHttpResponse build(Socket sock) throws IOException {
-        return new OioHttpResponse(sock).responseHead();
+    public static OioHttpResponse build(Socket sock, RequestContext reqCtx) throws IOException {
+        return new OioHttpResponse(sock, reqCtx).responseHead();
     }
 
     public HashMap<String, String> headers() {
@@ -83,6 +86,10 @@ public class OioHttpResponse {
 
     public OioHttpResponse close() {
         return close(true);
+    }
+
+    public RequestContext requestContext() {
+        return this.reqCtx;
     }
 
     private OioHttpResponse responseHead() throws IOException {
