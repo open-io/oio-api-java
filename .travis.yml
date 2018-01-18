@@ -32,3 +32,5 @@ script:
   - test -f etc/bootstrap-preset-${TEST_SUITE}.yml && oio-reset.sh -v -v -N $OIO_NS -f etc/bootstrap-preset-${TEST_SUITE}.yml || oio-reset.sh -v -v -N $OIO_NS -f etc/bootstrap-${TEST_SUITE}.yml
   - cd .. && ./gradlew test
   - ./gradlew assemble
+after_success:
+  - bash <(curl -s https://codecov.io/bash)

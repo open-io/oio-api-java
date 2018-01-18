@@ -2,11 +2,9 @@ package io.openio.sds;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.HierarchicalINIConfiguration;
-import org.apache.commons.configuration.SubnodeConfiguration;
-
+import io.openio.sds.common.IniFile;
 import io.openio.sds.proxy.ProxySettings;
 import io.openio.sds.storage.rawx.RawxSettings;
 
@@ -17,6 +15,9 @@ import io.openio.sds.storage.rawx.RawxSettings;
  */
 public class Settings {
 
+    /**
+     * Separator used in parameters with multiple values.
+     */
     public static String MULTI_VALUE_SEPARATOR = ",";
 
     private ProxySettings proxy = new ProxySettings();
@@ -32,26 +33,27 @@ public class Settings {
      * @return a new {@link Settings} object
      * @throws FileNotFoundException
      *             when the specified file does not exist
+     * @throws IllegalArgumentException
+     *             when a parsing error occurs
      */
     public static Settings fromFile(String myNs, String confPath) throws FileNotFoundException {
-        File confFile = new File(confPath);
-        if (!confFile.exists() || !confFile.isFile())
-            throw new FileNotFoundException(confPath);
         try {
-            HierarchicalINIConfiguration conf = new HierarchicalINIConfiguration();
-            conf.setDelimiterParsingDisabled(true);
-            conf.load(confFile);
-            SubnodeConfiguration nsSection = conf.getSection(myNs);
-            if (nsSection.isEmpty()) {
-                throw new FileNotFoundException();
+            IniFile conf1 = new IniFile(confPath);
+            if (!conf1.hasSection(myNs)) {
+                throw new FileNotFoundException(
+                        "Section [" + myNs + "] does not exist or is empty");
             }
-            String rawProxyString = nsSection.getString("proxy");
-            String rawEcdString = nsSection.getString("ecd");
-            ProxySettings pst = new ProxySettings().ns(myNs).url(rawProxyString).ecd(rawEcdString);
+            ProxySettings pst = new ProxySettings().ns(myNs);
+            String rawProxyString = conf1.getString(myNs, "proxy", null);
+            if (rawProxyString == null)
+                throw new IllegalArgumentException("No proxy address found in configuration");
+            pst.url(rawProxyString);
+            String rawEcdString = conf1.getString(myNs, "ecd", null);
+            pst.ecd(rawEcdString);  // can be null
             // TODO: load rawx settings somehow
             return new Settings().proxy(pst).rawx(new RawxSettings());
-        } catch (ConfigurationException e) {
-            throw new IllegalArgumentException(e);
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Could not read " + confPath);
         }
     }
 
@@ -63,22 +65,24 @@ public class Settings {
      *            name of the namespace to load
      * @return a new {@link Settings} object
      * @throws FileNotFoundException
-     *             if no configuration file could be found in default places
+     *             if no valid configuration file could be found in default places
      */
     public static Settings forNamespace(String myNs) throws FileNotFoundException {
         String confPath = System.getProperty("user.home") + File.separator + ".oio" + File.separator
                 + "sds.conf";
+        String confPath2 = "/etc/oio/sds.conf.d/" + myNs;
+        String confPath3 = "/etc/oio/sds.conf";
         try {
             return fromFile(myNs, confPath);
         } catch (FileNotFoundException fnfe) {
             try {
-                return fromFile(myNs, "/etc/oio/sds.conf.d/" + myNs);
+                return fromFile(myNs, confPath2);
             } catch (FileNotFoundException fnfe2) {
                 try {
-                    return fromFile(myNs, "/etc/oio/sds.conf");
+                    return fromFile(myNs, confPath3);
                 } catch (FileNotFoundException fnfe3) {
-                    throw new FileNotFoundException(
-                            "Neither /etc/oio/sds.conf nor " + confPath + " exist");
+                    throw new FileNotFoundException("None of " + confPath3 + ", " + confPath2
+                            + " or " + confPath + " contains a valid configuration for " + myNs);
                 }
             }
         }
