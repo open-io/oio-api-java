@@ -118,7 +118,7 @@ public class EcdClientTest {
 				SocketProviders.directSocketProvider(new OioHttpSettings()));
 
 		EcdClient client = new EcdClient(http, new RawxSettings(),
-		        new ProxySettings().ecd(TestHelper.ecd()).allEcdHosts());
+		        TestHelper.proxySettings().allEcdHosts());
 
 		byte[] dataIn = TestHelper.bytes(size);
 

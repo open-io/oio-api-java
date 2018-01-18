@@ -1,5 +1,12 @@
 package io.openio.sds;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.HierarchicalINIConfiguration;
+import org.apache.commons.configuration.SubnodeConfiguration;
+
 import io.openio.sds.proxy.ProxySettings;
 import io.openio.sds.storage.rawx.RawxSettings;
 
@@ -14,6 +21,68 @@ public class Settings {
 
     private ProxySettings proxy = new ProxySettings();
     private RawxSettings rawx = new RawxSettings();
+
+    /**
+     * Load namespace settings from INI file.
+     *
+     * @param myNs
+     *            name of the namespace to load
+     * @param confPath
+     *            path to the configuration file
+     * @return a new {@link Settings} object
+     * @throws FileNotFoundException
+     *             when the specified file does not exist
+     */
+    public static Settings fromFile(String myNs, String confPath) throws FileNotFoundException {
+        File confFile = new File(confPath);
+        if (!confFile.exists() || !confFile.isFile())
+            throw new FileNotFoundException(confPath);
+        try {
+            HierarchicalINIConfiguration conf = new HierarchicalINIConfiguration();
+            conf.setDelimiterParsingDisabled(true);
+            conf.load(confFile);
+            SubnodeConfiguration nsSection = conf.getSection(myNs);
+            if (nsSection.isEmpty()) {
+                throw new FileNotFoundException();
+            }
+            String rawProxyString = nsSection.getString("proxy");
+            String rawEcdString = nsSection.getString("ecd");
+            ProxySettings pst = new ProxySettings().ns(myNs).url(rawProxyString).ecd(rawEcdString);
+            // TODO: load rawx settings somehow
+            return new Settings().proxy(pst).rawx(new RawxSettings());
+        } catch (ConfigurationException e) {
+            throw new IllegalArgumentException(e);
+        }
+    }
+
+    /**
+     * Load configuration from "sds.conf" file found either in "$HOME/.oio/" or
+     * "/etc/oio/", or from "/etc/oio/sds.conf.d/$NS".
+     *
+     * @param myNs
+     *            name of the namespace to load
+     * @return a new {@link Settings} object
+     * @throws FileNotFoundException
+     *             if no configuration file could be found in default places
+     */
+    public static Settings forNamespace(String myNs) throws FileNotFoundException {
+        String confPath = System.getProperty("user.home") + File.separator + ".oio" + File.separator
+                + "sds.conf";
+        try {
+            return fromFile(myNs, confPath);
+        } catch (FileNotFoundException fnfe) {
+            try {
+                return fromFile(myNs, "/etc/oio/sds.conf.d/" + myNs);
+            } catch (FileNotFoundException fnfe2) {
+                try {
+                    return fromFile(myNs, "/etc/oio/sds.conf");
+                } catch (FileNotFoundException fnfe3) {
+                    throw new FileNotFoundException(
+                            "Neither /etc/oio/sds.conf nor " + confPath + " exist");
+                }
+            }
+        }
+    }
 
     /**
      * Returns oio proxyd connection configuration

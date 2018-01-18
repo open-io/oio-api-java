@@ -2,6 +2,7 @@ package io.openio.sds;
 
 import static io.openio.sds.http.OioHttp.http;
 
+import java.io.FileNotFoundException;
 import java.net.InetSocketAddress;
 import java.net.URI;
 
@@ -23,13 +24,13 @@ import io.openio.sds.storage.rawx.RawxClient;
 public class ClientBuilder {
 
 	/**
-	 * Creates a client using the specified settings
+	 * Create a new {@link AdvancedClient} using the specified settings.
 	 * 
 	 * @param settings
 	 *            the settings to use
-	 * @return The build {@link Client}
+	 * @return a new {@link AdvancedClient} object
 	 */
-	public static Client newClient(Settings settings) {
+	public static AdvancedClient newAdvancedClient(Settings settings) {
 		OioHttp proxyHttp = http(settings.proxy().http(),
 		        proxySocketProvider(settings.proxy().url(),
 		                settings.proxy().http(), settings.proxy().pooling()));
@@ -41,6 +42,17 @@ public class ClientBuilder {
 				? null
 				: new EcdClient(rawxHttp, settings.rawx(), settings.proxy().allEcdHosts());
 		return new DefaultClient(proxy, rawx, ecd);
+	}
+
+	/**
+	 * Create an OpenIO SDS client using the specified settings.
+	 *
+	 * @param settings
+	 *            the settings to use
+	 * @return a new {@link Client} object
+	 */
+	public static Client newClient(Settings settings) {
+	    return newAdvancedClient(settings);
 	}
 
 	/**
@@ -60,6 +72,19 @@ public class ClientBuilder {
 	}
 
 	/**
+	 * Create a client for the specified OpenIO SDS namespace. Load the settings from the default
+	 * places ("$HOME/.oio/sds.conf" or "/etc/oio/sds.conf.d/$NS" or "/etc/oio/sds.conf").
+	 *
+	 * @param ns the OpenIO Namespace to connect to
+	 * @return a new {@link Client} object
+	 * @throws FileNotFoundException
+	 *            if no configuration file for the specified namespace has been found
+	 */
+	public static Client newClient(String ns) throws FileNotFoundException {
+	    return newClient(Settings.forNamespace(ns));
+	}
+
+	/**
 	 * Creates a client without specific configuration. Useful for testing
 	 * purpose
 	 *
@@ -68,7 +93,7 @@ public class ClientBuilder {
 	 * @param proxydUrl
 	 *            the url of OpenIO proxyd service
 	 * @param ecdUrl 
-	 * 			  url of ECD service to manage Erasure Coding
+	 *            url of ECD service to manage Erasure Coding
 	 * @return The build {@link Client}
 	 */
 	public static Client newClient(String ns,

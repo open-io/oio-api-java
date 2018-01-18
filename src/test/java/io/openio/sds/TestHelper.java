@@ -1,212 +1,115 @@
 package io.openio.sds;
 
-import io.openio.sds.common.Hash;
-import io.openio.sds.models.ChunkInfo;
-import io.openio.sds.models.ObjectInfo;
-import io.openio.sds.models.OioUrl;
-import io.openio.sds.models.Position;
-import io.openio.sds.proxy.ProxySettings;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.HierarchicalINIConfiguration;
-import org.apache.commons.configuration.SubnodeConfiguration;
+import static java.lang.String.format;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import static java.lang.String.format;
+import io.openio.sds.common.Hash;
+import io.openio.sds.models.ChunkInfo;
+import io.openio.sds.models.ObjectInfo;
+import io.openio.sds.models.OioUrl;
+import io.openio.sds.models.Position;
+import io.openio.sds.proxy.ProxySettings;
 
 public class TestHelper {
 
-	private static final String TEST_ACCOUNT = "TEST";
-	private static String ns = "OPENIO";
-	private static String rawProxyString = "192.168.150.95:6006";
-	private static String proxyIp = "192.168.150.95";
-	private static int proxyPort = 6006;
-	private static String rawEcdString = "192.168.150.23:5000";
-	private static boolean isLoaded = false;
+    private static final String TEST_ACCOUNT = "TEST";
+    private static String defaultNs = "OPENIO";
+    private static boolean isLoaded = false;
+    private static Settings settings = null;
 
-	public static ProxySettings proxySettings() {
-		if (!isLoaded)
-			loadConfiguration();
-		return new ProxySettings().url(proxyd()).ns(ns()).ecd(ecd());
-	}
+    public static ProxySettings proxySettings() {
+        return settings().proxy();
+    }
 
-	public static String ns() {
-		if (!isLoaded)
-			loadConfiguration();
-		return ns;
-	}
+    public static Settings settings() {
+        if (!isLoaded)
+            loadConfiguration();
+        return settings;
+    }
 
-	public static String proxyd() {
-		if (!isLoaded)
-			loadConfiguration();
-		return rawProxyString;
-	}
+    public static String testAccount() {
+        return TEST_ACCOUNT;
+    }
 
-	public static String ecd() {
-		if (!isLoaded)
-			loadConfiguration();
-		return rawEcdString;
-	}
+    // TODO provide actual test_file
+    public static String test_file() {
+        return "/test/file";
+    }
 
-	public static InetSocketAddress proxyAddr() {
-		if (!isLoaded)
-			loadConfiguration();
-		return new InetSocketAddress(proxyIp, proxyPort);
-	}
+    public static byte[] bytes(long size) {
+        byte[] res = new byte[(int) size];
+        if (size > 0)
+            new Random().nextBytes(res);
+        return res;
+    }
 
-	public static String testAccount() {
-		return TEST_ACCOUNT;
-	}
+    /**
+     * Load configuration from "sds.conf" file found either in "$HOME/.oio/" or
+     * "/etc/oio/".
+     *
+     * @param myNs
+     *            name of the namespace to load
+     * @throws FileNotFoundException
+     *             if no configuration file could be found in default places
+     */
+    public static void loadConfiguration(String myNs) throws FileNotFoundException {
+        settings = Settings.forNamespace(myNs);
+        isLoaded = true;
+    }
 
-	// TODO provide actual test_file
-	public static String test_file() {
-		return "/test/file";
-	}
+    /**
+     * Load configuration from default file for the namespace defined in
+     * "OIO_NS" environment variable.
+     *
+     * @throws RuntimeException
+     *             if no configuration file could be found in default places
+     */
+    public static void loadConfiguration() {
+        String myNs = System.getenv("OIO_NS");
+        if (myNs == null || myNs.isEmpty())
+            myNs = System.getProperty("OIO_NS");
+        if (myNs == null || myNs.isEmpty())
+            myNs = defaultNs;
+        try {
+            loadConfiguration(myNs);
+        } catch (FileNotFoundException fnfe) {
+            throw new RuntimeException(fnfe);
+        }
+    }
 
-	public static byte[] bytes(long size) {
-		byte[] res = new byte[(int) size];
-		if (size > 0)
-			new Random().nextBytes(res);
-		return res;
-	}
+    public static ObjectInfo newTestObjectInfo(OioUrl url, long size) {
+        ObjectInfo info = new ObjectInfo();
+        info.url(url);
+        info.size(size);
 
-	/**
-	 * Parse an URL with or without protocol prefix. If there is no protocol,
-	 * default to "http".
-	 *
-	 * @param source
-	 * @return
-	 * @throws MalformedURLException if URL is not parsable, even when adding "http://" prefix
-	 */
-	public static URL parseUnprefixedUrl(String source)
-			throws MalformedURLException {
-		URL url = null;
-		try {
-			url = new URL(source);
-		} catch (MalformedURLException mue) {
-			url = new URL("http://" + source);
-		}
-		return url;
-	}
+        List<ChunkInfo> l = new ArrayList<ChunkInfo>();
+        for (int i = 0; i < 3; i++) {
+            String chunkId = Hash.sha256().hashBytes(Integer.toString(i).getBytes()).toString();
+            String chunkUrl = format("http://127.0.0.1:601%d/%s", i, chunkId);
+            ChunkInfo ci = new ChunkInfo().pos(Position.simple(0)).size(size).url(chunkUrl);
+            l.add(ci);
+        }
+        info.chunks(l);
 
-	/**
-	 * Load namespace configuration from INI file.
-	 *
-	 * @param myNs     name of the namespace to load
-	 * @param confPath path to the configuration file
-	 * @throws FileNotFoundException
-	 */
-	public static void loadConfiguration(String myNs, String confPath)
-			throws FileNotFoundException {
-		File confFile = new File(confPath);
-		if (!confFile.exists() || !confFile.isFile())
-			throw new FileNotFoundException(confPath);
-		try {
-			HierarchicalINIConfiguration conf = new HierarchicalINIConfiguration();
-			conf.setDelimiterParsingDisabled(true);
-			conf.load(confFile);
-			SubnodeConfiguration nsSection = conf.getSection(myNs);
-			if (nsSection.isEmpty()) {
-				throw new FileNotFoundException();
-			}
-			rawProxyString = nsSection.getString("proxy");
-			URL proxyUrl = parseUnprefixedUrl(rawProxyString.split(",")[0]);
-			proxyIp = proxyUrl.getHost();
-			proxyPort = proxyUrl.getPort();
-			rawEcdString = nsSection.getString("ecd");
-			ns = myNs;
-			isLoaded = true;
-		} catch (ConfigurationException e) {
-			throw new IllegalArgumentException(e);
-		} catch (MalformedURLException e) {
-			throw new IllegalArgumentException("Bad proxy or ECD URL in "
-					+ confPath, e);
-		}
-	}
+        return info;
+    }
 
-	/**
-	 * Load configuration from "sds.conf" file found either in "$HOME/.oio/" or
-	 * "/etc/oio/".
-	 *
-	 * @param myNs
-	 * @throws FileNotFoundException
-	 */
-	public static void loadConfiguration(String myNs)
-			throws FileNotFoundException {
-		String confPath = System.getProperty("user.home") + File.separator
-				+ ".oio" + File.separator + "sds.conf";
-		try {
-			loadConfiguration(myNs, confPath);
-		} catch (FileNotFoundException fnfe) {
-			try {
-				loadConfiguration(myNs, "/etc/oio/sds.conf.d/" + myNs);
-			} catch (FileNotFoundException fnfe2) {
-				try {
-					loadConfiguration(myNs, "/etc/oio/sds.conf");
-				} catch (FileNotFoundException fnfe3) {
-					throw new FileNotFoundException(
-							"Neither /etc/oio/sds.conf nor " + confPath + " exist");
-				}
-			}
-		}
-	}
-
-	/**
-	 * Load configuration from default file for the namespace defined in
-	 * "OIO_NS" environment variable.
-	 *
-	 * @throws FileNotFoundException
-	 */
-	public static void loadConfiguration() {
-		String myNs = System.getenv("OIO_NS");
-		if (myNs == null || myNs.isEmpty())
-			myNs = System.getProperty("OIO_NS");
-		if (myNs == null || myNs.isEmpty())
-			myNs = ns;
-		try {
-			loadConfiguration(myNs);
-		} catch (FileNotFoundException fnfe) {
-			throw new RuntimeException(fnfe);
-		}
-	}
-
-	public static ObjectInfo newTestObjectInfo(OioUrl url, long size) {
-		ObjectInfo info = new ObjectInfo();
-		info.url(url);
-		info.size(size);
-
-		List<ChunkInfo> l = new ArrayList<ChunkInfo>();
-		for (int i = 0; i < 3; i++) {
-			String chunkId = Hash.sha256().hashBytes(Integer.toString(i).getBytes()).toString();
-			String chunkUrl = format("http://127.0.0.1:601%d/%s", i, chunkId);
-			ChunkInfo ci = new ChunkInfo()
-					.pos(Position.simple(0))
-					.size(size)
-					.url(chunkUrl);
-			l.add(ci);
-		}
-		info.chunks(l);
-
-		return info;
-	}
-
-	public static byte[] toByteArray(InputStream is) throws IOException {
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		byte[] buf = new byte[1024];
-		int r;
-		while ((r = is.read(buf, 0, buf.length)) != -1) {
-			out.write(buf, 0, r);
-		}
-		return out.toByteArray();
-	}
+    public static byte[] toByteArray(InputStream is) throws IOException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        byte[] buf = new byte[1024];
+        int r;
+        while ((r = is.read(buf, 0, buf.length)) != -1) {
+            out.write(buf, 0, r);
+        }
+        return out.toByteArray();
+    }
 }

@@ -38,10 +38,10 @@ public class ProxyClientITest {
 
     @BeforeClass
     public static void setup() {
+        ProxySettings pst = TestHelper.proxySettings();
         SocketProvider prov = SocketProviders.pooledSocketProvider(new PoolingSettings(),
-                new OioHttpSettings(), TestHelper.proxyAddr());
-        proxy = new ProxyClient(OioHttp.http(new OioHttpSettings(), prov),
-                TestHelper.proxySettings());
+                new OioHttpSettings(), pst.allHosts().get(0));
+        proxy = new ProxyClient(OioHttp.http(pst.http(), prov), pst);
     }
 
     @Test

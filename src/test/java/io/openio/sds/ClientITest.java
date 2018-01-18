@@ -4,13 +4,12 @@ import static io.openio.sds.TestHelper.testAccount;
 import static io.openio.sds.common.OioConstants.OIO_CHARSET;
 import static io.openio.sds.models.OioUrl.url;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertNotEquals;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.MessageDigest;
@@ -20,12 +19,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import io.openio.sds.common.Hex;
@@ -52,9 +49,7 @@ public class ClientITest {
 
     @BeforeClass
     public static void setup() {
-        Settings settings = new Settings();
-        settings.proxy().ns(TestHelper.ns()).url(TestHelper.proxyd())
-                .ecd(TestHelper.ecd());
+        Settings settings = TestHelper.settings();
         settings.rawx().http().readTimeout(httpReadTimeout);
         client = ClientBuilder.newClient(settings);
     }
