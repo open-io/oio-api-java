@@ -29,7 +29,7 @@ public class ClientBuilder {
 	 *            the settings to use
 	 * @return The build {@link Client}
 	 */
-	public static DefaultClient newClient(Settings settings) {
+	public static Client newClient(Settings settings) {
 		OioHttp proxyHttp = http(settings.proxy().http(),
 		        proxySocketProvider(settings.proxy().url(),
 		                settings.proxy().http(), settings.proxy().pooling()));
@@ -53,12 +53,12 @@ public class ClientBuilder {
 	 *            the url of OpenIO proxyd service
 	 * @return The build {@link Client}
 	 */
-	public static DefaultClient newClient(String ns, String proxydUrl) {
+	public static Client newClient(String ns, String proxydUrl) {
 		Settings settings = new Settings();
 		settings.proxy().url(proxydUrl).ns(ns);
 		return newClient(settings);
 	}
-	
+
 	/**
 	 * Creates a client without specific configuration. Useful for testing
 	 * purpose
@@ -71,7 +71,7 @@ public class ClientBuilder {
 	 * 			  url of ECD service to manage Erasure Coding
 	 * @return The build {@link Client}
 	 */
-	public static DefaultClient newClient(String ns, 
+	public static Client newClient(String ns,
 			String proxydUrl,
 			String ecdUrl) {
 		Settings settings = new Settings();

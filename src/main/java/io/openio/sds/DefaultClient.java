@@ -27,7 +27,7 @@ import io.openio.sds.storage.rawx.RawxClient;
  * @author Christopher Dedeurwaerder
  *
  */
-public class DefaultClient implements Client {
+public class DefaultClient implements AdvancedClient {
 
     private final ProxyClient proxy;
     protected final RawxClient rawx;
