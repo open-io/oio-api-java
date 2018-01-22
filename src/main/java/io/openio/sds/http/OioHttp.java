@@ -174,7 +174,8 @@ public class OioHttp {
          */
         public RequestBuilder withRequestContext(RequestContext reqCtx) {
             this.reqCtx = reqCtx;
-            headers.put(OIO_REQUEST_ID_HEADER, reqCtx.requestId());
+            if (reqCtx != null)
+                headers.put(OIO_REQUEST_ID_HEADER, reqCtx.requestId());
             return this;
         }
 
@@ -223,9 +224,15 @@ public class OioHttp {
         private void applyDeadline(Socket sock) throws SocketException {
             int timeout;
             if (this.reqCtx != null) {
-                DeadlineManager.instance().checkDeadline(this.reqCtx.deadline());
-                timeout = this.reqCtx.timeout();
-                sock.setSoTimeout(timeout);
+                if (this.reqCtx.hasDeadline())
+                    DeadlineManager.instance().checkDeadline(this.reqCtx.deadline());
+                if (this.reqCtx.hasDeadline() || this.reqCtx.hasTimeout()) {
+                    timeout = this.reqCtx.timeout();
+                    sock.setSoTimeout(timeout);
+                } else {
+                    // Do not change the timeout, but still set the header.
+                    timeout = sock.getSoTimeout();
+                }
             } else {
                 timeout = sock.getSoTimeout();
             }

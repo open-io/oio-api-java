@@ -15,13 +15,28 @@ public class RequestContext {
 
     private DeadlineManager dm;
 
-    protected String reqId = null;
-    protected int reqStart = -1;
-    protected int rawTimeout = 30 * 1000;
-    protected int deadline = -1;
+    private String reqId = null;
+    private int reqStart = -1;
+    private int rawTimeout = -1;
+    private int deadline = -1;
 
+    /**
+     * Build a new {@link RequestContext} with a default 30s timeout.
+     */
     public RequestContext() {
         this.dm = DeadlineManager.instance();
+    }
+
+    /**
+     * Copy constructor. Build a new {@link RequestContext} from another one.
+     * This will keep the request ID, the timeout and the deadline (if there is one).
+     *
+     * @param src The {@link RequestContext} to copy.
+     */
+    public RequestContext(RequestContext src) {
+        this.withRequestId(src.requestId());
+        this.deadline = src.deadline;
+        this.rawTimeout = src.rawTimeout;
     }
 
     /* -- Request IDs ----------------------------------------------------- */
@@ -51,17 +66,35 @@ public class RequestContext {
     /**
      * Set a request ID.
      *
-     * @param reqId
+     * @param requestId
      *            a request ID string. If is null, it will be auto-generated. If
      *            it is less than 8 characters, it will be suffixed.
      * @return this
      */
-    public RequestContext withRequestId(String reqId) {
-        this.reqId = reqId;
+    public RequestContext withRequestId(String requestId) {
+        this.reqId = requestId;
         return this;
     }
 
     /* -- Deadlines and timeouts ------------------------------------------ */
+
+    /**
+     * Compute a deadline from the {@link #timeout()}. This also means that the
+     * timeout will be recomputed for each unique sub-request resulting from an
+     * API call. If this request has started, compute the timeout from the start,
+     * otherwise compute it from now.
+     *
+     * @return {@code this}
+     */
+    public RequestContext computeDeadline() {
+        if (!this.hasTimeout())
+            throw new IllegalStateException("No timeout has been set, cannot compute deadline");
+        if (this.hasStarted())
+            this.deadline = dm.timeoutToDeadline(this.rawTimeout, this.reqStart);
+        else
+            this.deadline = dm.timeoutToDeadline(this.rawTimeout);
+        return this;
+    }
 
     /**
      * Get the deadline for this request.
@@ -74,19 +107,49 @@ public class RequestContext {
     public int deadline() {
         if (!hasDeadline()) {
             startTiming();
+            computeDeadline();
         }
         return this.deadline;
     }
 
     /**
+     * Tell the time elapsed since this request has started.
+     *
+     * @return the duration since this request has started, in milliseconds
+     */
+    public int elapsed() {
+        if (!this.hasStarted())
+            return 0;
+        return this.dm.now() - this.reqStart;
+    }
+
+    /**
      * Tell whether this request has a deadline or not. This will always return
-     * {@code true} after {@link #startTiming()} or {@link #deadline()} has been
+     * {@code true} after {@link #computeDeadline()} or {@link #deadline()} has been
      * called.
      *
      * @return {@code true} if this request has a deadline.
      */
     public boolean hasDeadline() {
         return this.deadline >= 0;
+    }
+
+    /**
+     * Tell if this request has started.
+     *
+     * @return {@code true} if this request has started.
+     */
+    public boolean hasStarted() {
+        return this.reqStart >= 0;
+    }
+
+    /**
+     * Tell whether this request has a timeout or not.
+     *
+     * @return {@code true} if this request has timeout.
+     */
+    public boolean hasTimeout() {
+        return this.rawTimeout >= 0;
     }
 
     /**
@@ -101,13 +164,13 @@ public class RequestContext {
     }
 
     /**
-     * Start timing this request. If no deadline has been set, compute one from
-     * the {@link #timeout()}.
+     * Start timing this request.
+     *
+     * @return this
      */
-    void startTiming() {
+    public RequestContext startTiming() {
         this.reqStart = dm.now();
-        if (!this.hasDeadline())
-            this.deadline = dm.timeoutToDeadline(this.rawTimeout, this.reqStart);
+        return this;
     }
 
     /**
@@ -142,7 +205,7 @@ public class RequestContext {
     }
 
     /**
-     * Set a timeout on the whole request.
+     * Set a timeout for each unique sub-request resulting from an API call.
      *
      * This will reset any previous deadline set with {@link #withDeadline(int)}.
      *

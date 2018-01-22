@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.util.List;
 
+import io.openio.sds.RequestContext;
 import io.openio.sds.common.Hex;
 import io.openio.sds.common.OioConstants;
 import io.openio.sds.exceptions.OioException;
@@ -61,13 +62,12 @@ public class EcdClient implements StorageClient {
 
 	@Override
 	public ObjectInfo uploadChunks(ObjectInfo oinf, InputStream data) {
-		return uploadChunks(oinf, data, requestId());
-
+		return uploadChunks(oinf, data, new RequestContext());
 	}
 
 	@Override
 	public ObjectInfo uploadChunks(ObjectInfo oinf, InputStream data,
-	        String reqId) {
+	        RequestContext reqCtx) {
 		StreamWrapper wrapper = new StreamWrapper(data);
 		long remaining = oinf.size();
 		for (int pos = 0; pos < oinf.sortedChunks().size(); pos++) {
@@ -75,7 +75,7 @@ public class EcdClient implements StorageClient {
 			if (csize == 0 && pos != 0)
 				throw new OioException("Too many chunks prepared");
 			StreamWrapper chunkwrapper = new StreamWrapper(wrapper);
-			uploadPosition(oinf, pos, csize, chunkwrapper, reqId);
+			uploadPosition(oinf, pos, csize, chunkwrapper, reqCtx);
 			String hash = Hex.toHex(chunkwrapper.md5());
 			for(ChunkInfo ci : oinf.sortedChunks().get(pos)) {
 				ci.size(csize);
@@ -88,15 +88,15 @@ public class EcdClient implements StorageClient {
 
 	@Override
 	public ObjectInfo uploadChunks(ObjectInfo oinf, File data) {
-		return uploadChunks(oinf, data, requestId());
+		return uploadChunks(oinf, data, new RequestContext());
 	}
 
 	@Override
-	public ObjectInfo uploadChunks(ObjectInfo oinf, File data, String reqId) {
+	public ObjectInfo uploadChunks(ObjectInfo oinf, File data, RequestContext reqCtx) {
 		try {
 			FileInputStream fin = new FileInputStream(data);
 			try {
-				return uploadChunks(oinf, fin, reqId);
+				return uploadChunks(oinf, fin, reqCtx);
 			} finally {
 				try {
 					fin.close();
@@ -111,37 +111,37 @@ public class EcdClient implements StorageClient {
 
 	@Override
 	public ObjectInfo uploadChunks(ObjectInfo oinf, byte[] data) {
-		return uploadChunks(oinf, data, requestId());
+		return uploadChunks(oinf, data, new RequestContext());
 
 	}
 
 	@Override
-	public ObjectInfo uploadChunks(ObjectInfo oinf, byte[] data, String reqId) {
-		return uploadChunks(oinf, new ByteArrayInputStream(data), reqId);
+	public ObjectInfo uploadChunks(ObjectInfo oinf, byte[] data, RequestContext reqCtx) {
+		return uploadChunks(oinf, new ByteArrayInputStream(data), reqCtx);
 
 	}
 
 	@Override
 	public InputStream downloadObject(ObjectInfo oinf) {
-		return downloadObject(oinf, requestId());
+		return downloadObject(oinf, new RequestContext());
 	}
 	
 	@Override
 	public InputStream downloadObject(ObjectInfo oinf, Range range) {
-		return downloadObject(oinf, range, requestId());
+		return downloadObject(oinf, range, new RequestContext());
 	}
 
 	@Override
-	public InputStream downloadObject(ObjectInfo oinf, String reqId) {
-		return downloadObject(oinf, null, reqId);
+	public InputStream downloadObject(ObjectInfo oinf, RequestContext reqCtx) {
+		return downloadObject(oinf, null, reqCtx);
 	}
 
     @SuppressWarnings("resource")
     @Override
-    public InputStream downloadObject(ObjectInfo oinf, Range range, String reqId) {
+    public InputStream downloadObject(ObjectInfo oinf, Range range, RequestContext reqCtx) {
         checkArgument(null != oinf);
         List<Target> targets = DownloadHelper.loadTargets(oinf, range);
-        return new EcdInputStream(ecdUrl, targets, oinf.chunkMethod(), http, reqId)
+        return new EcdInputStream(ecdUrl, targets, oinf.chunkMethod(), http, reqCtx)
                 .alternativeHosts(ecdHosts);
     }
 
@@ -149,7 +149,7 @@ public class EcdClient implements StorageClient {
 
 	private ObjectInfo uploadPosition(final ObjectInfo oinf,
 	        final int pos, final Long size, InputStream data,
-	        final String reqId) {
+	        final RequestContext reqCtx) {
 
 		RequestBuilder builder = http.put(ecdUrl)
 		        .header(CHUNK_META_CONTAINER_ID,
@@ -175,10 +175,10 @@ public class EcdClient implements StorageClient {
 		                String.valueOf(oinf.sortedChunks().get(pos).size()))
 		        .header(OioConstants.CHUNK_META_FULL_PATH, oinf.url().toFullPath())
 		        .header(OioConstants.CHUNK_META_OIO_VERSION, "4")
-		        .header(OIO_REQUEST_ID_HEADER, reqId)
 		        .body(data, size)
 		        .hosts(ecdHosts)
-		        .verifier(RAWX_VERIFIER);
+		        .verifier(RAWX_VERIFIER)
+		        .withRequestContext(reqCtx);
 
 		for (ChunkInfo ci : oinf.sortedChunks().get(pos)) {
 			builder.header(

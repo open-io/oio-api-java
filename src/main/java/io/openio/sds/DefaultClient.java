@@ -146,9 +146,9 @@ public class DefaultClient implements AdvancedClient {
         oinf.properties(properties);
         try {
             if (oinf.isEC())
-                ecd.uploadChunks(oinf, data, reqCtx.requestId());
+                ecd.uploadChunks(oinf, data, reqCtx);
             else
-                rawx.uploadChunks(oinf, data, reqCtx.requestId());
+                rawx.uploadChunks(oinf, data, reqCtx);
             proxy.putObject(oinf, version, reqCtx);
         } catch (OioException e) {
             // TODO improve by knowing which chunk is uploaded
@@ -190,9 +190,9 @@ public class DefaultClient implements AdvancedClient {
         oinf.properties(properties);
         try {
             if (oinf.isEC())
-                ecd.uploadChunks(oinf, data, reqCtx.requestId());
+                ecd.uploadChunks(oinf, data, reqCtx);
             else
-                rawx.uploadChunks(oinf, data, reqCtx.requestId());
+                rawx.uploadChunks(oinf, data, reqCtx);
             proxy.putObject(oinf, version, reqCtx);
         } catch (OioException oioe) {
             // TODO improve by knowing which chunk is uploaded
@@ -234,15 +234,15 @@ public class DefaultClient implements AdvancedClient {
     @Override
     public InputStream downloadObject(ObjectInfo oinf) {
         checkArgument(oinf != null, "ObjectInfo cannot be null");
-        RequestContext reqCtx = oinf.requestContext().resetDeadline();
+        RequestContext reqCtx = oinf.requestContext();
         reqCtx.startTiming();
-        return oinf.isEC() ? ecd.downloadObject(oinf, reqCtx.requestId()) : rawx.downloadObject(
-                oinf, reqCtx.requestId());
+        return oinf.isEC() ? ecd.downloadObject(oinf, reqCtx) : rawx.downloadObject(
+                oinf, reqCtx);
     }
 
     @Override
     public InputStream downloadObject(ObjectInfo oinf, Range range) {
-        RequestContext reqCtx = oinf.requestContext().resetDeadline();
+        RequestContext reqCtx = oinf.requestContext();
         return this.downloadObject(oinf, range,
                 new RequestContext().withRequestId(reqCtx.requestId()));
     }
@@ -251,8 +251,8 @@ public class DefaultClient implements AdvancedClient {
     public InputStream downloadObject(ObjectInfo oinf, Range range, RequestContext reqCtx) {
         checkArgument(oinf != null, "ObjectInfo cannot be null");
         reqCtx.startTiming();
-        return oinf.isEC() ? ecd.downloadObject(oinf, range, reqCtx.requestId()) : rawx
-                .downloadObject(oinf, range, reqCtx.requestId());
+        return oinf.isEC() ? ecd.downloadObject(oinf, range, reqCtx) : rawx
+                .downloadObject(oinf, range, reqCtx);
     }
 
     @Override

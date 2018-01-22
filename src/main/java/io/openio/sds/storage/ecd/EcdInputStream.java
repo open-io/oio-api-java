@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.util.List;
 
+import io.openio.sds.RequestContext;
 import io.openio.sds.common.OioConstants;
 import io.openio.sds.exceptions.OioException;
 import io.openio.sds.http.OioHttp;
@@ -33,7 +34,7 @@ public class EcdInputStream extends InputStream {
 	private List<Target> targets;
 	private int pos = 0;
 	private OioHttpResponse current;
-	private String reqId;
+	private RequestContext reqCtx;
 	private String ecdUrl;
 	private List<InetSocketAddress> ecdHosts = null;
 	private String chunkMethod;
@@ -43,12 +44,12 @@ public class EcdInputStream extends InputStream {
 	        List<Target> targets,
 	        String chunkMethod,
 	        OioHttp http,
-	        String reqId) {
+	        RequestContext reqCtx) {
 		this.ecdUrl = ecdUrl;
 		this.targets = targets;
 		this.http = http;
 		this.chunkMethod = chunkMethod;
-		this.reqId = reqId;
+		this.reqCtx = reqCtx;
 	}
 
 	public EcdInputStream alternativeHosts(List<InetSocketAddress> hosts) {
@@ -110,10 +111,10 @@ public class EcdInputStream extends InputStream {
 
 		try {
 			RequestBuilder builder = http.get(ecdUrl)
-			        .header(OIO_REQUEST_ID_HEADER, reqId)
 			        .header(OioConstants.CHUNK_META_CONTENT_CHUNK_METHOD,
 			                chunkMethod)
 			        .verifier(RAWX_VERIFIER)
+			        .withRequestContext(reqCtx)
 			        .hosts(ecdHosts);
 			for (ChunkInfo ci : targets.get(pos).getChunk()) {
 				builder.header(

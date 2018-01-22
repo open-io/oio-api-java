@@ -35,8 +35,8 @@ public class ProxyClientTest {
 
     class FixedTimeoutRequestContext extends RequestContext {
         @Override
-        public int timeout() {
-            return this.rawTimeout;
+        public boolean hasDeadline() {
+            return false;
         }
     }
 
@@ -101,7 +101,7 @@ public class ProxyClientTest {
 
         OioUrl oioURL = newContainerOioUrl();
 
-        RequestContext reqCtx = new FixedTimeoutRequestContext();
+        RequestContext reqCtx = new FixedTimeoutRequestContext().withTimeout(1);
         ReferenceInfo resp = proxy.showReference(oioURL, reqCtx);
 
         String expectedPath = "/v3.0/" + NAMESPACE + "/reference/show?acct=" + ACCOUNT_NAME
@@ -147,7 +147,7 @@ public class ProxyClientTest {
         OioHttp http = OioHttp.http(new OioHttpSettings(), socketProvider);
         ProxyClient proxy = newTestProxyClient(http);
 
-        RequestContext reqCtx = new FixedTimeoutRequestContext();
+        RequestContext reqCtx = new FixedTimeoutRequestContext().withTimeout(1);
         OioUrl url = newContainerOioUrl();
         String delimiter = "/";
         String marker = "marker";

@@ -1,5 +1,6 @@
 package io.openio.sds.storage.rawx;
 
+import io.openio.sds.RequestContext;
 import io.openio.sds.common.FeedableInputStream;
 import io.openio.sds.common.Hex;
 import io.openio.sds.exceptions.OioException;
@@ -105,11 +106,11 @@ public class RawxClient implements StorageClient {
 	 *
 	 * @param oinf the ObjectInfo to deal with
 	 * @param data the data to upload
-	 * @return oinf
+	 * @return {@code oinf}
 	 */
 	public ObjectInfo uploadChunks(ObjectInfo oinf,
 								   InputStream data) {
-		return uploadChunks(oinf, data, requestId());
+		return uploadChunks(oinf, data, new RequestContext());
 	}
 
 	/**
@@ -117,18 +118,18 @@ public class RawxClient implements StorageClient {
 	 *
 	 * @param oinf  the ObjectInfo to deal with
 	 * @param data  the data to upload
-	 * @param reqId the id to use to identify the request
-	 * @return oinf
+	 * @param reqCtx Common parameters to all requests
+	 * @return {@code oinf}
 	 */
 	public ObjectInfo uploadChunks(ObjectInfo oinf,
-								   InputStream data, String reqId) {
+								   InputStream data, RequestContext reqCtx) {
 		StreamWrapper wrapper = new StreamWrapper(data);
 		long remaining = oinf.size();
 		for (int pos = 0; pos < oinf.nbchunks(); pos++) {
 			long csize = Math.min(remaining, oinf.chunksize(pos));
 			if (csize == 0 && pos != 0)
 				throw new OioException("Too many chunks prepared");
-			uploadPosition(oinf, pos, csize, wrapper, reqId);
+			uploadPosition(oinf, pos, csize, wrapper, reqCtx);
 			remaining -= csize;
 		}
 		return oinf.hash(Hex.toHex(wrapper.md5()));
@@ -142,7 +143,7 @@ public class RawxClient implements StorageClient {
 	 * @return oinf
 	 */
 	public ObjectInfo uploadChunks(ObjectInfo oinf, File data) {
-		return uploadChunks(oinf, data, requestId());
+		return uploadChunks(oinf, data, new RequestContext());
 	}
 
 	/**
@@ -150,15 +151,15 @@ public class RawxClient implements StorageClient {
 	 *
 	 * @param oinf  the ObjectInfo to deal with
 	 * @param data  the data to upload
-	 * @param reqId the id to use to identify the request
+	 * @param reqCtx Common parameters to all requests
 	 * @return oinf
 	 */
-	public ObjectInfo uploadChunks(ObjectInfo oinf, File data, String reqId) {
+	public ObjectInfo uploadChunks(ObjectInfo oinf, File data, RequestContext reqCtx) {
 
 		try {
 			FileInputStream fin = new FileInputStream(data);
 			try {
-				return uploadChunks(oinf, fin, reqId);
+				return uploadChunks(oinf, fin, reqCtx);
 			} finally {
 				try {
 					fin.close();
@@ -172,30 +173,30 @@ public class RawxClient implements StorageClient {
 	}
 
 	public ObjectInfo uploadChunks(ObjectInfo oinf, byte[] data) {
-		return uploadChunks(oinf, data, requestId());
+		return uploadChunks(oinf, data, new RequestContext());
 	}
 
 	public ObjectInfo uploadChunks(
-			ObjectInfo oinf, byte[] data, String reqId) {
-		return uploadChunks(oinf, new ByteArrayInputStream(data), reqId);
+			ObjectInfo oinf, byte[] data, RequestContext reqCtx) {
+		return uploadChunks(oinf, new ByteArrayInputStream(data), reqCtx);
 	}
 
 	public InputStream downloadObject(ObjectInfo oinf) {
-		return downloadObject(oinf, requestId());
+		return downloadObject(oinf, new RequestContext());
 	}
 
 	public InputStream downloadObject(ObjectInfo oinf, Range range) {
-		return downloadObject(oinf, range, requestId());
+		return downloadObject(oinf, range, new RequestContext());
 	}
 
-	public InputStream downloadObject(ObjectInfo oinf, String reqId) {
-		return downloadObject(oinf, null, reqId);
+	public InputStream downloadObject(ObjectInfo oinf, RequestContext reqCtx) {
+		return downloadObject(oinf, null, reqCtx);
 	}
 
-	public InputStream downloadObject(ObjectInfo oinf, Range range, String reqId) {
+	public InputStream downloadObject(ObjectInfo oinf, Range range, RequestContext reqCtx) {
 		checkArgument(null != oinf);
 		List<Target> targets = DownloadHelper.loadTargets(oinf, range);
-		return new ObjectInputStream(targets, http, reqId);
+		return new ObjectInputStream(targets, http, reqCtx);
 	}
 
 	public void deleteChunks(List<ChunkInfo> l) {
@@ -218,7 +219,7 @@ public class RawxClient implements StorageClient {
 	/* --- INTERNALS --- */
 
 	private ObjectInfo uploadPosition(final ObjectInfo oinf, final int pos, final Long size,
-									  InputStream data, final String reqId) {
+									  InputStream data, final RequestContext reqCtx) {
 		List<ChunkInfo> cil = oinf.sortedChunks().get(pos);
 		final List<FeedableInputStream> gens = size == 0 ? null : feedableBodies(cil.size(), size);
 		List<Future<UploadResult>> futures = new ArrayList<Future<UploadResult>>();
@@ -248,7 +249,8 @@ public class RawxClient implements StorageClient {
 								.header(CHUNK_META_CHUNK_POS, ci.pos().toString())
 								.header(CHUNK_META_FULL_PATH, oinf.url().toFullPath())
 								.header(CHUNK_META_OIO_VERSION, "4")
-								.header(OIO_REQUEST_ID_HEADER, reqId).verifier(RAWX_VERIFIER);
+								.verifier(RAWX_VERIFIER)
+								.withRequestContext(reqCtx);
 						if (null == gens)
 							builder.body("");
 						else

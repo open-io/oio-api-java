@@ -1,5 +1,6 @@
 package io.openio.sds.storage.rawx;
 
+import io.openio.sds.RequestContext;
 import io.openio.sds.TestHelper;
 import io.openio.sds.TestSocketProvider;
 import io.openio.sds.exceptions.OioException;
@@ -35,7 +36,8 @@ public class RawxClientTest {
 	}
 
 
-	void verifyGetRequests(TestSocketProvider socketProvider, ObjectInfo info, String reqId) {
+	void verifyGetRequests(TestSocketProvider socketProvider, ObjectInfo info,
+	        RequestContext reqCtx) {
 		List<ByteArrayOutputStream> outputs = socketProvider.outputs();
 		assertEquals(outputs.size(), 1);
 		ByteArrayOutputStream output = outputs.get(0);
@@ -43,7 +45,7 @@ public class RawxClientTest {
 		try {
 			OioHttpRequest req = OioHttpRequest.build(new ByteArrayInputStream(output.toByteArray()));
 			assertEquals(req.method(), "GET");
-			assertEquals(req.header("X-oio-req-id"), reqId);
+			assertEquals(req.header("X-oio-req-id"), reqCtx.requestId());
 			// TODO verify matching chunk
 		} catch (IOException e) {
 			fail("Failed to read HTTP request");
@@ -70,9 +72,9 @@ public class RawxClientTest {
 		String testData = "test";
 		byte[] dataBytes = testData.getBytes();
 
-		String reqId = requestId();
+		RequestContext reqCtx = new RequestContext();
 		ObjectInfo objectInfo = TestHelper.newTestObjectInfo(url, dataBytes.length);
-		client.uploadChunks(objectInfo, dataBytes, reqId);
+		client.uploadChunks(objectInfo, dataBytes, reqCtx);
 
 		// TODO verify PUT requests
 	}
@@ -124,10 +126,10 @@ public class RawxClientTest {
 
 		OioUrl url = newObjectOioUrl();
 
-		String reqId = requestId();
+		RequestContext reqCtx = new RequestContext();
 		ObjectInfo objectInfo = TestHelper.newTestObjectInfo(url, 0);
 
-		InputStream stream = client.downloadObject(objectInfo, reqId);
+		InputStream stream = client.downloadObject(objectInfo, reqCtx);
 
 		try {
 			assertEquals(stream.read(), -1);
@@ -136,7 +138,7 @@ public class RawxClientTest {
 			fail("Unexpected IOException");
 		}
 
-		verifyGetRequests(socketProvider, objectInfo, reqId);
+		verifyGetRequests(socketProvider, objectInfo, reqCtx);
 	}
 
 	@Test
@@ -153,10 +155,10 @@ public class RawxClientTest {
 
 		OioUrl url = newObjectOioUrl();
 
-		String reqId = requestId();
+		RequestContext reqCtx = new RequestContext();;
 		ObjectInfo objectInfo = TestHelper.newTestObjectInfo(url, 4);
 
-		InputStream stream = client.downloadObject(objectInfo, reqId);
+		InputStream stream = client.downloadObject(objectInfo, reqCtx);
 
 		try {
 			assertEquals(new String(TestHelper.toByteArray(stream)),"test");
@@ -165,6 +167,6 @@ public class RawxClientTest {
 			fail("Unexpected IOException");
 		}
 
-		verifyGetRequests(socketProvider, objectInfo, reqId);
+		verifyGetRequests(socketProvider, objectInfo, reqCtx);
 	}
 }

@@ -1,5 +1,6 @@
 package io.openio.sds.storage.rawx;
 
+import io.openio.sds.RequestContext;
 import io.openio.sds.common.OioConstants;
 import io.openio.sds.exceptions.OioException;
 import io.openio.sds.http.OioHttp;
@@ -34,12 +35,12 @@ public class ObjectInputStream extends InputStream {
 	private long currentRemaining;
 	private ChunkInfo currentChunk;
 	private OioHttpResponse current;
-	private String reqId;
+	private RequestContext reqCtx;
 
-	public ObjectInputStream(List<Target> targets, OioHttp http, String reqId) {
+	public ObjectInputStream(List<Target> targets, OioHttp http, RequestContext reqCtx) {
 		this.targets = targets;
 		this.http = http;
-		this.reqId = reqId;
+		this.reqCtx = reqCtx;
 	}
 
 	@Override
@@ -111,8 +112,8 @@ public class ObjectInputStream extends InputStream {
 			logger.debug("download from " + currentChunk.url());
 		try {
 			RequestBuilder builder = http.get(currentChunk.url())
-					.header(OIO_REQUEST_ID_HEADER, reqId)
-					.verifier(RAWX_VERIFIER);
+					.verifier(RAWX_VERIFIER)
+					.withRequestContext(this.reqCtx);
 
 			if (null != targets.get(pos).getRange())
 				builder.header(OioConstants.RANGE_HEADER,

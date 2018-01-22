@@ -53,7 +53,7 @@ public class ProxySettings {
                 URI uri = new URI(uriBase);
                 addrs.add(new InetSocketAddress(uri.getHost(), uri.getPort()));
             } catch (URISyntaxException e) {
-                throw new OioException("Could not parse [" + "" + "] as a URI", e);
+                throw new OioException("Could not parse [" + uriBase + "] as a URI", e);
             }
         }
         return addrs;
