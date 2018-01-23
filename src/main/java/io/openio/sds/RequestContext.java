@@ -99,8 +99,8 @@ public class RequestContext {
     /**
      * Get the deadline for this request.
      *
-     * If a timeout has been set ({@link #withTimeout(int)}) and
-     * {@link #startTiming()} has not been called yet, call it now.
+     * If a timeout has been set ({@link #withTimeout(int)}) but no
+     * deadline, {@link #computeDeadline()} will be called.
      *
      * @return the overall deadline for this request, in milliseconds
      */
