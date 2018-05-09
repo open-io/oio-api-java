@@ -136,7 +136,7 @@ public class RequestContextTest {
     public void computeDeadline_no_timeout() {
         new RequestContext().computeDeadline();
     }
-    
+
     @Test
     public void copy_constructor() {
         RequestContext ctx = new RequestContext().withTimeout(10).ensureRequestId();

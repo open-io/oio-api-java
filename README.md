@@ -4,6 +4,8 @@ OpenIO SDS API
 OpenIO SDS API is a java remote API for [OpenIO Software Defined Storage](https://github.com/open-io/oio-sds). It is designed
  to be as simple and fast as possible.
 
+[![Build Status][build_status_svg]][repo] [![Codecov][codecov_svg]][codecov]
+
 -------------
 ### Getting started
 ------------
@@ -123,3 +125,10 @@ Contributing
 
 This project was originally indented with tabulations but should from now on
 be indented with 4 spaces.
+
+
+
+[build_status_svg]: https://travis-ci.org/open-io/oio-api-java.svg?branch=master
+[repo]: https://travis-ci.org/open-io/oio-api-java
+[codecov_svg]: https://codecov.io/gh/open-io/oio-api-java/branch/master/graph/badge.svg
+[codecov]: https://codecov.io/gh/open-io/oio-api-java
