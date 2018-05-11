@@ -51,6 +51,8 @@ public class FeedableInputStream extends InputStream {
                 /* Retry until done
                  * or reader has been interrupted
                  * or we are interrupted */
+                logger.debug("Timed out while trying to feed queue, " +
+                        "will check if not failed and then retry");
             }
         } catch (InterruptedException e) {
             failed = true;

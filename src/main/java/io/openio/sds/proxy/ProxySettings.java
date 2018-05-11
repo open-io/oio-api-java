@@ -63,7 +63,7 @@ public class ProxySettings {
      * @return The first proxy URL
      */
     public String url() {
-        if ((null == hosts || hosts.size() == 0)) {
+        if (null == hosts || hosts.size() == 0) {
             if (null == this.url) {
                 throw new OioException("Proxy url not defined");
             } else {

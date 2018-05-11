@@ -212,11 +212,18 @@ public class ClientITest {
                         Hex.toHex(MessageDigest.getInstance("MD5").digest(src)),
                         oinf.hash());
             } finally {
-                // client.deleteObject(url);
-                System.out.println(url);
+                try {
+                    client.deleteObject(url);
+                } catch (OioException e) {
+                    System.out.println("Failed to delete object " + url + ": " + e);
+                }
             }
         } finally {
-            // client.deleteContainer(url);
+            try {
+                client.deleteContainer(url);
+            } catch (OioException e) {
+                System.out.println("Failed to delete container " + url + ": " + e);
+            }
         }
     }
 

@@ -30,7 +30,7 @@ public class DeadlineManager {
     }
 
 
-    private static DeadlineManager instance = null;
+    private static volatile DeadlineManager instance = null;
 
     private ClockSource clock;
 

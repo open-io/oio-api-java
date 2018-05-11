@@ -155,7 +155,7 @@ public class RawxClientTest {
 
 		OioUrl url = newObjectOioUrl();
 
-		RequestContext reqCtx = new RequestContext();;
+		RequestContext reqCtx = new RequestContext();
 		ObjectInfo objectInfo = TestHelper.newTestObjectInfo(url, 4);
 
 		InputStream stream = client.downloadObject(objectInfo, reqCtx);
