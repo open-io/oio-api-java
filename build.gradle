@@ -63,7 +63,7 @@ check {
 
 test {
     useJUnit()
-	testLogging {
+    testLogging {
         events "passed", "skipped", "failed"
     }
     finalizedBy jacocoTestReport
@@ -72,7 +72,7 @@ test {
 jacocoTestReport {
     reports {
         xml.enabled true
-		xml.destination "${buildDir}/reports/jacoco/report.xml"
+        xml.destination "${buildDir}/reports/jacoco/report.xml"
         csv.enabled false
         html.destination "${buildDir}/reports/jacoco"
     }
@@ -145,6 +145,11 @@ uploadArchives {
             id 'jkasarherou'
             name 'Julien Kasarherou'
             email 'julien@openio.io'
+          }
+          developer {
+            id 'fvennetier'
+            name 'Florent Vennetier'
+            email 'florent@fridu.net'
           }
         }
       }
