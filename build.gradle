@@ -17,7 +17,7 @@ repositories {
 }
 
 task wrapper(type: Wrapper) {
-  gradleVersion = '2.10'
+  gradleVersion = '4.7'
 }
 
 group = 'io.openio.sds'
@@ -96,6 +96,7 @@ artifacts {
 }
 
 signing {
+  useGpgCmd()
   required { gradle.taskGraph.hasTask("uploadArchives") }
   sign configurations.archives
 }
