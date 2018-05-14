@@ -26,6 +26,7 @@ version = file('version.txt').text.trim()
 if (!project.hasProperty('build.type') || project.property('build.type') != 'release') {
     version = version + '-SNAPSHOT'
 }
+ext.isReleaseVersion = !version.endsWith('SNAPSHOT')
 
 
 dependencies {
@@ -97,8 +98,14 @@ artifacts {
 
 signing {
   useGpgCmd()
-  required { gradle.taskGraph.hasTask("uploadArchives") }
+  required { isReleaseVersion && gradle.taskGraph.hasTask("uploadArchives") }
   sign configurations.archives
+}
+
+tasks.withType(Sign) {
+  // Workaround bug in Gradle
+  // https://github.com/gradle/gradle/issues/5064
+  onlyIf { isReleaseVersion }
 }
 
 def ossrhUsername = properties['ossrhUsername']
