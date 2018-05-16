@@ -207,7 +207,7 @@ public class RawxClient implements StorageClient {
 	public void deleteChunk(ChunkInfo ci) {
 		// no verifier, suppress exceptions
 		try {
-			http.delete(ci.url())
+			http.delete(ci.finalUrl())
 					.execute()
 					.close();
 		} catch (OioException e) {
@@ -234,7 +234,7 @@ public class RawxClient implements StorageClient {
 					UploadResult result = new UploadResult(ci);
 					try {
 						RequestBuilder builder = http
-								.put(ci.url())
+								.put(ci.finalUrl())
 								.header(CHUNK_META_CONTAINER_ID, oinf.url().cid())
 								.header(CHUNK_META_CONTENT_ID, oinf.oid())
 								.header(CHUNK_META_CONTENT_VERSION, String.valueOf(oinf.version()))

@@ -183,7 +183,7 @@ public class EcdClient implements StorageClient {
 		for (ChunkInfo ci : oinf.sortedChunks().get(pos)) {
 			builder.header(
 			        OioConstants.CHUNK_META_CHUNK_PREFIX + ci.pos().sub(),
-			        ci.url());
+			        ci.finalUrl());
 		}
 
 		// TODO chunks hash

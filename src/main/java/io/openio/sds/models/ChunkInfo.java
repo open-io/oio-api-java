@@ -8,6 +8,7 @@ public class ChunkInfo {
     }
 
     private String url;
+    private String real_url;
     private Long size;
     private String hash;
     private Position pos;
@@ -33,6 +34,11 @@ public class ChunkInfo {
         return this;
     }
 
+    public ChunkInfo real_url(String real_url) {
+        this.real_url = real_url;
+        return this;
+    }
+
     public ChunkInfo size(Long size) {
         this.size = size;
         return this;
@@ -47,9 +53,16 @@ public class ChunkInfo {
         this.pos = pos;
         return this;
     }
-    
+
     public String id(){
         return url.substring(url.lastIndexOf("/") + 1);
+    }
+
+    public String finalUrl() {
+        if (real_url != null && real_url.length() > 0) {
+            return real_url;
+        }
+        return url;
     }
 
     @Override
@@ -57,6 +70,7 @@ public class ChunkInfo {
         return MoreObjects.toStringHelper(this)
                 .omitNullValues()
                 .add("url", url)
+                .add("real_url", real_url)
                 .add("size", size)
                 .add("hash", hash)
                 .add("pos", pos)

@@ -109,9 +109,9 @@ public class ObjectInputStream extends InputStream {
 		Target t = targets.get(pos);
 		currentChunk = t.getChunk().get(offset);
 		if (logger.isDebugEnabled())
-			logger.debug("download from " + currentChunk.url());
+			logger.debug("download from " + currentChunk.finalUrl());
 		try {
-			RequestBuilder builder = http.get(currentChunk.url())
+			RequestBuilder builder = http.get(currentChunk.finalUrl())
 					.verifier(RAWX_VERIFIER)
 					.withRequestContext(this.reqCtx);
 

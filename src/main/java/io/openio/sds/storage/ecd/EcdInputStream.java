@@ -119,7 +119,7 @@ public class EcdInputStream extends InputStream {
 			for (ChunkInfo ci : targets.get(pos).getChunk()) {
 				builder.header(
 				        OioConstants.CHUNK_META_CHUNK_PREFIX + ci.pos().sub(),
-				        ci.url());
+				        ci.finalUrl());
 			}
 
 			builder.header(OioConstants.CHUNK_META_CHUNK_SIZE,
