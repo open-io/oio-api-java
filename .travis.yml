@@ -22,6 +22,7 @@ env:
     - TEST_SUITE=3COPIES-11RAWX
     - TEST_SUITE=3COPIES-11RAWX SDS_BRANCH=4.1.x
     - TEST_SUITE=3COPIES-11RAWX SDS_BRANCH=4.2.x
+    - TEST_SUITE=3COPIES-11RAWX SDS_BRANCH=4.2.x OPTS=-U
 script:
   - set -e
   - mkdir /tmp/oio
@@ -31,7 +32,7 @@ script:
   - python setup.py install
   - export G_DEBUG_LEVEL=D PATH="$PATH:/tmp/oio/bin" LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/tmp/oio/lib"
   - export OIO_NS="NS-${RANDOM}" OIO_ACCOUNT="ACCT-$RANDOM" OIO_USER=USER-$RANDOM OIO_PATH=PATH-$RANDOM
-  - test -f etc/bootstrap-preset-${TEST_SUITE}.yml && oio-reset.sh -v -v -N $OIO_NS -f etc/bootstrap-preset-${TEST_SUITE}.yml || oio-reset.sh -v -v -N $OIO_NS -f etc/bootstrap-${TEST_SUITE}.yml
+  - oio-reset.sh -v -v $OPTS -N $OIO_NS -f etc/bootstrap-preset-${TEST_SUITE}.yml
   - cd .. && ./gradlew test
   - ./gradlew assemble
 after_success:
