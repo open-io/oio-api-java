@@ -18,7 +18,7 @@ public class Settings {
     /**
      * Separator used in parameters with multiple values.
      */
-    public static String MULTI_VALUE_SEPARATOR = ",";
+    public static final String MULTI_VALUE_SEPARATOR = ",";
 
     private ProxySettings proxy = new ProxySettings();
     private RawxSettings rawx = new RawxSettings();

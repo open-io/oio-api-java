@@ -43,7 +43,7 @@ public class ChunkedStream extends InputStream {
 		if (-1 == currentRemaining)
 			return -1;
 		int res = chunked.read(buf, offset,
-		        Math.min(len, Math.min(buf.length - offset, currentRemaining)));
+				Math.min(len, Math.min(buf.length - offset, currentRemaining)));
 		currentRemaining = currentRemaining - res;
 		return res;
 	}
@@ -63,9 +63,7 @@ public class ChunkedStream extends InputStream {
 			out.write(b);
 		}
 		chunked.read(); // read \n
-		String line = out.toString("utf-8");
-		currentRemaining = Integer.parseInt(out.toString("utf-8"),
-		        16);
+		currentRemaining = Integer.parseInt(out.toString("utf-8"), 16);
 		if (0 == currentRemaining) { // EOF
 			readCRLF();
 			currentRemaining = -1;
