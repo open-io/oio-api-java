@@ -13,6 +13,7 @@ import io.openio.sds.RequestContext;
 import io.openio.sds.common.Hash;
 import io.openio.sds.common.MoreObjects;
 import io.openio.sds.common.OioConstants;
+import io.openio.sds.common.Strings;
 
 public class ObjectInfo {
 
@@ -191,6 +192,30 @@ public class ObjectInfo {
         int maxmcsize = (int) (ecinfo.k() * sortedChunks.get(pos).get(0).size());
         int remaining = (int) (size - (pos * maxmcsize));
         return Math.min(maxmcsize, remaining);
+    }
+
+    /**
+     * @return a string suitable to be sent as {@code CHUNK_META_FULL_PATH} header value.
+     */
+    public String fullpath() {
+        if (this.url.account() == null || this.url.account().isEmpty()
+                || this.url.container() == null || this.url.container().isEmpty()
+                || this.url.object() == null || this.url.object().isEmpty()
+                || this.version() == null || this.version() == 0
+                || this.oid() == null || this.oid().isEmpty()) {
+            throw new IllegalArgumentException("Can't encode fullpath");
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append(Strings.quote(this.url.account()));
+        sb.append('/');
+        sb.append(Strings.quote(this.url.container()));
+        sb.append('/');
+        sb.append(Strings.quote(this.url.object()));
+        sb.append('/');
+        sb.append(Strings.quote(this.version()));
+        sb.append('/');
+        sb.append(Strings.quote(this.oid()));
+        return sb.toString();
     }
 
     @Override

@@ -53,4 +53,12 @@ public class Strings {
             return src;
         }
     }
+
+    public static String quote(String src) {
+        return Strings.urlEncode(src).replace("+", "%20");
+    }
+
+    public static String quote(Long src) {
+        return Strings.quote(String.valueOf(src));
+    }
 }

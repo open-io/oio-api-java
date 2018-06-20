@@ -90,6 +90,8 @@ public class TestHelper {
         ObjectInfo info = new ObjectInfo();
         info.url(url);
         info.size(size);
+        info.version(Long.valueOf(1234567890));
+        info.oid("0123456789ABCDEF");
 
         List<ChunkInfo> l = new ArrayList<ChunkInfo>();
         for (int i = 0; i < 3; i++) {

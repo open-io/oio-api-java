@@ -115,22 +115,6 @@ public class OioUrl {
     }
 
     /**
-     * @return a string suitable to be sent as {@code CHUNK_META_FULL_PATH} header value.
-     */
-    public String toFullPath() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(Strings.urlEncode(this.account));
-        sb.append('/');
-        sb.append(Strings.urlEncode(this.container));
-        sb.append('/');
-        sb.append(Strings.urlEncode(this.object));
-        sb.append('/');
-        // FIXME(KRA): append object version
-        sb.append(0);
-        return sb.toString();
-    }
-
-    /**
      * Generates the container id from the specified account and container name
      * 
      * @param account

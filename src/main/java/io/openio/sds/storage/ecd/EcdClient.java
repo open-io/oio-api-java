@@ -27,6 +27,7 @@ import java.util.List;
 import io.openio.sds.RequestContext;
 import io.openio.sds.common.Hex;
 import io.openio.sds.common.OioConstants;
+import io.openio.sds.common.Strings;
 import io.openio.sds.exceptions.OioException;
 import io.openio.sds.http.OioHttp;
 import io.openio.sds.http.OioHttp.RequestBuilder;
@@ -168,12 +169,12 @@ public class EcdClient implements StorageClient {
 		        .header(CHUNK_META_CONTENT_SIZE,
 		                String.valueOf(oinf.metachunksize(pos)))
 		        .header(CHUNK_META_CONTENT_PATH,
-		                oinf.url().object())
+		                Strings.quote(oinf.url().object()))
 		        .header(CHUNK_META_CHUNK_POS,
 		                String.valueOf(pos))
 		        .header(OioConstants.CHUNK_META_CHUNKS_NB,
 		                String.valueOf(oinf.sortedChunks().get(pos).size()))
-		        .header(OioConstants.CHUNK_META_FULL_PATH, oinf.url().toFullPath())
+		        .header(OioConstants.CHUNK_META_FULL_PATH, oinf.fullpath())
 		        .header(OioConstants.CHUNK_META_OIO_VERSION, "4")
 		        .body(data, size)
 		        .hosts(ecdHosts)

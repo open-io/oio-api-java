@@ -3,6 +3,7 @@ package io.openio.sds.storage.rawx;
 import io.openio.sds.RequestContext;
 import io.openio.sds.common.FeedableInputStream;
 import io.openio.sds.common.Hex;
+import io.openio.sds.common.Strings;
 import io.openio.sds.exceptions.OioException;
 import io.openio.sds.http.OioHttp;
 import io.openio.sds.http.OioHttp.RequestBuilder;
@@ -244,10 +245,10 @@ public class RawxClient implements StorageClient {
 								.header(CHUNK_META_CONTENT_CHUNKSNB,
 										String.valueOf(oinf.nbchunks()))
 								.header(CHUNK_META_CONTENT_SIZE, String.valueOf(oinf.size()))
-								.header(CHUNK_META_CONTENT_PATH, oinf.url().object())
+								.header(CHUNK_META_CONTENT_PATH, Strings.quote(oinf.url().object()))
 								.header(CHUNK_META_CHUNK_ID, ci.id())
 								.header(CHUNK_META_CHUNK_POS, ci.pos().toString())
-								.header(CHUNK_META_FULL_PATH, oinf.url().toFullPath())
+								.header(CHUNK_META_FULL_PATH, oinf.fullpath())
 								.header(CHUNK_META_OIO_VERSION, "4")
 								.verifier(RAWX_VERIFIER)
 								.withRequestContext(reqCtx);
