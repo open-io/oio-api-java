@@ -611,7 +611,9 @@ public class ProxyClient {
                 .header(CONTENT_META_HASH_HEADER, oinf.hash())
                 .header(CONTENT_META_POLICY_HEADER, oinf.policy())
                 .header(CONTENT_META_CHUNK_METHOD_HEADER, oinf.chunkMethod())
-                .header(CONTENT_META_VERSION_HEADER, versionHeader(oinf, version)).body(body)
+                .header(CONTENT_META_VERSION_HEADER, versionHeader(oinf, version))
+                .header(CONTENT_META_ID_HEADER, oinf.oid())
+                .body(body)
                 .hosts(hosts).withRequestContext(reqCtx).verifier(OBJECT_VERIFIER).execute()
                 .close();
         return oinf;
