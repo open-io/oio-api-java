@@ -291,8 +291,7 @@ public class OioHttp {
         }
 
         private void sendRequest(Socket sock) throws IOException {
-            headers.put("Host",
-                    sock.getLocalAddress().toString().substring(1) + ":" + sock.getLocalPort());
+            headers.put("Host", uri.getHost() + ":" + uri.getPort());
             headers.put("Connection", socketProvider.reusableSocket() ? "keep-alive" : "close");
             headers.put("Accept", "*/*");
             headers.put("Accept-Encoding", "gzip, deflate");
@@ -313,8 +312,7 @@ public class OioHttp {
         }
 
         private void sendRequestChunked(Socket sock) throws IOException {
-            headers.put("Host",
-                    sock.getLocalAddress().toString().substring(1) + ":" + sock.getLocalPort());
+            headers.put("Host", uri.getHost() + ":" + uri.getPort());
             headers.put("Connection", socketProvider.reusableSocket() ? "keep-alive" : "close");
             headers.put("Accept", "*/*");
             headers.put("Accept-Encoding", "gzip, deflate");
