@@ -7,6 +7,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -320,6 +321,68 @@ public class ClientITest {
                 // check props are set on object as expected and not on
                 // container
                 assertEquals(0, client.getContainerProperties(url).size());
+            } finally {
+                client.deleteObject(url);
+            }
+        } finally {
+            client.deleteContainer(url);
+        }
+    }
+
+    @Test
+    public void objectPropertiesWithClear() {
+        OioUrl url = url("TEST", UUID.randomUUID().toString(), UUID
+                .randomUUID().toString());
+        client.createContainer(url);
+        try {
+            client.putObject(
+                    url,
+                    10L,
+                    new ByteArrayInputStream("0123456789".getBytes(OIO_CHARSET)));
+            try {
+                Map<String, String> props1 = new HashMap<String, String>();
+                props1.put("user.key1", "value1");
+                props1.put("user.key2", "value2");
+                client.setObjectProperties(url, props1, false);
+                Map<String, String> res = client.getObjectProperties(url);
+                assertNotNull(res);
+                assertEquals(props1.size(), res.size());
+                for (Entry<String, String> e : props1.entrySet()) {
+                    assertTrue(res.containsKey(e.getKey()));
+                    assertEquals(e.getValue(), res.get(e.getKey()));
+                }
+
+                Map<String, String> props2 = new HashMap<String, String>();
+                props2.put("user.key3", "value3");
+                client.setObjectProperties(url, props2, false);
+                res = client.getObjectProperties(url);
+                assertNotNull(res);
+                assertEquals(props1.size()+props2.size(), res.size());
+                for (Entry<String, String> e : props1.entrySet()) {
+                    assertTrue(res.containsKey(e.getKey()));
+                    assertEquals(e.getValue(), res.get(e.getKey()));
+                }
+                for (Entry<String, String> e : props2.entrySet()) {
+                    assertTrue(res.containsKey(e.getKey()));
+                    assertEquals(e.getValue(), res.get(e.getKey()));
+                }
+
+                Map<String, String> props3 = new HashMap<String, String>();
+                props3.put("user.key4", "value4");
+                client.setObjectProperties(url, props3, true);
+                res = client.getObjectProperties(url);
+                assertNotNull(res);
+                assertEquals(props3.size(), res.size());
+                for (Entry<String, String> e : props1.entrySet()) {
+                    assertFalse(res.containsKey(e.getKey()));
+                }
+                for (Entry<String, String> e : props2.entrySet()) {
+                    assertFalse(res.containsKey(e.getKey()));
+                }
+                for (Entry<String, String> e : props3.entrySet()) {
+                    assertTrue(res.containsKey(e.getKey()));
+                    assertEquals(e.getValue(), res.get(e.getKey()));
+                }
             } finally {
                 client.deleteObject(url);
             }

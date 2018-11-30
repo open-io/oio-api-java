@@ -341,15 +341,28 @@ public class DefaultClient implements AdvancedClient {
     }
 
     @Override
-    public void setObjectProperties(OioUrl url, Map<String, String> props) throws OioException {
+    public void setObjectProperties(OioUrl url, Map<String, String> props)
+            throws OioException {
         this.setObjectProperties(url, props, new RequestContext());
     }
 
     @Override
-    public void setObjectProperties(OioUrl url, Map<String, String> props, RequestContext reqCtx)
-            throws OioException {
+    public void setObjectProperties(OioUrl url, Map<String, String> props,
+            boolean clear) throws OioException {
+        this.setObjectProperties(url, props, clear, new RequestContext());
+    }
+
+    @Override
+    public void setObjectProperties(OioUrl url, Map<String, String> props,
+            RequestContext reqCtx) throws OioException {
+        this.setObjectProperties(url, props, false, reqCtx);
+    }
+
+    @Override
+    public void setObjectProperties(OioUrl url, Map<String, String> props,
+            boolean clear, RequestContext reqCtx) throws OioException {
         reqCtx.startTiming();
-        proxy.setObjectProperties(url, props, reqCtx);
+        proxy.setObjectProperties(url, props, clear, reqCtx);
     }
 
     @Override

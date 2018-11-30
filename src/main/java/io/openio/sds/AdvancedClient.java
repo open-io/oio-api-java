@@ -353,8 +353,31 @@ public interface AdvancedClient extends Client {
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
-    public void setObjectProperties(OioUrl url, Map<String, String> props, RequestContext reqCtx)
-            throws OioException;
+    public void setObjectProperties(OioUrl url, Map<String, String> props,
+            RequestContext reqCtx) throws OioException;
+
+    /**
+     * Add properties to the specified object. The properties must be prefixed
+     * with "user." and this prefix will be stored, and finally used to query
+     * the parameters later.
+     *
+     * @param url
+     *            the URL of the object
+     * @param props
+     *            the properties to set
+     * @param clear
+     *            clear previous properties
+     * @param reqCtx
+     *            common parameters to all requests
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws ObjectNotFoundException
+     *             if the specified object doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public void setObjectProperties(OioUrl url, Map<String, String> props,
+            boolean clear, RequestContext reqCtx) throws OioException;
 
     /**
      * Retrieve user properties of the specified object.

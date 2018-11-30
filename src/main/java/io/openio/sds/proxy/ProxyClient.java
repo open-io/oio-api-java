@@ -29,6 +29,7 @@ import static io.openio.sds.common.OioConstants.DIR_REF_CREATE_FORMAT;
 import static io.openio.sds.common.OioConstants.DIR_REF_DELETE_FORMAT;
 import static io.openio.sds.common.OioConstants.DIR_REF_SHOW_FORMAT;
 import static io.openio.sds.common.OioConstants.DIR_UNLINK_SRV_FORMAT;
+import static io.openio.sds.common.OioConstants.FLUSH_PARAM;
 import static io.openio.sds.common.OioConstants.GET_BEANS_FORMAT;
 import static io.openio.sds.common.OioConstants.GET_CONTAINER_INFO_FORMAT;
 import static io.openio.sds.common.OioConstants.GET_OBJECT_FORMAT;
@@ -78,6 +79,7 @@ import io.openio.sds.exceptions.OioException;
 import io.openio.sds.exceptions.OioSystemException;
 import io.openio.sds.http.OioHttp;
 import io.openio.sds.http.OioHttpResponse;
+import io.openio.sds.http.OioHttp.RequestBuilder;
 import io.openio.sds.models.BeansRequest;
 import io.openio.sds.models.ChunkInfo;
 import io.openio.sds.models.ContainerInfo;
@@ -987,7 +989,7 @@ public class ProxyClient {
      * Add properties to the specified object. The properties must be prefixed
      * with "user." and this prefix will be stored, and finally used to query
      * the parameters later.
-     * 
+     *
      * @param url
      *            the URL of the object
      * @param properties
@@ -1001,16 +1003,16 @@ public class ProxyClient {
      */
     @Deprecated
     public void setObjectProperties(OioUrl url, Map<String, String> properties) {
-        setObjectProperties(url, properties, new RequestContext());
+        setObjectProperties(url, properties, false, new RequestContext());
     }
 
     /**
      * Add properties to the specified object. The properties must be prefixed
      * with "user." and this prefix will be stored, and finally used to query
      * the parameters later.
-     * 
+     *
      * @param url
-     *            the url of the object
+     *            the URL of the object
      * @param properties
      *            the properties to set
      * @param reqCtx
@@ -1022,16 +1024,48 @@ public class ProxyClient {
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
+    @Deprecated
     public void setObjectProperties(OioUrl url, Map<String, String> properties,
             RequestContext reqCtx) {
+        setObjectProperties(url, properties, false, reqCtx);
+    }
+
+    /**
+     * Add properties to the specified object. The properties must be prefixed
+     * with "user." and this prefix will be stored, and finally used to query
+     * the parameters later.
+     *
+     * @param url
+     *            the URL of the object
+     * @param properties
+     *            the properties to set
+     * @param clear
+     *            clear previous properties
+     * @param reqCtx
+     *            common parameters to all requests
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws ObjectNotFoundException
+     *             if the specified object doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public void setObjectProperties(OioUrl url, Map<String, String> properties,
+            boolean clear, RequestContext reqCtx) {
         checkArgument(null != url && null != url.object(), INVALID_URL_MSG);
         checkArgument(null != properties && properties.size() > 0, "Invalid properties");
-        String body = String.format("{\"properties\": %1$s}", gson().toJson(properties));
-        http.post(
-                format(OBJECT_SET_PROP, settings.url(), settings.ns(),
-                        Strings.urlEncode(url.account()), Strings.urlEncode(url.container()),
-                        Strings.urlEncode(url.object()))).verifier(OBJECT_VERIFIER)
-                .withRequestContext(reqCtx).hosts(hosts).body(body).execute().close();
+        String body = String.format("{\"properties\": %1$s}",
+                gson().toJson(properties));
+        RequestBuilder request = http.post(format(OBJECT_SET_PROP,
+                settings.url(), settings.ns(),
+                Strings.urlEncode(url.account()),
+                Strings.urlEncode(url.container()),
+                Strings.urlEncode(url.object())));
+        if (clear)
+            request.query(FLUSH_PARAM, "1");
+        request.verifier(OBJECT_VERIFIER)
+                .withRequestContext(reqCtx).hosts(hosts).body(body)
+                .execute().close();
     }
 
     /**

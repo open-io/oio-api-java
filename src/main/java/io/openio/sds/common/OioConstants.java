@@ -102,6 +102,7 @@ public class OioConstants {
     public static final String PREFIX_PARAM = "prefix";
     public static final String DELIMITER_PARAM = "delimiter";
     public static final String MARKER_PARAM = "marker";
+    public static final String FLUSH_PARAM = "flush";
 
     /* -- URL String format -- */
 
