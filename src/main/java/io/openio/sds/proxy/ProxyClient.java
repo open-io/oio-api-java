@@ -813,7 +813,7 @@ public class ProxyClient {
      * query the parameters later
      * 
      * @param url
-     *            the url of the container to add properties
+     *            the URL of the container to add properties
      * @param properties
      *            the properties to add
      * @throws ContainerNotFoundException
@@ -822,8 +822,9 @@ public class ProxyClient {
      *             if any error occurs during request execution
      */
     @Deprecated
-    public void setContainerProperties(OioUrl url, Map<String, String> properties) {
-        setContainerProperties(url, properties, new RequestContext());
+    public void setContainerProperties(OioUrl url,
+            Map<String, String> properties) {
+        setContainerProperties(url, properties, false, new RequestContext());
     }
 
     /**
@@ -832,27 +833,55 @@ public class ProxyClient {
      * query the parameters later
      * 
      * @param url
-     *            the url of the container to add properties
+     *            the URL of the container to add properties
      * @param properties
      *            the properties to add
      * @param reqCtx
      *            common parameters to all requests
-     * 
      * @throws ContainerNotFoundException
      *             if the specified container doesn't exist
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
-    public void setContainerProperties(OioUrl url, Map<String, String> properties,
+    @Deprecated
+    public void setContainerProperties(OioUrl url,
+            Map<String, String> properties, RequestContext reqCtx) {
+        setContainerProperties(url, properties, false, reqCtx);
+    }
+
+    /**
+     * Add properties to the specified container. The properties must be
+     * prefixed with "user." and this prefix will be stored, and finally used to
+     * query the parameters later
+     * 
+     * @param url
+     *            the URL of the container to add properties
+     * @param properties
+     *            the properties to add
+     * @param reqCtx
+     *            common parameters to all requests
+     * @param clear
+     *            clear previous properties
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public void setContainerProperties(OioUrl url,
+            Map<String, String> properties, boolean clear,
             RequestContext reqCtx) {
         checkArgument(null != url, INVALID_URL_MSG);
         checkArgument(null != properties && properties.size() > 0, "Invalid properties");
         String props = gson().toJson(properties);
         String root = String.format("{\"properties\": %1$s}", props);
-        http.post(
-                format(CONTAINER_SET_PROP, settings.url(), settings.ns(),
-                        Strings.urlEncode(url.account()), Strings.urlEncode(url.container())))
-                .hosts(hosts).verifier(CONTAINER_VERIFIER).withRequestContext(reqCtx).body(root)
+        RequestBuilder request = http.post(format(CONTAINER_SET_PROP,
+                settings.url(), settings.ns(),
+                Strings.urlEncode(url.account()),
+                Strings.urlEncode(url.container())));
+        if (clear)
+            request.query(FLUSH_PARAM, "1");
+        request.verifier(CONTAINER_VERIFIER)
+                .withRequestContext(reqCtx).hosts(hosts).body(root)
                 .execute().close();
     }
 

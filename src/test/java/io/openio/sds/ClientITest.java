@@ -292,6 +292,60 @@ public class ClientITest {
     }
 
     @Test
+    public void containerPropertiesWithClear() {
+        OioUrl url = url("TEST", UUID.randomUUID().toString(), UUID
+                .randomUUID().toString());
+        client.createContainer(url);
+        try {
+            Map<String, String> props1 = new HashMap<String, String>();
+            props1.put("user.key1", "value1");
+            props1.put("user.key2", "value2");
+            client.setContainerProperties(url, props1, false);
+            Map<String, String> res = client.getContainerProperties(url);
+            assertNotNull(res);
+            assertEquals(props1.size(), res.size());
+            for (Entry<String, String> e : props1.entrySet()) {
+                assertTrue(res.containsKey(e.getKey()));
+                assertEquals(e.getValue(), res.get(e.getKey()));
+            }
+
+            Map<String, String> props2 = new HashMap<String, String>();
+            props2.put("user.key3", "value3");
+            client.setContainerProperties(url, props2, false);
+            res = client.getContainerProperties(url);
+            assertNotNull(res);
+            assertEquals(props1.size()+props2.size(), res.size());
+            for (Entry<String, String> e : props1.entrySet()) {
+                assertTrue(res.containsKey(e.getKey()));
+                assertEquals(e.getValue(), res.get(e.getKey()));
+            }
+            for (Entry<String, String> e : props2.entrySet()) {
+                assertTrue(res.containsKey(e.getKey()));
+                assertEquals(e.getValue(), res.get(e.getKey()));
+            }
+
+            Map<String, String> props3 = new HashMap<String, String>();
+            props3.put("user.key4", "value4");
+            client.setContainerProperties(url, props3, true);
+            res = client.getContainerProperties(url);
+            assertNotNull(res);
+            assertEquals(props3.size(), res.size());
+            for (Entry<String, String> e : props1.entrySet()) {
+                assertFalse(res.containsKey(e.getKey()));
+            }
+            for (Entry<String, String> e : props2.entrySet()) {
+                assertFalse(res.containsKey(e.getKey()));
+            }
+            for (Entry<String, String> e : props3.entrySet()) {
+                assertTrue(res.containsKey(e.getKey()));
+                assertEquals(e.getValue(), res.get(e.getKey()));
+            }
+        } finally {
+            client.deleteContainer(url);
+        }
+    }
+
+    @Test
     public void objectProperties() {
         OioUrl url = url("TEST", UUID.randomUUID().toString(), UUID
                 .randomUUID().toString());

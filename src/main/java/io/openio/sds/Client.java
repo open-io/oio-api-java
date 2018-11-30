@@ -162,18 +162,37 @@ public interface Client {
      * Add properties to the specified container. The properties must be
      * prefixed with "user." and this prefix will be stored, and finally used to
      * query the parameters later
-     * 
+     *
      * @param url
-     *            the url of the container to add properties
+     *            the URL of the container to add properties
      * @param props
      *            the properties to add
-     * 
      * @throws ContainerNotFoundException
      *             if the specified container doesn't exist
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
-    public void setContainerProperties(OioUrl url, Map<String, String> props) throws OioException;
+    public void setContainerProperties(OioUrl url, Map<String, String> props)
+            throws OioException;
+
+    /**
+     * Add properties to the specified container. The properties must be
+     * prefixed with "user." and this prefix will be stored, and finally used to
+     * query the parameters later
+     *
+     * @param url
+     *            the URL of the container to add properties
+     * @param props
+     *            the properties to add
+     * @param clear
+     *            clear previous properties
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public void setContainerProperties(OioUrl url, Map<String, String> props,
+            boolean clear) throws OioException;
 
     /**
      * Retrieves user properties of the specified container

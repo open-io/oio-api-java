@@ -293,15 +293,28 @@ public class DefaultClient implements AdvancedClient {
     }
 
     @Override
-    public void setContainerProperties(OioUrl url, Map<String, String> props) throws OioException {
-        this.setContainerProperties(url, props, new RequestContext());
+    public void setContainerProperties(OioUrl url, Map<String, String> props)
+            throws OioException {
+        this.setContainerProperties(url, props, false, new RequestContext());
     }
 
     @Override
-    public void setContainerProperties(OioUrl url, Map<String, String> props, RequestContext reqCtx)
-            throws OioException {
+    public void setContainerProperties(OioUrl url, Map<String, String> props,
+            boolean clear) throws OioException {
+        this.setContainerProperties(url, props, clear, new RequestContext());
+    }
+
+    @Override
+    public void setContainerProperties(OioUrl url, Map<String, String> props,
+            RequestContext reqCtx) throws OioException {
+        this.setContainerProperties(url, props, false, reqCtx);
+    }
+
+    @Override
+    public void setContainerProperties(OioUrl url, Map<String, String> props,
+            boolean clear, RequestContext reqCtx) throws OioException {
         reqCtx.startTiming();
-        proxy.setContainerProperties(url, props, reqCtx);
+        proxy.setContainerProperties(url, props, clear, reqCtx);
     }
 
     @Override
