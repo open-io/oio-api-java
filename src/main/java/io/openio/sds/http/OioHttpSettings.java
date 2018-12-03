@@ -11,6 +11,7 @@ public class OioHttpSettings {
 	private Integer receiveBufferSize = 8192;
 	private Integer connectTimeout = 30000;
 	private Integer readTimeout = 60000;
+	private String userAgent = "oio-http";
 
 	public OioHttpSettings() {
 	}
@@ -50,4 +51,14 @@ public class OioHttpSettings {
 		this.readTimeout = readTimeout;
 		return this;
 	}
+
+    public String userAgent() {
+        return userAgent;
+    }
+
+    public OioHttpSettings userAgent(String userAgent) {
+        this.userAgent = userAgent;
+        return this;
+    }
+
 }

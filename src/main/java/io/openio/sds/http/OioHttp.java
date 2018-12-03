@@ -295,7 +295,7 @@ public class OioHttp {
             headers.put("Connection", socketProvider.reusableSocket() ? "keep-alive" : "close");
             headers.put("Accept", "*/*");
             headers.put("Accept-Encoding", "gzip, deflate");
-            headers.put("User-Agent", "oio-http");
+            headers.put("User-Agent", settings.userAgent());
 
             if (!headers.containsKey("Content-Length"))
                 headers.put(CONTENT_LENGTH_HEADER, "0");
@@ -316,7 +316,7 @@ public class OioHttp {
             headers.put("Connection", socketProvider.reusableSocket() ? "keep-alive" : "close");
             headers.put("Accept", "*/*");
             headers.put("Accept-Encoding", "gzip, deflate");
-            headers.put("User-Agent", "oio-http");
+            headers.put("User-Agent", settings.userAgent());
 
             // ensure no content-length
             headers.remove("Content-Length");
