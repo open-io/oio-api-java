@@ -377,7 +377,7 @@ public class ProxyClient {
 
     /**
      * Creates a container using the specified {@code OioUrl}
-     * 
+     *
      * @param url
      *            the url of the container to create
      * @return {@code ContainerInfo}
@@ -386,12 +386,12 @@ public class ProxyClient {
      */
     @Deprecated
     public ContainerInfo createContainer(OioUrl url) throws OioException {
-        return createContainer(url, new RequestContext());
+        return createContainer(url, null, new RequestContext());
     }
 
     /**
      * Creates a container using the specified {@code OioUrl}
-     * 
+     *
      * @param url
      *            the url of the container to create
      * @param reqCtx
@@ -400,13 +400,38 @@ public class ProxyClient {
      * @throws OioException
      *             if any error occurs during request execution
      */
-    public ContainerInfo createContainer(OioUrl url, RequestContext reqCtx) throws OioException {
+    public ContainerInfo createContainer(OioUrl url, RequestContext reqCtx)
+            throws OioException {
+        return createContainer(url, null, reqCtx);
+    }
+
+    /**
+     * Creates a container using the specified {@code OioUrl}
+     *
+     * @param url
+     *            the url of the container to create
+     * @param properties
+     *            the properties to add
+     * @param reqCtx
+     *            common parameters to all requests
+     * @return {@code ContainerInfo}
+     * @throws OioException
+     *             if any error occurs during request execution
+     */
+    public ContainerInfo createContainer(OioUrl url,
+            Map<String, String> properties, RequestContext reqCtx)
+            throws OioException {
         checkArgument(null != url, INVALID_URL_MSG);
-        OioHttpResponse resp = http
-                .post(format(CREATE_CONTAINER_FORMAT, settings.url(), settings.ns(),
-                        Strings.urlEncode(url.account()), Strings.urlEncode(url.container())))
-                .hosts(hosts).header(OIO_ACTION_MODE_HEADER, "autocreate").body("{}")
-                .verifier(CONTAINER_VERIFIER).withRequestContext(reqCtx).execute().close();
+        String body = String.format("{\"properties\": %1$s}",
+                properties != null ? gson().toJson(properties) : "{}");
+        OioHttpResponse resp = http.post(
+                format(CREATE_CONTAINER_FORMAT, settings.url(), settings.ns(),
+                        Strings.urlEncode(url.account()),
+                        Strings.urlEncode(url.container())))
+                .header(OIO_ACTION_MODE_HEADER, "autocreate")
+                .body(body)
+                .hosts(hosts).withRequestContext(reqCtx).verifier(CONTAINER_VERIFIER).execute()
+                .close();
         if (204 == resp.code())
             throw new ContainerExistException("Container already present");
 

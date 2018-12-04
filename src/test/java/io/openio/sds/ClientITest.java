@@ -240,6 +240,31 @@ public class ClientITest {
     }
 
     @Test
+    public void containerCreateWithProperties() {
+        OioUrl url = url("TEST", UUID.randomUUID().toString());
+        Map<String, String> props = new HashMap<String, String>();
+        props.put("key1", "value1");
+        props.put("key2", "value2");
+        props.put("key3", "value3");
+        client.createContainer(url, props);
+        try {
+            Map<String, String> res = client.getContainerProperties(url);
+            assertNotNull(res);
+            assertEquals(3, res.size());
+            for (Entry<String, String> e : props.entrySet()) {
+                assertTrue(res.containsKey(e.getKey()));
+                assertEquals(e.getValue(), res.get(e.getKey()));
+            }
+            client.deleteContainerProperties(url, "key1");
+            res = client.getContainerProperties(url);
+            assertNotNull(res);
+            assertEquals(2, res.size());
+        } finally {
+            client.deleteContainer(url);
+        }
+    }
+
+    @Test
     public void containerProperties() {
         OioUrl url = url("TEST", UUID.randomUUID().toString());
         Map<String, String> props = new HashMap<String, String>();

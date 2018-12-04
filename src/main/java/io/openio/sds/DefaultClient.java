@@ -64,10 +64,24 @@ public class DefaultClient implements AdvancedClient {
     }
 
     @Override
-    public ContainerInfo createContainer(OioUrl url, RequestContext reqCtx) throws OioException {
+    public ContainerInfo createContainer(OioUrl url,
+            Map<String, String> properties) {
+        return this.createContainer(url, properties, new RequestContext());
+    }
+
+    @Override
+    public ContainerInfo createContainer(OioUrl url, RequestContext reqCtx)
+            throws OioException {
+        return this.createContainer(url, null, reqCtx);
+    }
+
+    @Override
+    public ContainerInfo createContainer(OioUrl url,
+            Map<String, String> properties, RequestContext reqCtx)
+            throws OioException {
         checkArgument(url != null, "url cannot be null");
         reqCtx.startTiming();
-        return proxy.createContainer(url, reqCtx);
+        return proxy.createContainer(url, properties, reqCtx);
     }
 
     @Override

@@ -72,6 +72,30 @@ public interface Client {
     public ContainerInfo createContainer(OioUrl url) throws OioException;
 
     /**
+     * Create a container using the specified {@link OioUrl}. OioUrl objects are
+     * built by using {@link OioUrl#url(String, String)} method, then you have
+     * to specify the name of the account to use and the name of the future
+     * container.
+     * <p>
+     * The container is available when the returned future is completed.
+     *
+     * @param url
+     *            the url of the container
+     * @param properties
+     *            the properties to set to the container. Note that the properties
+     *            are case insensitive and will always be returned in lower
+     *            case.
+     * @return a {@code ContainerInfo} with information about the created
+     *         container
+     * @throws ContainerExistException
+     *             if the specified container is alreay present
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public ContainerInfo createContainer(OioUrl url,
+            Map<String, String> properties) throws OioException;
+
+    /**
      * Return information about the specified container.
      *
      * @param url
