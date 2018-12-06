@@ -375,6 +375,14 @@ public class ClientITest {
                 // check props are set on object as expected and not on
                 // container
                 assertEquals(0, client.getContainerProperties(url).size());
+
+                client.deleteObjectProperties(url);
+                res = client.getObjectProperties(url);
+                assertNotNull(res);
+                assertEquals(0, res.size());
+                // check props are set on object as expected and not on
+                // container
+                assertEquals(0, client.getContainerProperties(url).size());
             } finally {
                 client.deleteObject(url);
             }

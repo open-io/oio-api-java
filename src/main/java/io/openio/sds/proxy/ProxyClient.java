@@ -1184,11 +1184,13 @@ public class ProxyClient {
      */
     public void deleteObjectProperties(RequestContext reqCtx, OioUrl url, String... keys) {
         checkArgument(null != url && null != url.object(), INVALID_URL_MSG);
-        checkArgument(null != keys && 0 < keys.length);
+        String body = "[]";
+        if (keys != null)
+            body = gson().toJson(keys);
         http.post(
                 format(OBJECT_DEL_PROP, settings.url(), settings.ns(),
                         Strings.urlEncode(url.account()), Strings.urlEncode(url.container()),
-                        Strings.urlEncode(url.object()))).hosts(hosts).body(gson().toJson(keys))
+                        Strings.urlEncode(url.object()))).hosts(hosts).body(body)
                 .verifier(CONTAINER_VERIFIER).withRequestContext(reqCtx).execute().close();
     }
 
@@ -1229,11 +1231,13 @@ public class ProxyClient {
      */
     public void deleteObjectProperties(OioUrl url, List<String> keys, RequestContext reqCtx) {
         checkArgument(null != url && null != url.object(), INVALID_URL_MSG);
-        checkArgument(null != keys && 0 < keys.size());
+        String body = "[]";
+        if (keys != null)
+            body = gson().toJson(keys);
         http.post(
                 format(OBJECT_DEL_PROP, settings.url(), settings.ns(),
                         Strings.urlEncode(url.account()), Strings.urlEncode(url.container()),
-                        Strings.urlEncode(url.object()))).hosts(hosts).body(gson().toJson(keys))
+                        Strings.urlEncode(url.object()))).hosts(hosts).body(body)
                 .verifier(CONTAINER_VERIFIER).withRequestContext(reqCtx).execute().close();
     }
 
