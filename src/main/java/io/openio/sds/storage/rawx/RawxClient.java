@@ -219,11 +219,40 @@ public class RawxClient implements StorageClient {
 
 	/* --- INTERNALS --- */
 
+	private <E> void quorumOrFail(int pos, int quorum, List<E> successes) {
+		if (successes.size() < quorum) {
+			throw new OioException(format(
+					"Quorum not reached when writing chunks at position %s (%d/%d)",
+					pos, successes.size(), quorum));
+		}
+	}
+
+	private void cancelTasks(List<Future<UploadResult>> futures, Exception exc,
+							 String prefixMessage) {
+		int notTerminated = 0;
+		for (Future<UploadResult> future : futures) {
+			if (!future.isDone())
+				notTerminated++;
+			future.cancel(true);
+		}
+		String message = prefixMessage;
+		if (notTerminated > 0)
+			message += " (" + notTerminated + " upload jobs cancelled)";
+		throw new OioException(message, exc);
+	}
+
 	private ObjectInfo uploadPosition(final ObjectInfo oinf, final int pos, final Long size,
 									  InputStream data, final RequestContext reqCtx) {
 		List<ChunkInfo> cil = oinf.sortedChunks().get(pos);
 		final List<FeedableInputStream> gens = size == 0 ? null : feedableBodies(cil.size(), size);
 		List<Future<UploadResult>> futures = new ArrayList<Future<UploadResult>>();
+
+		int quorum;
+		if (!settings.quorumWrite())
+			quorum = cil.size();
+		else
+			quorum = (cil.size() + 1) / 2;
+
 		for (int i = 0; i < cil.size(); i++) {
 			final ChunkInfo ci = cil.get(i);
 			final FeedableInputStream in = null == gens ? null : gens.get(i);
@@ -280,10 +309,18 @@ public class RawxClient implements StorageClient {
 							try {
 								Thread.sleep(delay * 1000);
 							} catch (InterruptedException e) {
-								throw new OioException("Failed to retry chunk upload", e);
+								UploadResult result = new UploadResult(ci);
+								OioException exc = new OioException(
+										"Failed to retry chunk upload", e);
+								result.exception(exc);
+								throw exc;
 							}
 						} else {
-							throw new OioException("Failed to schedule chunk upload", ree);
+							UploadResult result = new UploadResult(ci);
+							OioException exc = new OioException(
+									"Failed to schedule chunk upload", ree);
+							result.exception(exc);
+							throw exc;
 						}
 						retry++;
 					}
@@ -294,15 +331,25 @@ public class RawxClient implements StorageClient {
 				} catch (IOException e1) {
 					logger.warn(e1);
 				}
-				throw e;
 			}
 		}
-		consume(data, size, gens, futures);
+		try {
+			quorumOrFail(pos, quorum, futures);
+		} catch (Exception e) {
+			cancelTasks(futures, e,
+						"Too many failures to schedule chunk uploads");
+		}
 
 		try {
-			ArrayList<UploadResult> successes = new ArrayList<UploadResult>();
-			for (Future<UploadResult> f : futures) {
-				UploadResult result = f.get();
+			consume(data, size, gens, futures);
+		} catch (Exception e) {
+			cancelTasks(futures, e, "Stream read error");
+		}
+
+		try {
+			List<UploadResult> successes = new ArrayList<UploadResult>();
+			for (Future<UploadResult> future : futures) {
+				UploadResult result = future.get();
 
 				if (null != result.exception()) {
 					logger.warn(format("Failed to upload chunk %s", result.chunkInfo()), result.exception());
@@ -310,16 +357,7 @@ public class RawxClient implements StorageClient {
 					successes.add(result);
 				}
 			}
-			if (!settings.quorumWrite()) {
-				if (successes.size() != cil.size()) {
-					throw new OioException(format("Failed to write chunks at position %s", pos));
-				}
-			} else {
-				int quorum = (cil.size() + 1) / 2;
-				if (successes.size() < quorum) {
-					throw new OioException(format("Quorum not reached write chunks at position %s", pos));
-				}
-			}
+			quorumOrFail(pos, quorum, successes);
 		} catch (InterruptedException e) {
 			throw new OioException("got interrupted", e);
 		} catch (ExecutionException e) {
@@ -330,28 +368,14 @@ public class RawxClient implements StorageClient {
 
 	private void consume(InputStream data, Long size,
 						 List<FeedableInputStream> gens,
-						 List<Future<UploadResult>> futures) {
+						 List<Future<UploadResult>> futures) throws IOException {
 		int done = 0;
 		while (done < size) {
 			byte[] b = new byte[Math.min(size.intValue() - done,
 					settings.http().receiveBufferSize())];
-			try {
-				done += fill(b, data);
-				for (FeedableInputStream in : gens) {
-					in.feed(wrap(b), done >= size);
-				}
-			} catch (IOException e) {
-				// Cancel the tasks
-				int notTerminated = 0;
-				for (Future<UploadResult> f : futures) {
-					if (!f.isDone())
-						notTerminated++;
-					f.cancel(true);
-				}
-				String message = "Stream read error";
-				if (notTerminated > 0)
-					message += " (" + notTerminated + " upload jobs cancelled)";
-				throw new OioException(message, e);
+			done += fill(b, data);
+			for (FeedableInputStream in : gens) {
+				in.feed(wrap(b), done >= size);
 			}
 		}
 	}
