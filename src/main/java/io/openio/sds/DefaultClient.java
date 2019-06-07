@@ -164,9 +164,10 @@ public class DefaultClient implements AdvancedClient {
             else
                 rawx.uploadChunks(oinf, data, reqCtx);
             proxy.putObject(oinf, version, reqCtx);
-        } catch (OioException e) {
+        } catch (OioException oioe) {
             // TODO improve by knowing which chunk is uploaded
             rawx.deleteChunks(oinf.chunks());
+            throw oioe;
         }
         return oinf;
     }
