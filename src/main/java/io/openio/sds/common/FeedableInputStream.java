@@ -42,12 +42,20 @@ public class FeedableInputStream extends InputStream {
         this(qsize, 10000);
     }
 
+    public void setFailed(boolean f) {
+        failed = f;
+    }
+
+    public boolean isFailed() {
+        return failed;
+    }
+
     public void feed(ByteBuffer b, boolean last) {
         if (failed)
             return;
         try {
             DataPart part = new DataPart(b, last);
-            while (!(failed || q.offer(part, 10L, TimeUnit.SECONDS))) {
+            while (!(failed || q.offer(part, 1L, TimeUnit.SECONDS))) {
                 /* Retry until done
                  * or reader has been interrupted
                  * or we are interrupted */

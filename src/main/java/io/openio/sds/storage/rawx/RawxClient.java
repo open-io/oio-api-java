@@ -259,6 +259,7 @@ public class RawxClient implements StorageClient {
 						ci.size(size);
 						ci.hash(builder.execute().close(false).header(CHUNK_META_CHUNK_HASH));
 					} catch (OioException e) {
+						in.setFailed(true);
 						result.exception(e);
 					}
 					return result;
