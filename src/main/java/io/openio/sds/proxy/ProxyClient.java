@@ -129,9 +129,9 @@ public class ProxyClient {
      * @return the matching {@code NamespaceInfo}
      */
     public NamespaceInfo getNamespaceInfo(RequestContext reqCtx) throws OioException {
-        return http.get(format(CS_NSINFO_FORMAT, settings.url(), settings.ns())).hosts(hosts)
-                .verifier(STANDALONE_VERIFIER).withRequestContext(reqCtx)
-                .execute(NamespaceInfo.class);
+        return http.get(format(CS_NSINFO_FORMAT, settings.url(), settings.ns()))
+                .hosts(hosts).verifier(STANDALONE_VERIFIER)
+                .withRequestContext(reqCtx).execute(NamespaceInfo.class);
     }
 
     /**
@@ -146,9 +146,10 @@ public class ProxyClient {
      *             if any error occurs during request execution
      */
     public List<ServiceInfo> getServices(String type, RequestContext reqCtx) throws OioException {
-        OioHttpResponse resp = http
-                .get(format(CS_GETSRV_FORMAT, settings.url(), settings.ns(), type)).hosts(hosts)
-                .verifier(STANDALONE_VERIFIER).withRequestContext(reqCtx).execute();
+        OioHttpResponse resp = http.get(
+                format(CS_GETSRV_FORMAT, settings.url(), settings.ns(), type))
+                .hosts(hosts).verifier(STANDALONE_VERIFIER)
+                .withRequestContext(reqCtx).execute();
         return serviceInfoListAndClose(resp);
     }
 
@@ -177,13 +178,15 @@ public class ProxyClient {
      * @throws OioException
      *             if any error occurs during request execution
      */
-    public void createReference(OioUrl url, RequestContext reqCtx) throws OioException {
+    public void createReference(OioUrl url, RequestContext reqCtx)
+            throws OioException {
         checkArgument(null != url, INVALID_URL_MSG);
         http.post(
                 format(DIR_REF_CREATE_FORMAT, settings.url(), settings.ns(),
-                        Strings.urlEncode(url.account()), Strings.urlEncode(url.container())))
-                .hosts(hosts).verifier(REFERENCE_VERIFIER).withRequestContext(reqCtx).execute()
-                .close();
+                        Strings.urlEncode(url.account()),
+                        Strings.urlEncode(url.container())))
+                .hosts(hosts).verifier(REFERENCE_VERIFIER)
+                .withRequestContext(reqCtx).execute().close();
     }
 
     /**
@@ -211,13 +214,15 @@ public class ProxyClient {
      * @throws OioException
      *             if any error occurs during request execution
      */
-    public ReferenceInfo showReference(OioUrl url, RequestContext reqCtx) throws OioException {
+    public ReferenceInfo showReference(OioUrl url, RequestContext reqCtx)
+            throws OioException {
         checkArgument(null != url, INVALID_URL_MSG);
-        return http
-                .get(format(DIR_REF_SHOW_FORMAT, settings.url(), settings.ns(),
-                        Strings.urlEncode(url.account()), Strings.urlEncode(url.container())))
-                .hosts(hosts).withRequestContext(reqCtx).verifier(REFERENCE_VERIFIER)
-                .execute(ReferenceInfo.class);
+        return http.get(
+                format(DIR_REF_SHOW_FORMAT, settings.url(), settings.ns(),
+                        Strings.urlEncode(url.account()),
+                        Strings.urlEncode(url.container())))
+                .hosts(hosts).verifier(REFERENCE_VERIFIER)
+                .withRequestContext(reqCtx).execute(ReferenceInfo.class);
     }
 
     /**
@@ -247,13 +252,15 @@ public class ProxyClient {
      *             if any error occurs during request execution
      * 
      */
-    public void deleteReference(OioUrl url, RequestContext reqCtx) throws OioException {
+    public void deleteReference(OioUrl url, RequestContext reqCtx)
+            throws OioException {
         checkArgument(null != url, INVALID_URL_MSG);
         http.post(
                 format(DIR_REF_DELETE_FORMAT, settings.url(), settings.ns(),
-                        Strings.urlEncode(url.account()), Strings.urlEncode(url.container())))
-                .hosts(hosts).withRequestContext(reqCtx).verifier(REFERENCE_VERIFIER).execute()
-                .close();
+                        Strings.urlEncode(url.account()),
+                        Strings.urlEncode(url.container())))
+                .hosts(hosts).verifier(REFERENCE_VERIFIER)
+                .withRequestContext(reqCtx).execute().close();
     }
 
     /**
@@ -268,7 +275,8 @@ public class ProxyClient {
      *             if any error occurs during request execution
      */
     @Deprecated
-    public List<LinkedServiceInfo> linkService(OioUrl url, String type) throws OioException {
+    public List<LinkedServiceInfo> linkService(OioUrl url, String type)
+            throws OioException {
         return linkService(url, type, new RequestContext());
     }
 
@@ -285,13 +293,15 @@ public class ProxyClient {
      * @throws OioException
      *             if any error occurs during request execution
      */
-    public List<LinkedServiceInfo> linkService(OioUrl url, String type, RequestContext reqCtx)
-            throws OioException {
+    public List<LinkedServiceInfo> linkService(OioUrl url, String type,
+            RequestContext reqCtx) throws OioException {
         checkArgument(!nullOrEmpty(type), "Missing type");
-        OioHttpResponse resp = http
-                .post(format(DIR_LINK_SRV_FORMAT, settings.url(), settings.ns(),
-                        Strings.urlEncode(url.account()), Strings.urlEncode(url.container()), type))
-                .hosts(hosts).verifier(REFERENCE_VERIFIER).withRequestContext(reqCtx).execute();
+        OioHttpResponse resp = http.post(
+                format(DIR_LINK_SRV_FORMAT, settings.url(), settings.ns(),
+                        Strings.urlEncode(url.account()),
+                        Strings.urlEncode(url.container()), type))
+                .hosts(hosts).verifier(REFERENCE_VERIFIER)
+                .withRequestContext(reqCtx).execute();
 
         return listAndClose(resp);
     }
@@ -309,7 +319,8 @@ public class ProxyClient {
      *             if any error occurs during request execution
      */
     @Deprecated
-    public List<LinkedServiceInfo> listServices(OioUrl url, String type) throws OioException {
+    public List<LinkedServiceInfo> listServices(OioUrl url, String type)
+            throws OioException {
         return listServices(url, type, new RequestContext());
     }
 
@@ -327,15 +338,16 @@ public class ProxyClient {
      * @throws OioException
      *             if any error occurs during request execution
      */
-    public List<LinkedServiceInfo> listServices(OioUrl url, String type, RequestContext reqCtx)
-            throws OioException {
+    public List<LinkedServiceInfo> listServices(OioUrl url, String type,
+            RequestContext reqCtx) throws OioException {
         checkArgument(null != url, INVALID_URL_MSG);
         checkArgument(!nullOrEmpty(type));
-        return http
-                .get(format(DIR_LIST_SRV_FORMAT, settings.url(), settings.ns(),
-                        Strings.urlEncode(url.account()), Strings.urlEncode(url.container()), type))
-                .hosts(hosts).verifier(REFERENCE_VERIFIER).withRequestContext(reqCtx)
-                .execute(ReferenceInfo.class).srv();
+        return http.get(
+                format(DIR_LIST_SRV_FORMAT, settings.url(), settings.ns(),
+                        Strings.urlEncode(url.account()),
+                        Strings.urlEncode(url.container()), type))
+                .hosts(hosts).verifier(REFERENCE_VERIFIER)
+                .withRequestContext(reqCtx).execute(ReferenceInfo.class).srv();
     }
 
     /**
@@ -365,14 +377,16 @@ public class ProxyClient {
      * @throws OioException
      *             if any error occurs during request execution
      */
-    public void unlinkService(OioUrl url, String type, RequestContext reqCtx) throws OioException {
+    public void unlinkService(OioUrl url, String type, RequestContext reqCtx)
+            throws OioException {
         checkArgument(null != url, INVALID_URL_MSG);
         checkArgument(!nullOrEmpty(type));
         http.post(
                 format(DIR_UNLINK_SRV_FORMAT, settings.url(), settings.ns(),
-                        Strings.urlEncode(url.account()), Strings.urlEncode(url.container()), type))
-                .hosts(hosts).verifier(REFERENCE_VERIFIER).withRequestContext(reqCtx).execute()
-                .close();
+                        Strings.urlEncode(url.account()),
+                        Strings.urlEncode(url.container()), type))
+                .hosts(hosts).verifier(REFERENCE_VERIFIER)
+                .withRequestContext(reqCtx).execute().close();
 
     }
 
@@ -425,7 +439,7 @@ public class ProxyClient {
             Map<String, String> properties, RequestContext reqCtx)
             throws OioException {
         checkArgument(null != url, INVALID_URL_MSG);
-        String body = String.format("{\"properties\": %1$s}",
+        String body = format("{\"properties\": %1$s}",
                 properties != null ? gson().toJson(properties) : "{}");
         OioHttpResponse resp = http.post(
                 format(CREATE_CONTAINER_FORMAT, settings.url(), settings.ns(),
@@ -433,8 +447,8 @@ public class ProxyClient {
                         Strings.urlEncode(url.container())))
                 .header(OIO_ACTION_MODE_HEADER, "autocreate")
                 .body(body)
-                .hosts(hosts).withRequestContext(reqCtx).verifier(CONTAINER_VERIFIER).execute()
-                .close();
+                .hosts(hosts).verifier(CONTAINER_VERIFIER)
+                .withRequestContext(reqCtx).execute().close();
         if (204 == resp.code())
             throw new ContainerExistException("Container already present");
 
@@ -466,25 +480,32 @@ public class ProxyClient {
      * @throws OioException
      *             if any error occurs during request execution
      */
-    public ContainerInfo getContainerInfo(OioUrl url, RequestContext reqCtx) throws OioException {
+    public ContainerInfo getContainerInfo(OioUrl url, RequestContext reqCtx)
+            throws OioException {
         checkArgument(null != url, INVALID_URL_MSG);
-        OioHttpResponse r = http
-                .get(format(GET_CONTAINER_INFO_FORMAT, settings.url(), settings.ns(),
-                        Strings.urlEncode(url.account()), Strings.urlEncode(url.container())))
-                .hosts(hosts).verifier(CONTAINER_VERIFIER).withRequestContext(reqCtx).execute()
-                .close();
+        OioHttpResponse resp = http.get(
+                format(GET_CONTAINER_INFO_FORMAT, settings.url(), settings.ns(),
+                        Strings.urlEncode(url.account()),
+                        Strings.urlEncode(url.container())))
+                .hosts(hosts).verifier(CONTAINER_VERIFIER)
+                .withRequestContext(reqCtx).execute().close();
 
-        return new ContainerInfo(url.container()).account(r.header(ACCOUNT_HEADER))
-                .ctime(longHeader(r, M2_CTIME_HEADER)).init(longHeader(r, M2_INIT_HEADER))
-                .usage(longHeader(r, M2_USAGE_HEADER)).version(longHeader(r, M2_VERSION_HEADER))
-                .id(r.header(CONTAINER_SYS_NAME_HEADER)).ns(r.header(NS_HEADER))
-                .type(r.header(TYPE_HEADER)).user(r.header(USER_NAME_HEADER))
-                .schemavers(r.header(SCHEMA_VERSION_HEADER))
-                .versionMainAdmin(r.header(VERSION_MAIN_ADMIN_HEADER))
-                .versionMainAliases(r.header(VERSION_MAIN_ALIASES_HEADER))
-                .versionMainChunks(r.header(VERSION_MAIN_CHUNKS_HEADER))
-                .versionMainContents(r.header(VERSION_MAIN_CONTENTS_HEADER))
-                .versionMainProperties(r.header(VERSION_MAIN_PROPERTIES_HEADER));
+        return new ContainerInfo(url.container())
+                .account(resp.header(ACCOUNT_HEADER))
+                .ctime(longHeader(resp, M2_CTIME_HEADER))
+                .init(longHeader(resp, M2_INIT_HEADER))
+                .usage(longHeader(resp, M2_USAGE_HEADER))
+                .version(longHeader(resp, M2_VERSION_HEADER))
+                .id(resp.header(CONTAINER_SYS_NAME_HEADER))
+                .ns(resp.header(NS_HEADER))
+                .type(resp.header(TYPE_HEADER))
+                .user(resp.header(USER_NAME_HEADER))
+                .schemavers(resp.header(SCHEMA_VERSION_HEADER))
+                .versionMainAdmin(resp.header(VERSION_MAIN_ADMIN_HEADER))
+                .versionMainAliases(resp.header(VERSION_MAIN_ALIASES_HEADER))
+                .versionMainChunks(resp.header(VERSION_MAIN_CHUNKS_HEADER))
+                .versionMainContents(resp.header(VERSION_MAIN_CONTENTS_HEADER))
+                .versionMainProperties(resp.header(VERSION_MAIN_PROPERTIES_HEADER));
     }
 
     /**
@@ -500,7 +521,8 @@ public class ProxyClient {
      *             if any error occurs during request execution
      */
     @Deprecated
-    public ObjectList listContainer(OioUrl url, ListOptions options) throws OioException {
+    public ObjectList listContainer(OioUrl url, ListOptions options)
+            throws OioException {
         return listObjects(url, options, new RequestContext());
     }
 
@@ -518,22 +540,25 @@ public class ProxyClient {
      * @throws OioException
      *             if any error occurs during request execution
      */
-    public ObjectList listObjects(OioUrl url, ListOptions options, RequestContext reqCtx)
-            throws OioException {
+    public ObjectList listObjects(OioUrl url, ListOptions options,
+            RequestContext reqCtx) throws OioException {
         checkArgument(null != url, INVALID_URL_MSG);
         checkArgument(null != options, "Invalid options");
-        OioHttpResponse resp = http
-                .get(format(LIST_OBJECTS_FORMAT, settings.url(), settings.ns(),
-                        Strings.urlEncode(url.account()), Strings.urlEncode(url.container())))
-                .hosts(hosts)
+        OioHttpResponse resp = http.get(
+                format(LIST_OBJECTS_FORMAT, settings.url(), settings.ns(),
+                        Strings.urlEncode(url.account()),
+                        Strings.urlEncode(url.container())))
                 .query(MAX_PARAM, options.limit() > 0 ? String.valueOf(options.limit()) : null)
-                .query(PREFIX_PARAM, options.prefix()).query(MARKER_PARAM, options.marker())
-                .query(DELIMITER_PARAM, options.delimiter()).verifier(CONTAINER_VERIFIER)
+                .query(PREFIX_PARAM, options.prefix())
+                .query(MARKER_PARAM, options.marker())
+                .query(DELIMITER_PARAM, options.delimiter())
+                .hosts(hosts).verifier(CONTAINER_VERIFIER)
                 .withRequestContext(reqCtx).execute();
         boolean success = false;
         try {
             ObjectList objectList = gson().fromJson(
-                    new JsonReader(new InputStreamReader(resp.body(), OIO_CHARSET)),
+                    new JsonReader(new InputStreamReader(resp.body(),
+                            OIO_CHARSET)),
                     ObjectList.class);
             String truncated = resp.header(LIST_TRUNCATED_HEADER);
             if (truncated != null) {
@@ -572,13 +597,15 @@ public class ProxyClient {
      * @throws OioException
      *             if any error occurs during request execution
      */
-    public void deleteContainer(OioUrl url, RequestContext reqCtx) throws OioException {
+    public void deleteContainer(OioUrl url, RequestContext reqCtx)
+            throws OioException {
         checkArgument(null != url, INVALID_URL_MSG);
         http.post(
                 format(DELETE_CONTAINER_FORMAT, settings.url(), settings.ns(),
-                        Strings.urlEncode(url.account()), Strings.urlEncode(url.container())))
-                .hosts(hosts).verifier(CONTAINER_VERIFIER).withRequestContext(reqCtx).execute()
-                .close();
+                        Strings.urlEncode(url.account()),
+                        Strings.urlEncode(url.container())))
+                .hosts(hosts).verifier(CONTAINER_VERIFIER)
+                .withRequestContext(reqCtx).execute().close();
     }
 
     /**
@@ -595,18 +622,19 @@ public class ProxyClient {
      * @throws OioException
      *             if any error occurs during request execution
      */
-    public ObjectInfo preparePutObject(OioUrl url, long size, RequestContext reqCtx)
-            throws OioException {
+    public ObjectInfo preparePutObject(OioUrl url, long size,
+            RequestContext reqCtx) throws OioException {
         checkArgument(null != url, INVALID_URL_MSG);
-        OioHttpResponse resp = http
-                .post(format(GET_BEANS_FORMAT, settings.url(), settings.ns(),
-                        Strings.urlEncode(url.account()), Strings.urlEncode(url.container()),
+        OioHttpResponse resp = http.post(
+                format(GET_BEANS_FORMAT, settings.url(), settings.ns(),
+                        Strings.urlEncode(url.account()),
+                        Strings.urlEncode(url.container()),
                         Strings.urlEncode(url.object())))
-                .body(gson().toJson(new BeansRequest().size(size)))
-                .hosts(hosts)
                 .header(ACTION_MODE_HEADER,
                         settings.autocreate() ? OioConstants.AUTOCREATE_ACTION_MODE : null)
-                .withRequestContext(reqCtx).verifier(OBJECT_VERIFIER).execute();
+                .body(gson().toJson(new BeansRequest().size(size)))
+                .hosts(hosts).verifier(OBJECT_VERIFIER)
+                .withRequestContext(reqCtx).execute();
         return getBeansObjectInfoAndClose(url, resp);
     }
 
@@ -624,11 +652,11 @@ public class ProxyClient {
      * @throws OioException
      *             if any error occurs during request execution
      */
-    public ObjectInfo putObject(ObjectInfo oinf, Long version, RequestContext reqCtx)
-            throws OioException {
+    public ObjectInfo putObject(ObjectInfo oinf, Long version,
+            RequestContext reqCtx) throws OioException {
         checkArgument(oinf != null, "Invalid objectInfo");
         Map<String, String> props = oinf.properties();
-        String body = String.format("{\"chunks\": %1$s, \"properties\": %2$s}",
+        String body = format("{\"chunks\": %1$s, \"properties\": %2$s}",
                 gson().toJson(oinf.chunks()), props != null ? gson().toJson(props) : "{}");
         http.post(
                 format(PUT_OBJECT_FORMAT, settings.url(), settings.ns(),
@@ -642,8 +670,8 @@ public class ProxyClient {
                 .header(CONTENT_META_VERSION_HEADER, versionHeader(oinf, version))
                 .header(CONTENT_META_ID_HEADER, oinf.oid())
                 .body(body)
-                .hosts(hosts).withRequestContext(reqCtx).verifier(OBJECT_VERIFIER).execute()
-                .close();
+                .hosts(hosts).verifier(OBJECT_VERIFIER)
+                .withRequestContext(reqCtx).execute().close();
         return oinf;
     }
 
@@ -669,7 +697,8 @@ public class ProxyClient {
      * @return an {@link ObjectInfo} containing informations about the object
      */
     @Deprecated
-    public ObjectInfo getObjectInfo(OioUrl url, boolean loadProperties) throws OioException {
+    public ObjectInfo getObjectInfo(OioUrl url, boolean loadProperties)
+            throws OioException {
         return getObjectInfo(url, null, loadProperties);
     }
 
@@ -683,7 +712,8 @@ public class ProxyClient {
      * @return an {@link ObjectInfo} containing informations about the object
      */
     @Deprecated
-    public ObjectInfo getObjectInfo(OioUrl url, Long version) throws OioException {
+    public ObjectInfo getObjectInfo(OioUrl url, Long version)
+            throws OioException {
         return getObjectInfo(url, version, true);
     }
 
@@ -699,8 +729,8 @@ public class ProxyClient {
      * @return an {@link ObjectInfo} containing informations about the object
      */
     @Deprecated
-    public ObjectInfo getObjectInfo(OioUrl url, Long version, boolean loadProperties)
-            throws OioException {
+    public ObjectInfo getObjectInfo(OioUrl url, Long version,
+            boolean loadProperties) throws OioException {
         return getObjectInfo(url, version, new RequestContext(), loadProperties);
     }
 
@@ -716,8 +746,8 @@ public class ProxyClient {
      *            common parameters to all requests
      * @return an {@link ObjectInfo} containing informations about the object
      */
-    public ObjectInfo getObjectInfo(OioUrl url, Long version, RequestContext reqCtx)
-            throws OioException {
+    public ObjectInfo getObjectInfo(OioUrl url, Long version,
+            RequestContext reqCtx) throws OioException {
         return getObjectInfo(url, version, reqCtx, true);
     }
 
@@ -735,16 +765,17 @@ public class ProxyClient {
      *            Whether or not to load properties
      * @return an {@link ObjectInfo} containing informations about the object
      */
-    public ObjectInfo getObjectInfo(OioUrl url, Long version, RequestContext reqCtx,
-            boolean loadProperties) throws OioException {
+    public ObjectInfo getObjectInfo(OioUrl url, Long version,
+            RequestContext reqCtx, boolean loadProperties) throws OioException {
         checkArgument(null != url, INVALID_URL_MSG);
-        String uri = format(GET_OBJECT_FORMAT, settings.url(), settings.ns(),
-                Strings.urlEncode(url.account()), Strings.urlEncode(url.container()),
-                Strings.urlEncode(url.object()));
-        if (version != null) {
-            uri += "&version=" + version.toString();
-        }
-        OioHttpResponse resp = http.get(uri).hosts(hosts).verifier(OBJECT_VERIFIER)
+        RequestBuilder request = http.get(
+                format(GET_OBJECT_FORMAT, settings.url(), settings.ns(),
+                        Strings.urlEncode(url.account()),
+                        Strings.urlEncode(url.container()),
+                        Strings.urlEncode(url.object())));
+        if (version != null)
+            request.query(VERSION_PARAM, version.toString());
+        OioHttpResponse resp = request.hosts(hosts).verifier(OBJECT_VERIFIER)
                 .withRequestContext(reqCtx).execute();
         ObjectInfo info = objectShowObjectInfoAndClose(url, resp);
         if (loadProperties) {
@@ -877,16 +908,16 @@ public class ProxyClient {
         checkArgument(null != url, INVALID_URL_MSG);
         checkArgument(null != properties && properties.size() > 0, "Invalid properties");
         String props = gson().toJson(properties);
-        String root = String.format("{\"properties\": %1$s}", props);
-        RequestBuilder request = http.post(format(CONTAINER_SET_PROP,
-                settings.url(), settings.ns(),
-                Strings.urlEncode(url.account()),
-                Strings.urlEncode(url.container())));
+        String root = format("{\"properties\": %1$s}", props);
+        RequestBuilder request = http.post(
+                format(CONTAINER_SET_PROP, settings.url(), settings.ns(),
+                        Strings.urlEncode(url.account()),
+                        Strings.urlEncode(url.container())));
         if (clear)
             request.query(FLUSH_PARAM, "1");
-        request.verifier(CONTAINER_VERIFIER)
-                .withRequestContext(reqCtx).hosts(hosts).body(root)
-                .execute().close();
+        request.body(root)
+                .hosts(hosts).verifier(CONTAINER_VERIFIER)
+                .withRequestContext(reqCtx).execute().close();
     }
 
     /**
@@ -920,12 +951,15 @@ public class ProxyClient {
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
-    public Map<String, String> getContainerProperties(OioUrl url, RequestContext reqCtx) {
+    public Map<String, String> getContainerProperties(OioUrl url,
+            RequestContext reqCtx) {
         checkArgument(null != url, INVALID_URL_MSG);
-        OioHttpResponse resp = http
-                .post(format(CONTAINER_GET_PROP, settings.url(), settings.ns(),
-                        Strings.urlEncode(url.account()), Strings.urlEncode(url.container())))
-                .hosts(hosts).verifier(CONTAINER_VERIFIER).withRequestContext(reqCtx).execute();
+        OioHttpResponse resp = http.post(
+                format(CONTAINER_GET_PROP, settings.url(), settings.ns(),
+                        Strings.urlEncode(url.account()),
+                        Strings.urlEncode(url.container())))
+                .hosts(hosts).verifier(CONTAINER_VERIFIER)
+                .withRequestContext(reqCtx).execute();
         try {
             Map<String, Map<String, String>> res = JsonUtils.jsonToMapMap(resp.body());
             return res.get("properties");
@@ -967,13 +1001,16 @@ public class ProxyClient {
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
-    public void deleteContainerProperties(RequestContext reqCtx, OioUrl url, String... keys) {
+    public void deleteContainerProperties(RequestContext reqCtx, OioUrl url,
+            String... keys) {
         checkArgument(null != url, INVALID_URL_MSG);
         checkArgument(null != keys && 0 < keys.length);
         http.post(
                 format(CONTAINER_DEL_PROP, settings.url(), settings.ns(),
-                        Strings.urlEncode(url.account()), Strings.urlEncode(url.container())))
-                .body(gson().toJson(keys)).hosts(hosts).verifier(CONTAINER_VERIFIER)
+                        Strings.urlEncode(url.account()),
+                        Strings.urlEncode(url.container())))
+                .body(gson().toJson(keys))
+                .hosts(hosts).verifier(CONTAINER_VERIFIER)
                 .withRequestContext(reqCtx).execute().close();
     }
 
@@ -1008,13 +1045,16 @@ public class ProxyClient {
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
-    public void deleteContainerProperties(OioUrl url, List<String> keys, RequestContext reqCtx) {
+    public void deleteContainerProperties(OioUrl url, List<String> keys,
+            RequestContext reqCtx) {
         checkArgument(null != url, INVALID_URL_MSG);
         checkArgument(null != keys && 0 < keys.size());
         http.post(
                 format(CONTAINER_DEL_PROP, settings.url(), settings.ns(),
-                        Strings.urlEncode(url.account()), Strings.urlEncode(url.container())))
-                .body(gson().toJson(keys)).hosts(hosts).verifier(CONTAINER_VERIFIER)
+                        Strings.urlEncode(url.account()),
+                        Strings.urlEncode(url.container())))
+                .body(gson().toJson(keys))
+                .hosts(hosts).verifier(CONTAINER_VERIFIER)
                 .withRequestContext(reqCtx).execute().close();
     }
 
@@ -1117,7 +1157,7 @@ public class ProxyClient {
             RequestContext reqCtx) {
         checkArgument(null != url && null != url.object(), INVALID_URL_MSG);
         checkArgument(null != properties && properties.size() > 0, "Invalid properties");
-        String body = String.format("{\"properties\": %1$s}",
+        String body = format("{\"properties\": %1$s}",
                 gson().toJson(properties));
         RequestBuilder request = http.post(
                 format(OBJECT_SET_PROP, settings.url(), settings.ns(),
@@ -1196,11 +1236,11 @@ public class ProxyClient {
     public Map<String, String> getObjectProperties(OioUrl url, Long version,
             RequestContext reqCtx) {
         checkArgument(null != url && null != url.object(), INVALID_URL_MSG);
-        RequestBuilder request = http.post(format(OBJECT_GET_PROP,
-                settings.url(), settings.ns(),
-                Strings.urlEncode(url.account()),
-                Strings.urlEncode(url.container()),
-                Strings.urlEncode(url.object())));
+        RequestBuilder request = http.post(
+                format(OBJECT_GET_PROP, settings.url(), settings.ns(),
+                        Strings.urlEncode(url.account()),
+                        Strings.urlEncode(url.container()),
+                        Strings.urlEncode(url.object())));
         if (version != null)
             request.query(VERSION_PARAM, version.toString());
         OioHttpResponse resp = request
@@ -1373,7 +1413,8 @@ public class ProxyClient {
 
     /* -- INTERNALS -- */
 
-    private ObjectInfo getBeansObjectInfoAndClose(OioUrl url, OioHttpResponse resp) {
+    private ObjectInfo getBeansObjectInfoAndClose(OioUrl url,
+            OioHttpResponse resp) {
         boolean success = false;
         try {
             ObjectInfo oinf = fillObjectInfo(url, resp);
@@ -1398,7 +1439,8 @@ public class ProxyClient {
         }
     }
 
-    private ObjectInfo objectShowObjectInfoAndClose(OioUrl url, OioHttpResponse resp) {
+    private ObjectInfo objectShowObjectInfoAndClose(OioUrl url,
+            OioHttpResponse resp) {
         boolean success = false;
         try {
             ObjectInfo oinf = fillObjectInfo(url, resp);
@@ -1429,11 +1471,13 @@ public class ProxyClient {
                 .withRequestContext(r.requestContext());
     }
 
-    private List<ChunkInfo> bodyChunk(OioHttpResponse resp) throws OioException {
+    private List<ChunkInfo> bodyChunk(OioHttpResponse resp)
+            throws OioException {
         try {
-            return gson().fromJson(new JsonReader(new InputStreamReader(resp.body(), OIO_CHARSET)),
-                    new TypeToken<List<ChunkInfo>>() {
-                    }.getType());
+            return gson().fromJson(
+                    new JsonReader(
+                            new InputStreamReader(resp.body(), OIO_CHARSET)),
+                    new TypeToken<List<ChunkInfo>>() {}.getType());
         } catch (Exception e) {
             throw new OioException("Body extraction error", e);
         }
@@ -1442,10 +1486,10 @@ public class ProxyClient {
     private <T> List<T> listAndClose(OioHttpResponse resp) {
         boolean success = false;
         try {
-            Type t = new TypeToken<List<T>>() {
-            }.getType();
             List<T> res = gson().fromJson(
-                    new JsonReader(new InputStreamReader(resp.body(), OIO_CHARSET)), t);
+                    new JsonReader(
+                            new InputStreamReader(resp.body(), OIO_CHARSET)),
+                    new TypeToken<List<T>>() {}.getType());
             success = true;
             return res;
         } catch (Exception e) {
@@ -1458,10 +1502,10 @@ public class ProxyClient {
     private List<ServiceInfo> serviceInfoListAndClose(OioHttpResponse resp) {
         boolean success = false;
         try {
-            Type t = new TypeToken<List<ServiceInfo>>() {
-            }.getType();
             List<ServiceInfo> res = gson().fromJson(
-                    new JsonReader(new InputStreamReader(resp.body(), OIO_CHARSET)), t);
+                    new JsonReader(
+                        new InputStreamReader(resp.body(), OIO_CHARSET)),
+                    new TypeToken<List<ServiceInfo>>() {}.getType());
             success = true;
             return res;
         } catch (Exception e) {
@@ -1476,11 +1520,13 @@ public class ProxyClient {
                 : version.toString();
     }
 
-    private Map<String, String> propsFromHeaders(HashMap<String, String> headers) {
+    private Map<String, String> propsFromHeaders(HashMap<String,
+            String> headers) {
         HashMap<String, String> res = new HashMap<String, String>();
         for (Entry<String, String> e : headers.entrySet()) {
             if (e.getKey().startsWith(PROP_HEADER_PREFIX))
-                res.put(e.getKey().substring(PROP_HEADER_PREFIX_LEN), e.getValue());
+                res.put(e.getKey().substring(PROP_HEADER_PREFIX_LEN),
+                        e.getValue());
         }
         return res;
     }
