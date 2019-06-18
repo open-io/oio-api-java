@@ -384,6 +384,31 @@ public interface AdvancedClient extends Client {
      *
      * @param url
      *            the URL of the object
+     * @param version
+     *            the version to manipulate
+     *            (could be {@code null} to manipulate latest version)
+     * @param props
+     *            the properties to set
+     * @param reqCtx
+     *            common parameters to all requests
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws ObjectNotFoundException
+     *             if the specified object doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public void setObjectProperties(OioUrl url, Long version,
+            Map<String, String> props, RequestContext reqCtx)
+            throws OioException;
+
+    /**
+     * Add properties to the specified object. The properties must be prefixed
+     * with "user." and this prefix will be stored, and finally used to query
+     * the parameters later.
+     *
+     * @param url
+     *            the URL of the object
      * @param props
      *            the properties to set
      * @param clear
@@ -401,6 +426,33 @@ public interface AdvancedClient extends Client {
             boolean clear, RequestContext reqCtx) throws OioException;
 
     /**
+     * Add properties to the specified object. The properties must be prefixed
+     * with "user." and this prefix will be stored, and finally used to query
+     * the parameters later.
+     *
+     * @param url
+     *            the URL of the object
+     * @param version
+     *            the version to manipulate
+     *            (could be {@code null} to manipulate latest version)
+     * @param props
+     *            the properties to set
+     * @param clear
+     *            clear previous properties
+     * @param reqCtx
+     *            common parameters to all requests
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws ObjectNotFoundException
+     *             if the specified object doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public void setObjectProperties(OioUrl url, Long version,
+            Map<String, String> props, boolean clear, RequestContext reqCtx)
+            throws OioException;
+
+    /**
      * Retrieve user properties of the specified object.
      *
      * @param url
@@ -416,8 +468,30 @@ public interface AdvancedClient extends Client {
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
-    public Map<String, String> getObjectProperties(OioUrl url, RequestContext reqCtx)
-            throws OioException;
+    public Map<String, String> getObjectProperties(OioUrl url,
+            RequestContext reqCtx) throws OioException;
+
+    /**
+     * Retrieve user properties of the specified object.
+     *
+     * @param url
+     *            the URL of the object
+     * @param version
+     *            the version to manipulate
+     *            (could be {@code null} to manipulate latest version)
+     * @param reqCtx
+     *            common parameters to all requests
+     * @return the user properties (i.e. prefixed with "user.") found on the
+     *         object
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws ObjectNotFoundException
+     *             if the specified object doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public Map<String, String> getObjectProperties(OioUrl url, Long version,
+            RequestContext reqCtx) throws OioException;
 
     /**
      * Deletes the specified properties from the object
@@ -435,8 +509,30 @@ public interface AdvancedClient extends Client {
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
-    public void deleteObjectProperties(OioUrl url, RequestContext reqCtx, String... keys)
-            throws OioException;
+    public void deleteObjectProperties(OioUrl url, RequestContext reqCtx,
+            String... keys) throws OioException;
+
+    /**
+     * Deletes the specified properties from the object
+     *
+     * @param url
+     *            the url of the object
+     * @param version
+     *            the version to manipulate
+     *            (could be {@code null} to manipulate latest version)
+     * @param reqCtx
+     *            common parameters to all requests
+     * @param keys
+     *            the property keys to drop
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws ObjectNotFoundException
+     *             if the specified object doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public void deleteObjectProperties(OioUrl url, Long version,
+            RequestContext reqCtx, String... keys) throws OioException;
 
     /**
      * Deletes the specified properties from the object
@@ -454,6 +550,29 @@ public interface AdvancedClient extends Client {
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
-    public void deleteObjectProperties(OioUrl url, List<String> keys, RequestContext reqCtx)
-            throws OioException;
+    public void deleteObjectProperties(OioUrl url, List<String> keys,
+            RequestContext reqCtx) throws OioException;
+
+    /**
+     * Deletes the specified properties from the object
+     *
+     * @param url
+     *            the url of the object
+     * @param version
+     *            the version to manipulate
+     *            (could be {@code null} to manipulate latest version)
+     * @param keys
+     *            the property keys to drop
+     * @param reqCtx
+     *            common parameters to all requests
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws ObjectNotFoundException
+     *             if the specified object doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public void deleteObjectProperties(OioUrl url, Long version,
+            List<String> keys, RequestContext reqCtx) throws OioException;
+
 }

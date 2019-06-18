@@ -523,6 +523,10 @@ public class ClientITest {
         byte[] src = TestHelper.bytes(1024L);
         OioUrl url = url(testAccount(), UUID.randomUUID().toString(), UUID
                 .randomUUID().toString());
+        Map<String, String> props = new HashMap<String, String>();
+        props.put("key1", "value1");
+        props.put("key2", "value2");
+        props.put("key3", "value3");
         client.createContainer(url);
         try {
             client.putObject(url, 1024L, new ByteArrayInputStream(src),
@@ -539,6 +543,26 @@ public class ClientITest {
                 Assert.assertEquals(
                         Hex.toHex(MessageDigest.getInstance("MD5").digest(src)),
                         oinf.hash());
+
+                client.setObjectProperties(url, 123456789L, props);
+                Map<String, String> res = client.getObjectProperties(url,
+                        123456789L);
+                assertNotNull(res);
+                assertEquals(props.size(), res.size());
+                for (Entry<String, String> e : props.entrySet()) {
+                    assertTrue(res.containsKey(e.getKey()));
+                    assertEquals(e.getValue(), res.get(e.getKey()));
+                }
+
+                props.remove("key2");
+                client.deleteObjectProperties(url, 123456789L, "key2");
+                res = client.getObjectProperties(url, 123456789L);
+                assertNotNull(res);
+                assertEquals(props.size(), res.size());
+                for (Entry<String, String> e : props.entrySet()) {
+                    assertTrue(res.containsKey(e.getKey()));
+                    assertEquals(e.getValue(), res.get(e.getKey()));
+                }
             } finally {
                 client.deleteObject(url, 123456789L);
             }
@@ -557,6 +581,62 @@ public class ClientITest {
             client.putObject(url, 1024L, new ByteArrayInputStream(src));
             try {
                 client.getObjectInfo(url, 123456789L);
+            } finally {
+                client.deleteObject(url);
+            }
+        } finally {
+            client.deleteContainer(url);
+        }
+    }
+
+    @Test(expected=ObjectNotFoundException.class)
+    public void setObjectPropertiesWithWrongVersion() {
+        byte[] src = TestHelper.bytes(1024L);
+        OioUrl url = url(testAccount(), UUID.randomUUID().toString(), UUID
+                .randomUUID().toString());
+        Map<String, String> props = new HashMap<String, String>();
+        props.put("user.key", "value");
+        client.createContainer(url);
+        try {
+            client.putObject(url, 1024L, new ByteArrayInputStream(src));
+            try {
+                client.setObjectProperties(url, 123456789L, props);
+            } finally {
+                client.deleteObject(url);
+            }
+        } finally {
+            client.deleteContainer(url);
+        }
+    }
+
+    @Test(expected=ObjectNotFoundException.class)
+    public void getObjectPropertiesWithWrongVersion() {
+        byte[] src = TestHelper.bytes(1024L);
+        OioUrl url = url(testAccount(), UUID.randomUUID().toString(), UUID
+                .randomUUID().toString());
+        client.createContainer(url);
+        try {
+            client.putObject(url, 1024L, new ByteArrayInputStream(src));
+            try {
+                client.getObjectProperties(url, 123456789L);
+            } finally {
+                client.deleteObject(url);
+            }
+        } finally {
+            client.deleteContainer(url);
+        }
+    }
+
+    @Test(expected=ObjectNotFoundException.class)
+    public void deleteObjectPropertiesWithWrongVersion() {
+        byte[] src = TestHelper.bytes(1024L);
+        OioUrl url = url(testAccount(), UUID.randomUUID().toString(), UUID
+                .randomUUID().toString());
+        client.createContainer(url);
+        try {
+            client.putObject(url, 1024L, new ByteArrayInputStream(src));
+            try {
+                client.deleteObjectProperties(url, 123456789L, "key");
             } finally {
                 client.deleteObject(url);
             }

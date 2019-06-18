@@ -196,7 +196,7 @@ public interface Client {
 
     /**
      * Retrieves user properties of the specified container
-     * 
+     *
      * @param url
      *            the url of the object
      * @return the user properties (i.e. prefixed with "user.") found on the
@@ -570,6 +570,28 @@ public interface Client {
      *
      * @param url
      *            the url of the object
+     * @param version
+     *            the version to manipulate
+     *            (could be {@code null} to manipulate latest version)
+     * @param props
+     *            the properties to set
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws ObjectNotFoundException
+     *             if the specified object doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public void setObjectProperties(OioUrl url, Long version,
+            Map<String, String> props) throws OioException;
+
+    /**
+     * Add properties to the specified object. The properties must be prefixed
+     * with "user." and this prefix will be stored, and finally used to query
+     * the parameters later.
+     *
+     * @param url
+     *            the url of the object
      * @param props
      *            the properties to set
      * @param clear
@@ -585,8 +607,32 @@ public interface Client {
             boolean clear) throws OioException;
 
     /**
+     * Add properties to the specified object. The properties must be prefixed
+     * with "user." and this prefix will be stored, and finally used to query
+     * the parameters later.
+     *
+     * @param url
+     *            the url of the object
+     * @param version
+     *            the version to manipulate
+     *            (could be {@code null} to manipulate latest version)
+     * @param props
+     *            the properties to set
+     * @param clear
+     *            clear previous properties
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws ObjectNotFoundException
+     *             if the specified object doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public void setObjectProperties(OioUrl url, Long version,
+            Map<String, String> props, boolean clear) throws OioException;
+
+    /**
      * Retrieves user properties of the specified object
-     * 
+     *
      * @param url
      *            the url of the object
      * @return the user properties (i.e. prefixed with "user.") found on the
@@ -598,11 +644,32 @@ public interface Client {
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
-    public Map<String, String> getObjectProperties(OioUrl url) throws OioException;
+    public Map<String, String> getObjectProperties(OioUrl url)
+            throws OioException;
+
+    /**
+     * Retrieves user properties of the specified object
+     *
+     * @param url
+     *            the url of the object
+     * @param version
+     *            the version to manipulate
+     *            (could be {@code null} to manipulate latest version)
+     * @return the user properties (i.e. prefixed with "user.") found on the
+     *         object
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws ObjectNotFoundException
+     *             if the specified object doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public Map<String, String> getObjectProperties(OioUrl url, Long version)
+            throws OioException;
 
     /**
      * Deletes the specified properties from the object
-     * 
+     *
      * @param url
      *            the url of the object
      * @param keys
@@ -614,11 +681,32 @@ public interface Client {
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
-    public void deleteObjectProperties(OioUrl url, String... keys) throws OioException;
+    public void deleteObjectProperties(OioUrl url, String... keys)
+            throws OioException;
 
     /**
      * Deletes the specified properties from the object
-     * 
+     *
+     * @param url
+     *            the url of the object
+     * @param version
+     *            the version to manipulate
+     *            (could be {@code null} to manipulate latest version)
+     * @param keys
+     *            the property keys to drop
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws ObjectNotFoundException
+     *             if the specified object doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public void deleteObjectProperties(OioUrl url, Long version, String... keys)
+            throws OioException;
+
+    /**
+     * Deletes the specified properties from the object
+     *
      * @param url
      *            the url of the object
      * @param keys
@@ -630,6 +718,27 @@ public interface Client {
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
-    public void deleteObjectProperties(OioUrl url, List<String> keys) throws OioException;
+    public void deleteObjectProperties(OioUrl url, List<String> keys)
+            throws OioException;
+
+    /**
+     * Deletes the specified properties from the object
+     *
+     * @param url
+     *            the url of the object
+     * @param version
+     *            the version to manipulate
+     *            (could be {@code null} to manipulate latest version)
+     * @param keys
+     *            the property keys to drop
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws ObjectNotFoundException
+     *             if the specified object doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public void deleteObjectProperties(OioUrl url, Long version,
+            List<String> keys) throws OioException;
 
 }

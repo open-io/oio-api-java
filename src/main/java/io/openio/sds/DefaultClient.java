@@ -361,9 +361,22 @@ public class DefaultClient implements AdvancedClient {
     }
 
     @Override
+    public void setObjectProperties(OioUrl url, Long version,
+            Map<String, String> props) throws OioException {
+        this.setObjectProperties(url, version, props, new RequestContext());
+    }
+
+    @Override
     public void setObjectProperties(OioUrl url, Map<String, String> props,
             boolean clear) throws OioException {
         this.setObjectProperties(url, props, clear, new RequestContext());
+    }
+
+    @Override
+    public void setObjectProperties(OioUrl url, Long version,
+            Map<String, String> props, boolean clear) throws OioException {
+        this.setObjectProperties(url, version, props, clear,
+                new RequestContext());
     }
 
     @Override
@@ -373,45 +386,99 @@ public class DefaultClient implements AdvancedClient {
     }
 
     @Override
-    public void setObjectProperties(OioUrl url, Map<String, String> props,
-            boolean clear, RequestContext reqCtx) throws OioException {
-        reqCtx.startTiming();
-        proxy.setObjectProperties(url, props, clear, reqCtx);
+    public void setObjectProperties(OioUrl url, Long version,
+            Map<String, String> props, RequestContext reqCtx)
+            throws OioException {
+        this.setObjectProperties(url, version, props, false, reqCtx);
     }
 
     @Override
-    public Map<String, String> getObjectProperties(OioUrl url) throws OioException {
+    public void setObjectProperties(OioUrl url, Map<String, String> props,
+            boolean clear, RequestContext reqCtx) throws OioException {
+        this.setObjectProperties(url, null, props, clear, reqCtx);
+    }
+
+    @Override
+    public void setObjectProperties(OioUrl url, Long version,
+            Map<String, String> props, boolean clear, RequestContext reqCtx)
+            throws OioException {
+        reqCtx.startTiming();
+        proxy.setObjectProperties(url, version, props, clear, reqCtx);
+    }
+
+    @Override
+    public Map<String, String> getObjectProperties(OioUrl url)
+            throws OioException {
         return this.getObjectProperties(url, new RequestContext());
     }
 
     @Override
-    public Map<String, String> getObjectProperties(OioUrl url, RequestContext reqCtx)
+    public Map<String, String> getObjectProperties(OioUrl url, Long version)
             throws OioException {
-        reqCtx.startTiming();
-        return proxy.getObjectProperties(url, reqCtx);
+        return this.getObjectProperties(url, version, new RequestContext());
     }
 
     @Override
-    public void deleteObjectProperties(OioUrl url, String... keys) throws OioException {
+    public Map<String, String> getObjectProperties(OioUrl url,
+            RequestContext reqCtx) throws OioException {
+        return this.getObjectProperties(url, null, reqCtx);
+    }
+
+    @Override
+    public Map<String, String> getObjectProperties(OioUrl url, Long version,
+            RequestContext reqCtx) throws OioException {
+        reqCtx.startTiming();
+        return proxy.getObjectProperties(url, version, reqCtx);
+    }
+
+    @Override
+    public void deleteObjectProperties(OioUrl url, String... keys)
+            throws OioException {
         this.deleteObjectProperties(url, new RequestContext(), keys);
     }
 
     @Override
-    public void deleteObjectProperties(OioUrl url, List<String> keys) throws OioException {
+    public void deleteObjectProperties(OioUrl url, List<String> keys)
+            throws OioException {
         this.deleteObjectProperties(url, keys, new RequestContext());
     }
 
     @Override
-    public void deleteObjectProperties(OioUrl url, RequestContext reqCtx, String... keys)
+    public void deleteObjectProperties(OioUrl url, Long version, String... keys)
             throws OioException {
-        reqCtx.startTiming();
-        proxy.deleteObjectProperties(reqCtx, url, keys);
+        this.deleteObjectProperties(url, version, new RequestContext(), keys);
     }
 
     @Override
-    public void deleteObjectProperties(OioUrl url, List<String> keys, RequestContext reqCtx)
-            throws OioException {
-        reqCtx.startTiming();
-        proxy.deleteObjectProperties(url, keys, reqCtx);
+    public void deleteObjectProperties(OioUrl url, Long version,
+            List<String> keys) throws OioException {
+        this.deleteObjectProperties(url, version, keys, new RequestContext());
     }
+
+    @Override
+    public void deleteObjectProperties(OioUrl url, RequestContext reqCtx,
+            String... keys) throws OioException {
+        this.deleteObjectProperties(url, null, reqCtx, keys);
+    }
+
+    @Override
+    public void deleteObjectProperties(OioUrl url, List<String> keys,
+            RequestContext reqCtx) throws OioException {
+        this.deleteObjectProperties(url, null, keys, reqCtx);
+    }
+
+    @Override
+    public void deleteObjectProperties(OioUrl url, Long version,
+            RequestContext reqCtx, String... keys) throws OioException {
+        reqCtx.startTiming();
+        proxy.deleteObjectProperties(reqCtx, url, version, keys);
+    }
+
+    @Override
+    public void deleteObjectProperties(OioUrl url, Long version,
+            List<String> keys, RequestContext reqCtx) throws OioException {
+        reqCtx.startTiming();
+        proxy.deleteObjectProperties(url, version, keys, reqCtx);
+    }
+
 }

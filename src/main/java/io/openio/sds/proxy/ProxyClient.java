@@ -1036,7 +1036,7 @@ public class ProxyClient {
      */
     @Deprecated
     public void setObjectProperties(OioUrl url, Map<String, String> properties) {
-        setObjectProperties(url, properties, false, new RequestContext());
+        setObjectProperties(url, null, properties, false, new RequestContext());
     }
 
     /**
@@ -1060,7 +1060,7 @@ public class ProxyClient {
     @Deprecated
     public void setObjectProperties(OioUrl url, Map<String, String> properties,
             RequestContext reqCtx) {
-        setObjectProperties(url, properties, false, reqCtx);
+        setObjectProperties(url, null, properties, false, reqCtx);
     }
 
     /**
@@ -1083,27 +1083,59 @@ public class ProxyClient {
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
+    @Deprecated
     public void setObjectProperties(OioUrl url, Map<String, String> properties,
             boolean clear, RequestContext reqCtx) {
+        setObjectProperties(url, null, properties, clear, reqCtx);
+    }
+
+    /**
+     * Add properties to the specified object. The properties must be prefixed
+     * with "user." and this prefix will be stored, and finally used to query
+     * the parameters later.
+     *
+     * @param url
+     *            the URL of the object
+     * @param version
+     *            the version to manipulate
+     *            (could be {@code null} to manipulate latest version)
+     * @param properties
+     *            the properties to set
+     * @param clear
+     *            clear previous properties
+     * @param reqCtx
+     *            common parameters to all requests
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws ObjectNotFoundException
+     *             if the specified object doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public void setObjectProperties(OioUrl url, Long version,
+            Map<String, String> properties, boolean clear,
+            RequestContext reqCtx) {
         checkArgument(null != url && null != url.object(), INVALID_URL_MSG);
         checkArgument(null != properties && properties.size() > 0, "Invalid properties");
         String body = String.format("{\"properties\": %1$s}",
                 gson().toJson(properties));
-        RequestBuilder request = http.post(format(OBJECT_SET_PROP,
-                settings.url(), settings.ns(),
-                Strings.urlEncode(url.account()),
-                Strings.urlEncode(url.container()),
-                Strings.urlEncode(url.object())));
+        RequestBuilder request = http.post(
+                format(OBJECT_SET_PROP, settings.url(), settings.ns(),
+                        Strings.urlEncode(url.account()),
+                        Strings.urlEncode(url.container()),
+                        Strings.urlEncode(url.object())));
+        if (version != null)
+            request.query(VERSION_PARAM, version.toString());
         if (clear)
             request.query(FLUSH_PARAM, "1");
-        request.verifier(OBJECT_VERIFIER)
-                .withRequestContext(reqCtx).hosts(hosts).body(body)
-                .execute().close();
+        request.body(body)
+                .hosts(hosts).verifier(OBJECT_VERIFIER)
+                .withRequestContext(reqCtx).execute().close();
     }
 
     /**
      * Retrieves user properties of the specified object
-     * 
+     *
      * @param url
      *            the url of the object
      * @return the user properties (i.e. prefixed with "user.") found on the
@@ -1117,12 +1149,12 @@ public class ProxyClient {
      */
     @Deprecated
     public Map<String, String> getObjectProperties(OioUrl url) {
-        return getObjectProperties(url, new RequestContext());
+        return getObjectProperties(url, null, new RequestContext());
     }
 
     /**
      * Retrieves user properties of the specified object
-     * 
+     *
      * @param url
      *            the url of the object
      * @param reqCtx
@@ -1136,15 +1168,47 @@ public class ProxyClient {
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
-    public Map<String, String> getObjectProperties(OioUrl url, RequestContext reqCtx) {
+    @Deprecated
+    public Map<String, String> getObjectProperties(OioUrl url,
+            RequestContext reqCtx) {
+        return getObjectProperties(url, null, reqCtx);
+    }
+
+    /**
+     * Retrieves user properties of the specified object
+     *
+     * @param url
+     *            the url of the object
+     * @param version
+     *            the version to manipulate
+     *            (could be {@code null} to manipulate latest version)
+     * @param reqCtx
+     *            common parameters to all requests
+     * @return the user properties (i.e. prefixed with "user.") found on the
+     *         object
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws ObjectNotFoundException
+     *             if the specified object doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public Map<String, String> getObjectProperties(OioUrl url, Long version,
+            RequestContext reqCtx) {
         checkArgument(null != url && null != url.object(), INVALID_URL_MSG);
-        OioHttpResponse resp = http
-                .post(format(OBJECT_GET_PROP, settings.url(), settings.ns(),
-                        Strings.urlEncode(url.account()), Strings.urlEncode(url.container()),
-                        Strings.urlEncode(url.object()))).hosts(hosts).verifier(OBJECT_VERIFIER)
+        RequestBuilder request = http.post(format(OBJECT_GET_PROP,
+                settings.url(), settings.ns(),
+                Strings.urlEncode(url.account()),
+                Strings.urlEncode(url.container()),
+                Strings.urlEncode(url.object())));
+        if (version != null)
+            request.query(VERSION_PARAM, version.toString());
+        OioHttpResponse resp = request
+                .hosts(hosts).verifier(OBJECT_VERIFIER)
                 .withRequestContext(reqCtx).execute();
         try {
-            Map<String, Map<String, String>> rootMap = JsonUtils.jsonToMapMap(resp.body());
+            Map<String, Map<String, String>> rootMap = JsonUtils.jsonToMapMap(
+                    resp.body());
             return rootMap.get("properties");
         } finally {
             resp.close();
@@ -1167,7 +1231,7 @@ public class ProxyClient {
      */
     @Deprecated
     public void deleteObjectProperties(OioUrl url, String... keys) {
-        deleteObjectProperties(new RequestContext(), url, keys);
+        deleteObjectProperties(new RequestContext(), url, null, keys);
     }
 
     /**
@@ -1186,16 +1250,47 @@ public class ProxyClient {
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
-    public void deleteObjectProperties(RequestContext reqCtx, OioUrl url, String... keys) {
+    @Deprecated
+    public void deleteObjectProperties(RequestContext reqCtx, OioUrl url,
+            String... keys) {
+        deleteObjectProperties(reqCtx, url, null, keys);
+    }
+
+    /**
+     * Deletes the specified properties from the object
+     * 
+     * @param url
+     *            the url of the object
+     * @param version
+     *            the version to manipulate
+     *            (could be {@code null} to manipulate latest version)
+     * @param keys
+     *            the property keys to drop
+     * @param reqCtx
+     *            common parameters to all requests
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws ObjectNotFoundException
+     *             if the specified object doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public void deleteObjectProperties(RequestContext reqCtx, OioUrl url,
+            Long version, String... keys) {
         checkArgument(null != url && null != url.object(), INVALID_URL_MSG);
         String body = "[]";
         if (keys != null)
             body = gson().toJson(keys);
-        http.post(
+        RequestBuilder request = http.post(
                 format(OBJECT_DEL_PROP, settings.url(), settings.ns(),
-                        Strings.urlEncode(url.account()), Strings.urlEncode(url.container()),
-                        Strings.urlEncode(url.object()))).hosts(hosts).body(body)
-                .verifier(CONTAINER_VERIFIER).withRequestContext(reqCtx).execute().close();
+                        Strings.urlEncode(url.account()),
+                        Strings.urlEncode(url.container()),
+                        Strings.urlEncode(url.object())));
+        if (version != null)
+            request.query(VERSION_PARAM, version.toString());
+        request.body(body)
+                .hosts(hosts).verifier(OBJECT_VERIFIER)
+                .withRequestContext(reqCtx).execute().close();
     }
 
     /**
@@ -1214,7 +1309,7 @@ public class ProxyClient {
      */
     @Deprecated
     public void deleteObjectProperties(OioUrl url, List<String> keys) {
-        deleteObjectProperties(url, keys, new RequestContext());
+        deleteObjectProperties(url, null, keys, new RequestContext());
     }
 
     /**
@@ -1233,16 +1328,47 @@ public class ProxyClient {
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
-    public void deleteObjectProperties(OioUrl url, List<String> keys, RequestContext reqCtx) {
+    @Deprecated
+    public void deleteObjectProperties(OioUrl url, List<String> keys,
+            RequestContext reqCtx) {
+        deleteObjectProperties(url, null, keys, reqCtx);
+    }
+
+    /**
+     * Deletes the specified properties from the object
+     * 
+     * @param url
+     *            the url of the object
+     * @param version
+     *            the version to manipulate
+     *            (could be {@code null} to manipulate latest version)
+     * @param keys
+     *            the property keys to drop
+     * @param reqCtx
+     *            common parameters to all requests
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws ObjectNotFoundException
+     *             if the specified object doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public void deleteObjectProperties(OioUrl url, Long version,
+            List<String> keys, RequestContext reqCtx) {
         checkArgument(null != url && null != url.object(), INVALID_URL_MSG);
         String body = "[]";
         if (keys != null)
             body = gson().toJson(keys);
-        http.post(
+        RequestBuilder request = http.post(
                 format(OBJECT_DEL_PROP, settings.url(), settings.ns(),
-                        Strings.urlEncode(url.account()), Strings.urlEncode(url.container()),
-                        Strings.urlEncode(url.object()))).hosts(hosts).body(body)
-                .verifier(CONTAINER_VERIFIER).withRequestContext(reqCtx).execute().close();
+                        Strings.urlEncode(url.account()),
+                        Strings.urlEncode(url.container()),
+                        Strings.urlEncode(url.object())));
+        if (version != null)
+            request.query(VERSION_PARAM, version.toString());
+        request.body(body)
+                .hosts(hosts).verifier(OBJECT_VERIFIER)
+                .withRequestContext(reqCtx).execute().close();
     }
 
     /* -- INTERNALS -- */
