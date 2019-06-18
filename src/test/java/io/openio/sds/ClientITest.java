@@ -517,6 +517,72 @@ public class ClientITest {
         }
     }
 
+    @Test
+    public void handleSpecificObjectVersion() throws IOException,
+            NoSuchAlgorithmException {
+        byte[] src = TestHelper.bytes(1024L);
+        OioUrl url = url(testAccount(), UUID.randomUUID().toString(), UUID
+                .randomUUID().toString());
+        client.createContainer(url);
+        try {
+            client.putObject(url, 1024L, new ByteArrayInputStream(src),
+                    123456789L);
+            try {
+                ObjectInfo oinf = client.getObjectInfo(url, 123456789L);
+                Assert.assertNotNull(oinf);
+                Assert.assertEquals(1024, oinf.size().longValue());
+                Assert.assertTrue(0 < oinf.ctime());
+                Assert.assertNotNull(oinf.policy());
+                Assert.assertNotNull(oinf.chunkMethod());
+                Assert.assertNotNull(oinf.hashMethod());
+                checkObject(oinf, new ByteArrayInputStream(src));
+                Assert.assertEquals(
+                        Hex.toHex(MessageDigest.getInstance("MD5").digest(src)),
+                        oinf.hash());
+            } finally {
+                client.deleteObject(url, 123456789L);
+            }
+        } finally {
+            client.deleteContainer(url);
+        }
+    }
+
+    @Test(expected=ObjectNotFoundException.class)
+    public void getObjectInfoWithWrongVersion() {
+        byte[] src = TestHelper.bytes(1024L);
+        OioUrl url = url(testAccount(), UUID.randomUUID().toString(), UUID
+                .randomUUID().toString());
+        client.createContainer(url);
+        try {
+            client.putObject(url, 1024L, new ByteArrayInputStream(src));
+            try {
+                client.getObjectInfo(url, 123456789L);
+            } finally {
+                client.deleteObject(url);
+            }
+        } finally {
+            client.deleteContainer(url);
+        }
+    }
+
+    @Test(expected=ObjectNotFoundException.class)
+    public void deleteObjectWithWrongVersion() {
+        byte[] src = TestHelper.bytes(1024L);
+        OioUrl url = url(testAccount(), UUID.randomUUID().toString(), UUID
+                .randomUUID().toString());
+        client.createContainer(url);
+        try {
+            client.putObject(url, 1024L, new ByteArrayInputStream(src));
+            try {
+                client.deleteObject(url, 123456789L);
+            } finally {
+                client.deleteObject(url);
+            }
+        } finally {
+            client.deleteContainer(url);
+        }
+    }
+
     private void checkObject(ObjectInfo oinf, InputStream src)
             throws IOException {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();

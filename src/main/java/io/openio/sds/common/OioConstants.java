@@ -98,6 +98,7 @@ public class OioConstants {
 
     /* -- Common parameters names -- */
 
+    public static final String VERSION_PARAM = "version";
     public static final String MAX_PARAM = "max";
     public static final String PREFIX_PARAM = "prefix";
     public static final String DELIMITER_PARAM = "delimiter";

@@ -61,6 +61,7 @@ import static io.openio.sds.common.OioConstants.VERSION_MAIN_ALIASES_HEADER;
 import static io.openio.sds.common.OioConstants.VERSION_MAIN_CHUNKS_HEADER;
 import static io.openio.sds.common.OioConstants.VERSION_MAIN_CONTENTS_HEADER;
 import static io.openio.sds.common.OioConstants.VERSION_MAIN_PROPERTIES_HEADER;
+import static io.openio.sds.common.OioConstants.VERSION_PARAM;
 import static io.openio.sds.common.Strings.nullOrEmpty;
 import static io.openio.sds.http.OioHttpHelper.longHeader;
 import static io.openio.sds.http.Verifiers.CONTAINER_VERIFIER;
@@ -794,15 +795,18 @@ public class ProxyClient {
      * @throws OioException
      *             if any error occurs during request execution
      */
-    public void deleteObject(OioUrl url, Long version, RequestContext reqCtx) throws OioException {
+    public void deleteObject(OioUrl url, Long version, RequestContext reqCtx)
+            throws OioException {
         checkArgument(null != url, INVALID_URL_MSG);
-        http.post(
+        RequestBuilder request = http.post(
                 format(DELETE_OBJECT_FORMAT, settings.url(), settings.ns(),
-                        Strings.urlEncode(url.account()), Strings.urlEncode(url.container()),
-                        Strings.urlEncode(url.object())))
-                .header(CONTENT_META_VERSION_HEADER, null == version ? null : version.toString())
-                .verifier(OBJECT_VERIFIER).withRequestContext(reqCtx).hosts(hosts).execute()
-                .close();
+                        Strings.urlEncode(url.account()),
+                        Strings.urlEncode(url.container()),
+                        Strings.urlEncode(url.object())));
+        if (version != null)
+            request.query(VERSION_PARAM, version.toString());
+        request.hosts(hosts).verifier(OBJECT_VERIFIER)
+                .withRequestContext(reqCtx).execute().close();
     }
 
     /* -- PROPERTIES -- */
