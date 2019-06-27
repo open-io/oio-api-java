@@ -214,14 +214,13 @@ public interface AdvancedClient extends Client {
             throws OioException;
 
     /**
-     * Retrieves user properties of the specified container
+     * Retrieve user properties of the specified container.
      * 
      * @param url
-     *            the url of the object
+     *            the url of the container
      * @param reqCtx
      *            common parameters to all requests
-     * @return the user properties (i.e. prefixed with "user.") found on the
-     *         object
+     * @return the user properties found on the container
      * @throws ContainerNotFoundException
      *             if the specified container doesn't exist
      * @throws OioSystemException
@@ -229,6 +228,23 @@ public interface AdvancedClient extends Client {
      */
     public Map<String, String> getContainerProperties(OioUrl url, RequestContext reqCtx)
             throws OioException;
+
+    /**
+     * Retrieve user properties and system properties
+     * of the specified container.
+     *
+     * @param url
+     *            the url of the container
+     * @param reqCtx
+     *            common parameters to all requests
+     * @return the user properties and system properties found on the container
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public Map<String, Map<String, String>> getAllContainerProperties(OioUrl url,
+            RequestContext reqCtx) throws OioException;
 
     /**
      * Deletes user properties from the specified container

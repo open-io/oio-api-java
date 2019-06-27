@@ -940,12 +940,11 @@ public class ProxyClient {
     }
 
     /**
-     * Retrieves user properties of the specified container
+     * Retrieve user properties of the specified container.
      * 
      * @param url
-     *            the url of the object
-     * @return the user properties (i.e. prefixed with "user.") found on the
-     *         object
+     *            the url of the container
+     * @return the user properties found on the container
      * @throws ContainerNotFoundException
      *             if the specified container doesn't exist
      * @throws OioSystemException
@@ -957,21 +956,41 @@ public class ProxyClient {
     }
 
     /**
-     * Retrieves user properties of the specified container
+     * Retrieve user properties of the specified container.
      * 
      * @param url
-     *            the url of the object
+     *            the url of the container
      * @param reqCtx
      *            common parameters to all requests
-     * @return the user properties (i.e. prefixed with "user.") found on the
-     *         object
+     * @return the user properties found on the container
      * @throws ContainerNotFoundException
      *             if the specified container doesn't exist
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
+    @Deprecated
     public Map<String, String> getContainerProperties(OioUrl url,
             RequestContext reqCtx) {
+        return getAllContainerProperties(url, new RequestContext())
+                .get("properties");
+    }
+
+    /**
+     * Retrieve user properties and system properties
+     * of the specified container.
+     *
+     * @param url
+     *            the url of the container
+     * @param reqCtx
+     *            common parameters to all requests
+     * @return the user properties and system properties found on the container
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public Map<String, Map<String, String>> getAllContainerProperties(
+            OioUrl url, RequestContext reqCtx) {
         checkArgument(null != url, INVALID_URL_MSG);
         OioHttpResponse resp = http.post(
                 format(CONTAINER_GET_PROP, settings.url(), settings.ns(),
@@ -980,12 +999,10 @@ public class ProxyClient {
                 .hosts(hosts).verifier(CONTAINER_VERIFIER)
                 .withRequestContext(reqCtx).execute();
         try {
-            Map<String, Map<String, String>> res = JsonUtils.jsonToMapMap(resp.body());
-            return res.get("properties");
+            return JsonUtils.jsonToMapMap(resp.body());
         } finally {
             resp.close();
         }
-
     }
 
     /**
@@ -1193,7 +1210,7 @@ public class ProxyClient {
     }
 
     /**
-     * Retrieves user properties of the specified object
+     * Retrieve user properties of the specified object
      *
      * @param url
      *            the url of the object
@@ -1212,7 +1229,7 @@ public class ProxyClient {
     }
 
     /**
-     * Retrieves user properties of the specified object
+     * Retrieve user properties of the specified object
      *
      * @param url
      *            the url of the object
@@ -1234,7 +1251,7 @@ public class ProxyClient {
     }
 
     /**
-     * Retrieves user properties of the specified object
+     * Retrieve user properties of the specified object
      *
      * @param url
      *            the url of the object

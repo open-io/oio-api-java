@@ -344,15 +344,28 @@ public class DefaultClient implements AdvancedClient {
     }
 
     @Override
-    public Map<String, String> getContainerProperties(OioUrl url) throws OioException {
+    public Map<String, String> getContainerProperties(OioUrl url)
+            throws OioException {
         return this.getContainerProperties(url, new RequestContext());
     }
 
     @Override
-    public Map<String, String> getContainerProperties(OioUrl url, RequestContext reqCtx)
+    public Map<String, String> getContainerProperties(OioUrl url,
+            RequestContext reqCtx) throws OioException {
+        return this.getAllContainerProperties(url, reqCtx).get("properties");
+    }
+
+    @Override
+    public Map<String, Map<String, String>> getAllContainerProperties(OioUrl url)
             throws OioException {
+        return this.getAllContainerProperties(url, new RequestContext());
+    }
+
+    @Override
+    public Map<String, Map<String, String>> getAllContainerProperties(OioUrl url,
+            RequestContext reqCtx) throws OioException {
         reqCtx.startTiming();
-        return proxy.getContainerProperties(url, reqCtx);
+        return proxy.getAllContainerProperties(url, reqCtx);
     }
 
     @Override

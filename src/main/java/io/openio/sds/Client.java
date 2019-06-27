@@ -227,18 +227,33 @@ public interface Client {
             boolean clear, Map<String, String> sys) throws OioException;
 
     /**
-     * Retrieves user properties of the specified container
+     * Retrieve user properties of the specified container
      *
      * @param url
-     *            the url of the object
-     * @return the user properties (i.e. prefixed with "user.") found on the
-     *         object
+     *            the url of the container
+     * @return the user properties found on the container
      * @throws ContainerNotFoundException
      *             if the specified container doesn't exist
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
-    public Map<String, String> getContainerProperties(OioUrl url) throws OioException;
+    public Map<String, String> getContainerProperties(OioUrl url)
+            throws OioException;
+
+    /**
+     * Retrieve user properties and system properties
+     * of the specified container.
+     *
+     * @param url
+     *            the url of the container
+     * @return the user properties and system properties found on the container
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public Map<String, Map<String, String>> getAllContainerProperties(OioUrl url)
+            throws OioException;
 
     /**
      * Deletes user properties from the specified container
@@ -663,7 +678,7 @@ public interface Client {
             Map<String, String> props, boolean clear) throws OioException;
 
     /**
-     * Retrieves user properties of the specified object
+     * Retrieve user properties of the specified object
      *
      * @param url
      *            the url of the object
@@ -680,7 +695,7 @@ public interface Client {
             throws OioException;
 
     /**
-     * Retrieves user properties of the specified object
+     * Retrieve user properties of the specified object
      *
      * @param url
      *            the url of the object
