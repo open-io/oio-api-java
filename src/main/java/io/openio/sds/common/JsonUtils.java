@@ -43,6 +43,10 @@ public class JsonUtils {
         return builder.create();
     }
 
+    public static Gson gsonForObject() {
+        return builder.serializeNulls().create();
+    }
+
     public static Map<String, String> jsonToMap(String map) {
         return gson().fromJson(map, MAP_TYPE);
     }

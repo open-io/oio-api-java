@@ -2,6 +2,7 @@ package io.openio.sds.proxy;
 
 import static io.openio.sds.common.Check.checkArgument;
 import static io.openio.sds.common.JsonUtils.gson;
+import static io.openio.sds.common.JsonUtils.gsonForObject;
 import static io.openio.sds.common.OioConstants.ACCOUNT_HEADER;
 import static io.openio.sds.common.OioConstants.ACTION_MODE_HEADER;
 import static io.openio.sds.common.OioConstants.CONTAINER_DEL_PROP;
@@ -94,7 +95,6 @@ import io.openio.sds.models.ReferenceInfo;
 import io.openio.sds.models.ServiceInfo;
 
 import java.io.InputStreamReader;
-import java.lang.reflect.Type;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.List;
@@ -657,7 +657,8 @@ public class ProxyClient {
         checkArgument(oinf != null, "Invalid objectInfo");
         Map<String, String> props = oinf.properties();
         String body = format("{\"chunks\": %1$s, \"properties\": %2$s}",
-                gson().toJson(oinf.chunks()), props != null ? gson().toJson(props) : "{}");
+                gsonForObject().toJson(oinf.chunks()),
+                props != null ? gsonForObject().toJson(props) : "{}");
         http.post(
                 format(PUT_OBJECT_FORMAT, settings.url(), settings.ns(),
                         Strings.urlEncode(oinf.url().account()),
@@ -932,8 +933,8 @@ public class ProxyClient {
         if (clear)
             request.query(FLUSH_PARAM, "1");
         String body = format("{\"properties\": %1$s, \"system\": %2$s}",
-                (properties == null) ? "{}" : gson().toJson(properties),
-                (system == null) ? "{}" : gson().toJson(system));
+                (properties == null) ? "{}" : gsonForObject().toJson(properties),
+                (system == null) ? "{}" : gsonForObject().toJson(system));
         request.body(body)
                 .hosts(hosts).verifier(CONTAINER_VERIFIER)
                 .withRequestContext(reqCtx).execute().close();
@@ -1194,7 +1195,7 @@ public class ProxyClient {
         checkArgument(null != url && null != url.object(), INVALID_URL_MSG);
         checkArgument(null != properties && properties.size() > 0, "Invalid properties");
         String body = format("{\"properties\": %1$s}",
-                gson().toJson(properties));
+                gsonForObject().toJson(properties));
         RequestBuilder request = http.post(
                 format(OBJECT_SET_PROP, settings.url(), settings.ns(),
                         Strings.urlEncode(url.account()),
