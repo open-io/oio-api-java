@@ -296,26 +296,51 @@ public class DefaultClient implements AdvancedClient {
     @Override
     public void setContainerProperties(OioUrl url, Map<String, String> props)
             throws OioException {
-        this.setContainerProperties(url, props, false, new RequestContext());
+        this.setContainerProperties(url, props, false, null, new RequestContext());
     }
 
     @Override
     public void setContainerProperties(OioUrl url, Map<String, String> props,
             boolean clear) throws OioException {
-        this.setContainerProperties(url, props, clear, new RequestContext());
+        this.setContainerProperties(url, props, clear, null, new RequestContext());
+    }
+
+    @Override
+    public void setContainerProperties(OioUrl url, Map<String, String> props,
+            Map<String, String> sys) throws OioException {
+        this.setContainerProperties(url, props, false, sys, new RequestContext());
+    }
+
+    @Override
+    public void setContainerProperties(OioUrl url, Map<String, String> props,
+            boolean clear, Map<String, String> sys) throws OioException {
+        this.setContainerProperties(url, props, clear, sys, new RequestContext());
     }
 
     @Override
     public void setContainerProperties(OioUrl url, Map<String, String> props,
             RequestContext reqCtx) throws OioException {
-        this.setContainerProperties(url, props, false, reqCtx);
+        this.setContainerProperties(url, props, false, null, reqCtx);
     }
 
     @Override
     public void setContainerProperties(OioUrl url, Map<String, String> props,
             boolean clear, RequestContext reqCtx) throws OioException {
+        this.setContainerProperties(url, props, clear, null, reqCtx);
+    }
+
+    @Override
+    public void setContainerProperties(OioUrl url, Map<String, String> props,
+            Map<String, String> sys, RequestContext reqCtx) throws OioException {
+        this.setContainerProperties(url, props, false, sys, reqCtx);
+    }
+
+    @Override
+    public void setContainerProperties(OioUrl url, Map<String, String> props,
+            boolean clear, Map<String, String> sys, RequestContext reqCtx)
+            throws OioException {
         reqCtx.startTiming();
-        proxy.setContainerProperties(url, props, clear, reqCtx);
+        proxy.setContainerProperties(url, props, clear, sys, reqCtx);
     }
 
     @Override

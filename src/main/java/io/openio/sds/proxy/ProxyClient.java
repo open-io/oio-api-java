@@ -843,14 +843,12 @@ public class ProxyClient {
     /* -- PROPERTIES -- */
 
     /**
-     * Add properties to the specified container. The properties must be
-     * prefixed with "user." and this prefix will be stored, and finally used to
-     * query the parameters later
-     * 
+     * Set properties to the specified container.
+     *
      * @param url
-     *            the URL of the container to add properties
+     *            the URL of the container to set properties
      * @param properties
-     *            the properties to add
+     *            the properties to set
      * @throws ContainerNotFoundException
      *             if the specified container doesn't exist
      * @throws OioSystemException
@@ -863,14 +861,12 @@ public class ProxyClient {
     }
 
     /**
-     * Add properties to the specified container. The properties must be
-     * prefixed with "user." and this prefix will be stored, and finally used to
-     * query the parameters later
-     * 
+     * Set properties to the specified container.
+     *
      * @param url
-     *            the URL of the container to add properties
+     *            the URL of the container to set properties
      * @param properties
-     *            the properties to add
+     *            the properties to set
      * @param reqCtx
      *            common parameters to all requests
      * @throws ContainerNotFoundException
@@ -885,18 +881,41 @@ public class ProxyClient {
     }
 
     /**
-     * Add properties to the specified container. The properties must be
-     * prefixed with "user." and this prefix will be stored, and finally used to
-     * query the parameters later
-     * 
+     * Set properties to the specified container.
+     *
      * @param url
-     *            the URL of the container to add properties
+     *            the URL of the container to set properties
      * @param properties
-     *            the properties to add
-     * @param reqCtx
-     *            common parameters to all requests
+     *            the properties to set
      * @param clear
      *            clear previous properties
+     * @param reqCtx
+     *            common parameters to all requests
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    @Deprecated
+    public void setContainerProperties(OioUrl url,
+            Map<String, String> properties, boolean clear,
+            RequestContext reqCtx) {
+        setContainerProperties(url, properties, clear, null, reqCtx);
+    }
+
+    /**
+     * Set properties to the specified container.
+     *
+     * @param url
+     *            the URL of the container to set properties
+     * @param properties
+     *            the properties to set
+     * @param system
+     *            the system properties to set
+     * @param clear
+     *            clear previous properties
+     * @param reqCtx
+     *            common parameters to all requests
      * @throws ContainerNotFoundException
      *             if the specified container doesn't exist
      * @throws OioSystemException
@@ -904,18 +923,18 @@ public class ProxyClient {
      */
     public void setContainerProperties(OioUrl url,
             Map<String, String> properties, boolean clear,
-            RequestContext reqCtx) {
+            Map<String, String> system, RequestContext reqCtx) {
         checkArgument(null != url, INVALID_URL_MSG);
-        checkArgument(null != properties && properties.size() > 0, "Invalid properties");
-        String props = gson().toJson(properties);
-        String root = format("{\"properties\": %1$s}", props);
         RequestBuilder request = http.post(
                 format(CONTAINER_SET_PROP, settings.url(), settings.ns(),
                         Strings.urlEncode(url.account()),
                         Strings.urlEncode(url.container())));
         if (clear)
             request.query(FLUSH_PARAM, "1");
-        request.body(root)
+        String body = format("{\"properties\": %1$s, \"system\": %2$s}",
+                (properties == null) ? "{}" : gson().toJson(properties),
+                (system == null) ? "{}" : gson().toJson(system));
+        request.body(body)
                 .hosts(hosts).verifier(CONTAINER_VERIFIER)
                 .withRequestContext(reqCtx).execute().close();
     }

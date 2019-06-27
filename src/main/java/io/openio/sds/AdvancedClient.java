@@ -137,14 +137,12 @@ public interface AdvancedClient extends Client {
     public void deleteContainer(OioUrl url, RequestContext reqCtx) throws OioException;
 
     /**
-     * Add properties to the specified container. The properties must be
-     * prefixed with "user." and this prefix will be stored, and finally used to
-     * query the parameters later
+     * Set properties to the specified container.
      *
      * @param url
-     *            the URL of the container to add properties
+     *            the URL of the container to set properties
      * @param props
-     *            the properties to add
+     *            the properties to set
      * @param reqCtx
      *            common parameters to all requests
      * @throws ContainerNotFoundException
@@ -156,18 +154,16 @@ public interface AdvancedClient extends Client {
             RequestContext reqCtx) throws OioException;
 
     /**
-     * Add properties to the specified container. The properties must be
-     * prefixed with "user." and this prefix will be stored, and finally used to
-     * query the parameters later
+     * Set properties to the specified container.
      *
      * @param url
-     *            the URL of the container to add properties
+     *            the URL of the container to set properties
      * @param props
-     *            the properties to add
-     * @param reqCtx
-     *            common parameters to all requests
+     *            the properties to set
      * @param clear
      *            clear previous properties
+     * @param reqCtx
+     *            common parameters to all requests
      * @throws ContainerNotFoundException
      *             if the specified container doesn't exist
      * @throws OioSystemException
@@ -175,6 +171,47 @@ public interface AdvancedClient extends Client {
      */
     public void setContainerProperties(OioUrl url, Map<String, String> props,
             boolean clear, RequestContext reqCtx) throws OioException;
+
+    /**
+     * Set properties to the specified container.
+     *
+     * @param url
+     *            the URL of the container to set properties
+     * @param props
+     *            the properties to set
+     * @param sys
+     *            the system properties to set
+     * @param reqCtx
+     *            common parameters to all requests
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public void setContainerProperties(OioUrl url, Map<String, String> props,
+            Map<String, String> sys, RequestContext reqCtx) throws OioException;
+
+    /**
+     * Set properties to the specified container.
+     *
+     * @param url
+     *            the URL of the container to set properties
+     * @param props
+     *            the properties to set
+     * @param clear
+     *            clear previous properties
+     * @param sys
+     *            the system properties to set
+     * @param reqCtx
+     *            common parameters to all requests
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public void setContainerProperties(OioUrl url, Map<String, String> props,
+            boolean clear, Map<String, String> sys, RequestContext reqCtx)
+            throws OioException;
 
     /**
      * Retrieves user properties of the specified container
