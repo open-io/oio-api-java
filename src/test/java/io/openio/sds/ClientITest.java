@@ -346,6 +346,45 @@ public class ClientITest {
     }
 
     @Test
+    public void containerSystemProperties() {
+        OioUrl url = url("TEST", UUID.randomUUID().toString());
+        Map<String, String> sys = new HashMap<String, String>();
+        client.createContainer(url);
+        try {
+            sys.put("sys.m2.policy.version", "2");
+            client.setContainerProperties(url, null, sys);
+            Map<String, Map<String, String>> res =
+                    client.getAllContainerProperties(url);
+            assertNotNull(res);
+            assertEquals(2, res.size());
+            assertTrue(res.get("properties").isEmpty());
+            Map<String, String> sysRes = res.get("system");
+            for (Entry<String, String> e : sys.entrySet()) {
+                assertTrue(sysRes.containsKey(e.getKey()));
+                assertEquals(e.getValue(), sysRes.get(e.getKey()));
+            }
+
+            sys.put("sys.m2.policy.version", null);
+            try {
+                if (System. getenv("SDS_BRANCH").equals("4.2.x"))
+                    sys.put("sys.m2.policy.version", "");
+            } catch (NullPointerException e) {
+            }
+            client.setContainerProperties(url, null, sys);
+            res = client.getAllContainerProperties(url);
+            assertNotNull(res);
+            assertEquals(2, res.size());
+            assertTrue(res.get("properties").isEmpty());
+            sysRes = res.get("system");
+            for (Entry<String, String> e : sys.entrySet()) {
+                assertFalse(sysRes.containsKey(e.getKey()));
+            }
+        } finally {
+            client.deleteContainer(url);
+        }
+    }
+
+    @Test
     public void objectProperties() {
         OioUrl url = url("TEST", UUID.randomUUID().toString(), UUID
                 .randomUUID().toString());
