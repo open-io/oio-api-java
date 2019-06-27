@@ -60,28 +60,41 @@ public class DefaultClient implements AdvancedClient {
 
     @Override
     public ContainerInfo createContainer(OioUrl url) {
-        return this.createContainer(url, new RequestContext());
+        return this.createContainer(url, null, null, new RequestContext());
     }
 
     @Override
     public ContainerInfo createContainer(OioUrl url,
             Map<String, String> properties) {
-        return this.createContainer(url, properties, new RequestContext());
+        return this.createContainer(url, properties, null, new RequestContext());
+    }
+
+    @Override
+    public ContainerInfo createContainer(OioUrl url,
+            Map<String, String> properties, Map<String, String> system) {
+        return this.createContainer(url, properties, system, new RequestContext());
     }
 
     @Override
     public ContainerInfo createContainer(OioUrl url, RequestContext reqCtx)
             throws OioException {
-        return this.createContainer(url, null, reqCtx);
+        return this.createContainer(url, null, null, reqCtx);
     }
 
     @Override
     public ContainerInfo createContainer(OioUrl url,
             Map<String, String> properties, RequestContext reqCtx)
             throws OioException {
+        return this.createContainer(url, properties, null, reqCtx);
+    }
+
+    @Override
+    public ContainerInfo createContainer(OioUrl url,
+            Map<String, String> properties, Map<String, String> system,
+            RequestContext reqCtx) throws OioException {
         checkArgument(url != null, "url cannot be null");
         reqCtx.startTiming();
-        return proxy.createContainer(url, properties, reqCtx);
+        return proxy.createContainer(url, properties, system, reqCtx);
     }
 
     @Override

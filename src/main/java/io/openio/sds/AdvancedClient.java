@@ -66,9 +66,7 @@ public interface AdvancedClient extends Client {
      * @param url
      *            the URL of the container
      * @param properties
-     *            the properties to set to the container. Note that the properties
-     *            are case insensitive and will always be returned in lower
-     *            case.
+     *            the user properties to set to the container.
      * @param reqCtx
      *            common parameters to all requests
      * @return a {@code ContainerInfo} with information about the created
@@ -81,6 +79,33 @@ public interface AdvancedClient extends Client {
     public ContainerInfo createContainer(OioUrl url,
             Map<String, String> properties, RequestContext reqCtx)
             throws OioException;
+
+    /**
+     * Create a container using the specified {@link OioUrl}. OioUrl objects are
+     * built by using {@link OioUrl#url(String, String)} method, then you have
+     * to specify the name of the account to use and the name of the future
+     * container.
+     * <p>
+     * The container is available when the returned future is completed.
+     *
+     * @param url
+     *            the URL of the container
+     * @param properties
+     *            the user properties to set to the container.
+     * @param system
+     *            the system properties to set to the container.
+     * @param reqCtx
+     *            common parameters to all requests
+     * @return a {@code ContainerInfo} with information about the created
+     *         container
+     * @throws ContainerExistException
+     *             if the specified container is alreay present
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public ContainerInfo createContainer(OioUrl url,
+            Map<String, String> properties, Map<String, String> system,
+            RequestContext reqCtx) throws OioException;
 
     /**
      * Return information about the specified container.

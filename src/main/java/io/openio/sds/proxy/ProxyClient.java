@@ -403,7 +403,7 @@ public class ProxyClient {
      */
     @Deprecated
     public ContainerInfo createContainer(OioUrl url) throws OioException {
-        return createContainer(url, null, new RequestContext());
+        return createContainer(url, null, null, new RequestContext());
     }
 
     /**
@@ -417,9 +417,10 @@ public class ProxyClient {
      * @throws OioException
      *             if any error occurs during request execution
      */
+    @Deprecated
     public ContainerInfo createContainer(OioUrl url, RequestContext reqCtx)
             throws OioException {
-        return createContainer(url, null, reqCtx);
+        return createContainer(url, null, null, reqCtx);
     }
 
     /**
@@ -428,7 +429,29 @@ public class ProxyClient {
      * @param url
      *            the url of the container to create
      * @param properties
-     *            the properties to add
+     *            the user properties to set
+     * @param reqCtx
+     *            common parameters to all requests
+     * @return {@code ContainerInfo}
+     * @throws OioException
+     *             if any error occurs during request execution
+     */
+    @Deprecated
+    public ContainerInfo createContainer(OioUrl url,
+            Map<String, String> properties, RequestContext reqCtx)
+            throws OioException {
+        return createContainer(url, properties, null, reqCtx);
+    }
+
+    /**
+     * Creates a container using the specified {@code OioUrl}
+     *
+     * @param url
+     *            the url of the container to create
+     * @param properties
+     *            the user properties to set
+     * @param system
+     *            the system properties to set
      * @param reqCtx
      *            common parameters to all requests
      * @return {@code ContainerInfo}
@@ -436,11 +459,13 @@ public class ProxyClient {
      *             if any error occurs during request execution
      */
     public ContainerInfo createContainer(OioUrl url,
-            Map<String, String> properties, RequestContext reqCtx)
+            Map<String, String> properties, Map<String, String> system,
+            RequestContext reqCtx)
             throws OioException {
         checkArgument(null != url, INVALID_URL_MSG);
-        String body = format("{\"properties\": %1$s}",
-                properties != null ? gson().toJson(properties) : "{}");
+        String body = format("{\"properties\": %1$s, \"system\": %2$s}",
+                (properties == null) ? "{}" : gsonForObject().toJson(properties),
+                (system == null) ? "{}" : gsonForObject().toJson(system));
         OioHttpResponse resp = http.post(
                 format(CREATE_CONTAINER_FORMAT, settings.url(), settings.ns(),
                         Strings.urlEncode(url.account()),
