@@ -96,6 +96,7 @@ import io.openio.sds.models.ServiceInfo;
 
 import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -1066,7 +1067,8 @@ public class ProxyClient {
     public void deleteContainerProperties(RequestContext reqCtx, OioUrl url,
             String... keys) {
         checkArgument(null != url, INVALID_URL_MSG);
-        checkArgument(null != keys && 0 < keys.length);
+        if (keys == null)
+            keys = Strings.EMPTY_ARRAY;
         http.post(
                 format(CONTAINER_DEL_PROP, settings.url(), settings.ns(),
                         Strings.urlEncode(url.account()),
@@ -1110,7 +1112,8 @@ public class ProxyClient {
     public void deleteContainerProperties(OioUrl url, List<String> keys,
             RequestContext reqCtx) {
         checkArgument(null != url, INVALID_URL_MSG);
-        checkArgument(null != keys && 0 < keys.size());
+        if (keys == null)
+            keys = Collections.emptyList();
         http.post(
                 format(CONTAINER_DEL_PROP, settings.url(), settings.ns(),
                         Strings.urlEncode(url.account()),

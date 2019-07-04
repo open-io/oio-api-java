@@ -12,6 +12,7 @@ import io.openio.sds.logging.SdsLoggerFactory;
 public class Strings {
 
     private static final SdsLogger LOGGER = SdsLoggerFactory.getLogger(Strings.class);
+    public static final String[] EMPTY_ARRAY = new String[0];
 
     public static boolean nullOrEmpty(String string) {
         return null == string || 0 == string.length();

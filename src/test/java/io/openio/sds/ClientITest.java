@@ -59,6 +59,18 @@ public class ClientITest {
     public static void teardown() {
     }
 
+    private boolean isSdsBranch(String sdsBranch) {
+        String currentSdsBranch = null;
+        try {
+            currentSdsBranch = System.getenv("SDS_BRANCH");
+        } catch (NullPointerException e) {
+        }
+        if (currentSdsBranch == null) {
+            currentSdsBranch = "master";
+        }
+        return currentSdsBranch.equals(sdsBranch);
+    }
+
     @Test
     public void getNamespaceInfo() {
         NamespaceInfo nsi = client.getNamespaceInfo();
@@ -286,6 +298,13 @@ public class ClientITest {
             res = client.getContainerProperties(url);
             assertNotNull(res);
             assertEquals(2, res.size());
+            if (!isSdsBranch("4.2.x")) {
+                // Delete all containers properties
+                client.deleteContainerProperties(url);
+                res = client.getContainerProperties(url);
+                assertNotNull(res);
+                assertEquals(0, res.size());
+            }
         } finally {
             client.deleteContainer(url);
         }
@@ -376,11 +395,8 @@ public class ClientITest {
             }
 
             sys.put("sys.m2.policy.version", null);
-            try {
-                if (System. getenv("SDS_BRANCH").equals("4.2.x"))
-                    sys.put("sys.m2.policy.version", "");
-            } catch (NullPointerException e) {
-            }
+            if (isSdsBranch("4.2.x"))
+                sys.put("sys.m2.policy.version", "");
             client.setContainerProperties(url, null, sys);
             res = client.getAllContainerProperties(url);
             assertNotNull(res);
