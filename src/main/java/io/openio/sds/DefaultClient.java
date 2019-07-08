@@ -13,6 +13,7 @@ import io.openio.sds.http.OioHttp;
 import io.openio.sds.models.ContainerInfo;
 import io.openio.sds.models.ListOptions;
 import io.openio.sds.models.NamespaceInfo;
+import io.openio.sds.models.ObjectCreationOptions;
 import io.openio.sds.models.ObjectInfo;
 import io.openio.sds.models.ObjectList;
 import io.openio.sds.models.OioUrl;
@@ -142,41 +143,75 @@ public class DefaultClient implements AdvancedClient {
 
     @Override
     public ObjectInfo putObject(OioUrl url, Long size, File data) {
-        return putObject(url, size, data, null, null);
+        return putObject(url, size, data, null, new RequestContext());
     }
 
     @Override
-    public ObjectInfo putObject(OioUrl url, Long size, File data, Map<String, String> properties)
-            throws OioException {
-        return putObject(url, size, data, null, properties);
+    public ObjectInfo putObject(OioUrl url, Long size, File data,
+            Map<String, String> properties) throws OioException {
+        ObjectCreationOptions options = new ObjectCreationOptions()
+                .properties(properties);
+        return putObject(url, size, data, options, new RequestContext());
     }
 
     @Override
     public ObjectInfo putObject(OioUrl url, Long size, File data, Long version) {
-        return putObject(url, size, data, version, null);
+        ObjectCreationOptions options = new ObjectCreationOptions()
+                .version(version);
+        return putObject(url, size, data, options, new RequestContext());
     }
 
     @Override
     public ObjectInfo putObject(OioUrl url, Long size, File data, Long version,
             Map<String, String> properties) throws OioException {
-        checkArgument(null != url, "url cannot be null");
-        return putObject(url, size, data, version, properties, new RequestContext());
+        ObjectCreationOptions options = new ObjectCreationOptions()
+                .version(version)
+                .properties(properties);
+        return putObject(url, size, data, options, new RequestContext());
     }
 
     @Override
     public ObjectInfo putObject(OioUrl url, Long size, File data, Long version,
-            Map<String, String> properties, RequestContext reqCtx) throws OioException {
+            Map<String, String> properties, RequestContext reqCtx)
+            throws OioException {
+        ObjectCreationOptions options = new ObjectCreationOptions()
+                .version(version)
+                .properties(properties);
+        return putObject(url, size, data, options, new RequestContext());
+    }
+
+    @Override
+    public ObjectInfo putObject(OioUrl url, Long size, File data,
+            ObjectCreationOptions options) throws OioException {
+        return putObject(url, size, data, options, new RequestContext());
+    }
+
+    @Override
+    public ObjectInfo putObject(OioUrl url, Long size, File data,
+            ObjectCreationOptions options, RequestContext reqCtx)
+            throws OioException {
         checkArgument(url != null, "url cannot be null");
         checkArgument(url.object() != null, "object part of URL cannot be null");
+        if (options == null)
+            options = new ObjectCreationOptions();
         reqCtx.startTiming();
-        ObjectInfo oinf = proxy.preparePutObject(url, size, reqCtx);
-        oinf.properties(properties);
+        ObjectInfo oinf = proxy.preparePutObject(url, size, options.policy(),
+                options.version(), reqCtx);
+
+        // TODO(adu): To delete when oio-sds >= 4.4.0
+        if (options.version() != null)
+            oinf.version(options.version());
+
+        oinf.properties(options.properties());
+        if (options.mimeType() != null)
+            oinf.mimeType(options.mimeType());
+
         try {
             if (oinf.isEC())
                 ecd.uploadChunks(oinf, data, reqCtx);
             else
                 rawx.uploadChunks(oinf, data, reqCtx);
-            proxy.putObject(oinf, version, reqCtx);
+            proxy.putObject(oinf, reqCtx);
         } catch (OioException oioe) {
             // TODO improve by knowing which chunk is uploaded
             rawx.deleteChunks(oinf.chunks());
@@ -186,42 +221,79 @@ public class DefaultClient implements AdvancedClient {
     }
 
     @Override
-    public ObjectInfo putObject(OioUrl url, Long size, InputStream data) {
-        return putObject(url, size, data, null, null);
+    public ObjectInfo putObject(OioUrl url, Long size, InputStream data)
+            throws OioException {
+        return putObject(url, size, data, null, new RequestContext());
     }
 
     @Override
     public ObjectInfo putObject(OioUrl url, Long size, InputStream data,
             Map<String, String> properties) throws OioException {
-        return putObject(url, size, data, null, properties);
+        ObjectCreationOptions options = new ObjectCreationOptions()
+                .properties(properties);
+        return putObject(url, size, data, options, new RequestContext());
     }
 
     @Override
-    public ObjectInfo putObject(OioUrl url, Long size, InputStream data, Long version) {
-        return putObject(url, size, data, version, null);
+    public ObjectInfo putObject(OioUrl url, Long size, InputStream data,
+            Long version) throws OioException {
+        ObjectCreationOptions options = new ObjectCreationOptions()
+                .version(version);
+        return putObject(url, size, data, options, new RequestContext());
     }
 
     @Override
-    public ObjectInfo putObject(OioUrl url, Long size, InputStream data, Long version,
-            Map<String, String> properties) throws OioException {
-        checkArgument(url != null, "url cannot be null");
-        return putObject(url, size, data, version, properties, new RequestContext());
+    public ObjectInfo putObject(OioUrl url, Long size, InputStream data,
+            Long version, Map<String, String> properties) throws OioException {
+        ObjectCreationOptions options = new ObjectCreationOptions()
+                .version(version)
+                .properties(properties);
+        return putObject(url, size, data, options, new RequestContext());
     }
 
     @Override
-    public ObjectInfo putObject(OioUrl url, Long size, InputStream data, Long version,
-            Map<String, String> properties, RequestContext reqCtx) throws OioException {
+    public ObjectInfo putObject(OioUrl url, Long size, InputStream data,
+            Long version, Map<String, String> properties, RequestContext reqCtx)
+            throws OioException {
+        ObjectCreationOptions options = new ObjectCreationOptions()
+                .version(version)
+                .properties(properties);
+        return putObject(url, size, data, options, new RequestContext());
+    }
+
+    @Override
+    public ObjectInfo putObject(OioUrl url, Long size, InputStream data,
+            ObjectCreationOptions options) throws OioException {
+        return putObject(url, size, data, options, new RequestContext());
+    }
+
+
+    @Override
+    public ObjectInfo putObject(OioUrl url, Long size, InputStream data,
+            ObjectCreationOptions options, RequestContext reqCtx)
+            throws OioException {
         checkArgument(url != null, "url cannot be null");
         checkArgument(url.object() != null, "object part of URL cannot be null");
+        if (options == null)
+            options = new ObjectCreationOptions();
         reqCtx.startTiming();
-        ObjectInfo oinf = proxy.preparePutObject(url, size, reqCtx);
-        oinf.properties(properties);
+        ObjectInfo oinf = proxy.preparePutObject(url, size, options.policy(),
+                options.version(), reqCtx);
+
+        // TODO(adu): To delete when oio-sds >= 4.4.0
+        if (options.version() != null)
+            oinf.version(options.version());
+
+        oinf.properties(options.properties());
+        if (options.mimeType() != null)
+            oinf.mimeType(options.mimeType());
+
         try {
             if (oinf.isEC())
                 ecd.uploadChunks(oinf, data, reqCtx);
             else
                 rawx.uploadChunks(oinf, data, reqCtx);
-            proxy.putObject(oinf, version, reqCtx);
+            proxy.putObject(oinf, reqCtx);
         } catch (OioException oioe) {
             // TODO improve by knowing which chunk is uploaded
             rawx.deleteChunks(oinf.chunks());

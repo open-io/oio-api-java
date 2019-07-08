@@ -161,7 +161,7 @@ public class EcdClient implements StorageClient {
 		        .header(CHUNK_META_CONTENT_POLICY,
 		                oinf.policy())
 		        .header(CHUNK_META_CONTENT_MIME_TYPE,
-		                oinf.mtype())
+		                oinf.mimeType())
 		        .header(CHUNK_META_CONTENT_CHUNK_METHOD,
 		                oinf.chunkMethod())
 		        .header(CHUNK_META_CONTENT_CHUNKSNB,

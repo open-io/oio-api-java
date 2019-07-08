@@ -32,6 +32,7 @@ import static io.openio.sds.common.OioConstants.DIR_REF_SHOW_FORMAT;
 import static io.openio.sds.common.OioConstants.DIR_UNLINK_SRV_FORMAT;
 import static io.openio.sds.common.OioConstants.FLUSH_PARAM;
 import static io.openio.sds.common.OioConstants.GET_BEANS_FORMAT;
+import static io.openio.sds.common.OioConstants.GET_BEANS_FORMAT_WITH_VERSION;
 import static io.openio.sds.common.OioConstants.GET_CONTAINER_INFO_FORMAT;
 import static io.openio.sds.common.OioConstants.GET_OBJECT_FORMAT;
 import static io.openio.sds.common.OioConstants.INVALID_URL_MSG;
@@ -636,7 +637,7 @@ public class ProxyClient {
 
     /**
      * Prepares an object upload by asking some chunks available location.
-     * 
+     *
      * @param url
      *            the URL of the future object to create
      * @param size
@@ -648,17 +649,55 @@ public class ProxyClient {
      * @throws OioException
      *             if any error occurs during request execution
      */
+    @Deprecated
     public ObjectInfo preparePutObject(OioUrl url, long size,
             RequestContext reqCtx) throws OioException {
+        return preparePutObject(url, size, null, null, reqCtx);
+    }
+
+    /**
+     * Prepares an object upload by asking some chunks available location.
+     *
+     * @param url
+     *            the URL of the future object to create
+     * @param size
+     *            the size of the future object
+     * @param policy
+     *            the policy of the future object
+     * @param version
+     *            the version of the future object
+     * @param reqCtx
+     *            Common parameters to all requests
+     * @return an {@link ObjectInfo} which contains all informations to upload
+     *         the object
+     * @throws OioException
+     *             if any error occurs during request execution
+     */
+    public ObjectInfo preparePutObject(OioUrl url, long size,
+            String policy, Long version, RequestContext reqCtx)
+            throws OioException {
         checkArgument(null != url, INVALID_URL_MSG);
-        OioHttpResponse resp = http.post(
-                format(GET_BEANS_FORMAT, settings.url(), settings.ns(),
-                        Strings.urlEncode(url.account()),
-                        Strings.urlEncode(url.container()),
-                        Strings.urlEncode(url.object())))
+
+        String uri;
+        if (version == null) {
+            uri = format(GET_BEANS_FORMAT, settings.url(), settings.ns(),
+                    Strings.urlEncode(url.account()),
+                    Strings.urlEncode(url.container()),
+                    Strings.urlEncode(url.object()));
+        } else {
+            uri = format(GET_BEANS_FORMAT_WITH_VERSION, settings.url(), settings.ns(),
+                    Strings.urlEncode(url.account()),
+                    Strings.urlEncode(url.container()),
+                    Strings.urlEncode(url.object()),
+                    version);
+        }
+        BeansRequest beansRequest = new BeansRequest()
+                .size(size)
+                .policy(policy);
+        OioHttpResponse resp = http.post(uri)
                 .header(ACTION_MODE_HEADER,
                         settings.autocreate() ? OioConstants.AUTOCREATE_ACTION_MODE : null)
-                .body(gson().toJson(new BeansRequest().size(size)))
+                .body(gson().toJson(beansRequest))
                 .hosts(hosts).verifier(OBJECT_VERIFIER)
                 .withRequestContext(reqCtx).execute();
         return getBeansObjectInfoAndClose(url, resp);
@@ -678,8 +717,27 @@ public class ProxyClient {
      * @throws OioException
      *             if any error occurs during request execution
      */
+    @Deprecated
     public ObjectInfo putObject(ObjectInfo oinf, Long version,
             RequestContext reqCtx) throws OioException {
+        oinf.version(version);
+        return putObject(oinf, reqCtx);
+    }
+
+    /**
+     * Validate an object upload in the OpenIO-SDS namespace.
+     *
+     * @param oinf
+     *            the {@link ObjectInfo} containing informations about the
+     *            uploaded object
+     * @param reqCtx
+     *            Common parameters to all requests
+     * @return the validated object.
+     * @throws OioException
+     *             if any error occurs during request execution
+     */
+    public ObjectInfo putObject(ObjectInfo oinf, RequestContext reqCtx)
+            throws OioException {
         checkArgument(oinf != null, "Invalid objectInfo");
         Map<String, String> props = oinf.properties();
         String body = format("{\"chunks\": %1$s, \"properties\": %2$s}",
@@ -690,12 +748,14 @@ public class ProxyClient {
                         Strings.urlEncode(oinf.url().account()),
                         Strings.urlEncode(oinf.url().container()),
                         Strings.urlEncode(oinf.url().object())))
-                .header(CONTENT_META_LENGTH_HEADER, String.valueOf(oinf.size()))
-                .header(CONTENT_META_HASH_HEADER, oinf.hash())
-                .header(CONTENT_META_POLICY_HEADER, oinf.policy())
                 .header(CONTENT_META_CHUNK_METHOD_HEADER, oinf.chunkMethod())
-                .header(CONTENT_META_VERSION_HEADER, versionHeader(oinf, version))
+                .header(CONTENT_META_HASH_HEADER, oinf.hash())
                 .header(CONTENT_META_ID_HEADER, oinf.oid())
+                .header(CONTENT_META_LENGTH_HEADER, String.valueOf(oinf.size()))
+                .header(CONTENT_META_ID_HEADER, oinf.oid())
+                .header(CONTENT_META_MIME_TYPE_HEADER, oinf.mimeType())
+                .header(CONTENT_META_POLICY_HEADER, oinf.policy())
+                .header(CONTENT_META_VERSION_HEADER, oinf.version().toString())
                 .body(body)
                 .hosts(hosts).verifier(OBJECT_VERIFIER)
                 .withRequestContext(reqCtx).execute().close();
@@ -1531,7 +1591,7 @@ public class ProxyClient {
                 .version(longHeader(r, CONTENT_META_VERSION_HEADER))
                 .hash(r.header(OioConstants.CONTENT_META_HASH_HEADER))
                 .hashMethod(r.header(CONTENT_META_HASH_METHOD_HEADER))
-                .mtype(r.header(CONTENT_META_MIME_TYPE_HEADER))
+                .mimeType(r.header(CONTENT_META_MIME_TYPE_HEADER))
                 .properties(propsFromHeaders(r.headers()))
                 .withRequestContext(r.requestContext());
     }
@@ -1578,11 +1638,6 @@ public class ProxyClient {
         } finally {
             resp.close(success);
         }
-    }
-
-    private String versionHeader(ObjectInfo oinf, Long version) {
-        return null == version ? null == oinf.version() ? null : oinf.version().toString()
-                : version.toString();
     }
 
     private Map<String, String> propsFromHeaders(HashMap<String,

@@ -34,6 +34,7 @@ import io.openio.sds.exceptions.ObjectNotFoundException;
 import io.openio.sds.exceptions.OioException;
 import io.openio.sds.models.ContainerInfo;
 import io.openio.sds.models.NamespaceInfo;
+import io.openio.sds.models.ObjectCreationOptions;
 import io.openio.sds.models.ObjectInfo;
 import io.openio.sds.models.OioUrl;
 import io.openio.sds.models.Range;
@@ -637,6 +638,53 @@ public class ClientITest {
         }
     }
 
+    @Test
+    public void objectPutWithAllOptions() throws IOException,
+            NoSuchAlgorithmException {
+        byte[] src = TestHelper.bytes(1024L);
+        OioUrl url = url("TEST", UUID.randomUUID().toString(), UUID
+                .randomUUID().toString());
+        Map<String, String> props = new HashMap<String, String>();
+        props.put("key1", "value1");
+        props.put("key2", "value2");
+        props.put("key3", "value3");
+        ObjectCreationOptions options = new ObjectCreationOptions()
+                .version(123456789L)
+                .policy("SINGLE")
+                .mimeType("test")
+                .properties(props);
+        client.createContainer(url);
+        try {
+            client.putObject(url, 1024L, new ByteArrayInputStream(src),
+                    options);
+            try {
+                ObjectInfo oinf = client.getObjectInfo(url, 123456789L);
+                Assert.assertNotNull(oinf);
+                Assert.assertEquals(1024, oinf.size().longValue());
+                Assert.assertEquals("md5", oinf.hashMethod());
+                checkObject(oinf, new ByteArrayInputStream(src));
+                Assert.assertEquals(
+                        Hex.toHex(MessageDigest.getInstance("MD5").digest(src)),
+                        oinf.hash());
+                Assert.assertEquals(123456789L, oinf.version().longValue());
+                Assert.assertEquals("SINGLE", oinf.policy());
+                Assert.assertEquals("plain/nb_copy=1", oinf.chunkMethod());
+                Assert.assertEquals(1, oinf.chunks().size());
+                Assert.assertEquals("test", oinf.mimeType());
+                Assert.assertTrue(oinf.ctime() > 0);
+                assertEquals(props.size(), oinf.properties().size());
+                for (Entry<String, String> e : props.entrySet()) {
+                    assertTrue(oinf.properties().containsKey(e.getKey()));
+                    assertEquals(e.getValue(), oinf.properties().get(e.getKey()));
+                }
+            } finally {
+                client.deleteObject(url, 123456789L);
+            }
+        } finally {
+            client.deleteContainer(url);
+        }
+    }
+
     @Test(expected=ObjectNotFoundException.class)
     public void getObjectInfoWithWrongVersion() {
         byte[] src = TestHelper.bytes(1024L);
@@ -774,4 +822,5 @@ public class ClientITest {
                 Assert.fail(e.getMessage());
             }
     }
+
 }

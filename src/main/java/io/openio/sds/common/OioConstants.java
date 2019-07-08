@@ -127,6 +127,7 @@ public class OioConstants {
     public static final String LIST_OBJECTS_FORMAT = "%s/v3.0/%s/container/list?acct=%s&ref=%s";
     public static final String DELETE_CONTAINER_FORMAT = "%s/v3.0/%s/container/destroy?acct=%s&ref=%s";
     public static final String GET_BEANS_FORMAT = "%s/v3.0/%s/content/prepare?acct=%s&ref=%s&path=%s";
+    public static final String GET_BEANS_FORMAT_WITH_VERSION = "%s/v3.0/%s/content/prepare?acct=%s&ref=%s&path=%s&version=%d";
     public static final String PUT_OBJECT_FORMAT = "%s/v3.0/%s/content/create?acct=%s&ref=%s&path=%s";
     public static final String GET_OBJECT_FORMAT = "%s/v3.0/%s/content/show?acct=%s&ref=%s&path=%s";
     public static final String DELETE_OBJECT_FORMAT = "%s/v3.0/%s/content/delete?acct=%s&ref=%s&path=%s";

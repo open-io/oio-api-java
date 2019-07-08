@@ -89,7 +89,7 @@ public class EcdClientTest {
 		Mockito.when(mockedObject.version())
 		        .thenReturn(System.currentTimeMillis());
 		Mockito.when(mockedObject.policy()).thenReturn("ECD");
-		Mockito.when(mockedObject.mtype())
+		Mockito.when(mockedObject.mimeType())
 		        .thenReturn("application/octet-stream");
 		Mockito.when(mockedObject.chunkMethod())
 		        .thenReturn("ec/algo=jerasure,k=6,m=3");
@@ -154,7 +154,7 @@ public class EcdClientTest {
 		Mockito.when(mockedObject.version()).thenReturn(
 				System.currentTimeMillis());
 		Mockito.when(mockedObject.policy()).thenReturn("EC");
-		Mockito.when(mockedObject.mtype()).thenReturn(
+		Mockito.when(mockedObject.mimeType()).thenReturn(
 				"application/octet-stream");
 		Mockito.when(mockedObject.chunkMethod()).thenReturn(chunkMethod);
 		Mockito.when(mockedObject.nbchunks()).thenReturn(1);

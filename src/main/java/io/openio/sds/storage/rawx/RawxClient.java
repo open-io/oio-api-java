@@ -269,7 +269,7 @@ public class RawxClient implements StorageClient {
 								.header(CHUNK_META_CONTENT_ID, oinf.oid())
 								.header(CHUNK_META_CONTENT_VERSION, String.valueOf(oinf.version()))
 								.header(CHUNK_META_CONTENT_POLICY, oinf.policy())
-								.header(CHUNK_META_CONTENT_MIME_TYPE, oinf.mtype())
+								.header(CHUNK_META_CONTENT_MIME_TYPE, oinf.mimeType())
 								.header(CHUNK_META_CONTENT_CHUNK_METHOD, oinf.chunkMethod())
 								.header(CHUNK_META_CONTENT_CHUNKSNB,
 										String.valueOf(oinf.nbchunks()))

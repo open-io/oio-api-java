@@ -15,6 +15,7 @@ import io.openio.sds.exceptions.OioSystemException;
 import io.openio.sds.models.ContainerInfo;
 import io.openio.sds.models.ListOptions;
 import io.openio.sds.models.NamespaceInfo;
+import io.openio.sds.models.ObjectCreationOptions;
 import io.openio.sds.models.ObjectInfo;
 import io.openio.sds.models.ObjectList;
 import io.openio.sds.models.OioUrl;
@@ -308,7 +309,7 @@ public interface Client {
 
     /**
      * Push an object into the oio namespace
-     * 
+     *
      * @param url
      *            the url of the object to create
      * @param size
@@ -321,11 +322,12 @@ public interface Client {
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
-    public ObjectInfo putObject(OioUrl url, Long size, File data) throws OioException;
+    public ObjectInfo putObject(OioUrl url, Long size, File data)
+            throws OioException;
 
     /**
      * Push an object into the oio namespace
-     * 
+     *
      * @param url
      *            the url of the object to create
      * @param size
@@ -342,12 +344,12 @@ public interface Client {
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
-    public ObjectInfo putObject(OioUrl url, Long size, File data, Map<String, String> properties)
-            throws OioException;
+    public ObjectInfo putObject(OioUrl url, Long size, File data,
+            Map<String, String> properties) throws OioException;
 
     /**
      * Push an object into the oio namespace
-     * 
+     *
      * @param url
      *            the url of the object to create
      * @param size
@@ -362,11 +364,12 @@ public interface Client {
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
-    public ObjectInfo putObject(OioUrl url, Long size, File data, Long version) throws OioException;
+    public ObjectInfo putObject(OioUrl url, Long size, File data, Long version)
+            throws OioException;
 
     /**
      * Push an object into the oio namespace
-     * 
+     *
      * @param url
      *            the url of the object to create
      * @param size
@@ -390,7 +393,27 @@ public interface Client {
 
     /**
      * Push an object into the oio namespace
-     * 
+     *
+     * @param url
+     *            the url of the object to create
+     * @param size
+     *            the size of the object
+     * @param data
+     *            the file to read the data from
+     * @param options
+     *            the options of content to upload
+     * @return information about the uploaded object
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public ObjectInfo putObject(OioUrl url, Long size, File data,
+            ObjectCreationOptions options) throws OioException;
+
+    /**
+     * Push an object into the oio namespace
+     *
      * @param url
      *            the url of the object to create
      * @param size
@@ -405,11 +428,12 @@ public interface Client {
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
-    public ObjectInfo putObject(OioUrl url, Long size, InputStream data) throws OioException;
+    public ObjectInfo putObject(OioUrl url, Long size, InputStream data)
+            throws OioException;
 
     /**
      * Push an object into the oio namespace
-     * 
+     *
      * @param url
      *            the url of the object to create
      * @param size
@@ -433,7 +457,7 @@ public interface Client {
 
     /**
      * Push an object into the oio namespace
-     * 
+     *
      * @param url
      *            the url of the object to create
      * @param size
@@ -450,12 +474,12 @@ public interface Client {
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
-    public ObjectInfo putObject(OioUrl url, Long size, InputStream data, Long version)
-            throws OioException;
+    public ObjectInfo putObject(OioUrl url, Long size, InputStream data,
+            Long version) throws OioException;
 
     /**
      * Push an object into the oio namespace
-     * 
+     *
      * @param url
      *            the url of the object to create
      * @param size
@@ -476,9 +500,31 @@ public interface Client {
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
-    public ObjectInfo putObject(OioUrl url, Long size, InputStream data, Long version,
-            Map<String, String> properties) throws OioException;
+    public ObjectInfo putObject(OioUrl url, Long size, InputStream data,
+            Long version, Map<String, String> properties) throws OioException;
 
+
+    /**
+     * Push an object into the oio namespace
+     *
+     * @param url
+     *            the url of the object to create
+     * @param size
+     *            the size of the object
+     * @param data
+     *            the InputStream to read the data from
+     * @param options
+     *            the options of content to upload
+     * @return information about the uploaded object
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws ObjectExistException
+     *             if the specified object alreadeay exist in the container
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public ObjectInfo putObject(OioUrl url, Long size, InputStream data,
+            ObjectCreationOptions options) throws OioException;
 
     /**
      * Returns information about the specified object

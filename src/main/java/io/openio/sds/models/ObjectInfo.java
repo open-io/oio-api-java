@@ -12,7 +12,6 @@ import java.util.Map;
 import io.openio.sds.RequestContext;
 import io.openio.sds.common.Hash;
 import io.openio.sds.common.MoreObjects;
-import io.openio.sds.common.OioConstants;
 import io.openio.sds.common.Strings;
 
 public class ObjectInfo {
@@ -27,7 +26,7 @@ public class ObjectInfo {
     private String chunkMethod;
     private Long size;
     private Long version;
-    private String mtype;
+    private String mimeType;
     private Map<String, String> properties;
     private List<ChunkInfo> chunks;
     private ECInfo ecinfo;
@@ -152,12 +151,22 @@ public class ObjectInfo {
         return this;
     }
 
+    @Deprecated
     public String mtype() {
-        return mtype;
+        return mimeType();
     }
 
-    public ObjectInfo mtype(String mtype) {
-        this.mtype = mtype;
+    @Deprecated
+    public ObjectInfo mtype(String mimeType) {
+        return mimeType(mimeType);
+    }
+
+    public String mimeType() {
+        return mimeType;
+    }
+
+    public ObjectInfo mimeType(String mimeType) {
+        this.mimeType = mimeType;
         return this;
     }
 
@@ -224,7 +233,7 @@ public class ObjectInfo {
                 .omitNullValues()
                 .add("url", url)
                 .add("ctime", ctime)
-                .add("mime-type", mtype)
+                .add("mime-type", mimeType)
                 .add("deleted", deleted)
                 .add("policy", policy)
                 .add("hash", hash)
