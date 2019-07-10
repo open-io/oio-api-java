@@ -125,8 +125,13 @@ public class ProxySettings {
      * @return the first ECD URL
      */
     public String ecd() {
-        if (ecdHosts == null || ecdHosts.size() <= 0)
-            return null;
+        if (ecdHosts == null || ecdHosts.size() == 0) {
+            if (this.ecd == null) {
+                return null;
+            } else {
+                ecdHosts = strToSocketAddressList(this.ecd);
+            }
+        }
         return String.format("http://%1$s:%2$d",
                 ecdHosts.get(0).getHostString(), ecdHosts.get(0).getPort());
     }
