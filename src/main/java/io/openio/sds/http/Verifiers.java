@@ -11,8 +11,10 @@ import com.google.gson.stream.JsonReader;
 
 import io.openio.sds.exceptions.BadRequestException;
 import io.openio.sds.exceptions.ChunkNotFoundException;
+import io.openio.sds.exceptions.ContainerExistException;
 import io.openio.sds.exceptions.ContainerNotEmptyException;
 import io.openio.sds.exceptions.ContainerNotFoundException;
+import io.openio.sds.exceptions.ObjectExistException;
 import io.openio.sds.exceptions.ObjectNotFoundException;
 import io.openio.sds.exceptions.OioException;
 import io.openio.sds.exceptions.OioSystemException;
@@ -63,6 +65,8 @@ public class Verifiers {
             case 406:
             case 431:
                 throw new ContainerNotFoundException(err.toString());
+            case 433:
+                throw new ContainerExistException(err.toString());
             case 438:
                 throw new ContainerNotEmptyException(err.toString());
             case 500:
@@ -89,6 +93,8 @@ public class Verifiers {
                 throw new ContainerNotFoundException(err.toString());
             case 420:
                 throw new ObjectNotFoundException(err.toString());
+            case 421:
+                throw new ObjectExistException(err.toString());
             case 500:
                 throw new OioSystemException(err.toString());
             default:
