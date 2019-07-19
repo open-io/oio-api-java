@@ -82,24 +82,26 @@ public class ProxyClientITest {
         String container = UUID.randomUUID().toString();
         System.out.println(container);
         OioUrl url = OioUrl.url("TEST", container);
-        ContainerInfo ci = proxy.createContainer(url);
+        ContainerInfo ci = proxy.createContainer(url, null, null, null);
         assertNotNull(ci);
         assertNotNull(ci.name());
         assertEquals(container, ci.name());
-        ci = proxy.getContainerInfo(url);
-        System.out.println(proxy.listContainer(url, new ListOptions()));
+        ci = proxy.getContainerInfo(url, null);
+        System.out.println(proxy.listObjects(url, new ListOptions(), null));
         System.out.println(ci);
-        proxy.deleteContainer(url);
-        proxy.getContainerInfo(url);
+        proxy.deleteContainer(url, null);
+        proxy.getContainerInfo(url, null);
     }
 
     @Test(expected = ContainerNotFoundException.class)
     public void getUnknwonContainer() {
         try {
-            proxy.getContainerInfo(url("TEST", UUID.randomUUID().toString()));
+            proxy.getContainerInfo(url("TEST", UUID.randomUUID().toString()),
+                    null);
         } catch (OioException e) {
             try {
-                proxy.deleteReference(url("TEST", UUID.randomUUID().toString()));
+                proxy.deleteReference(url("TEST", UUID.randomUUID().toString()),
+                        null);
             } catch (OioException e1) {
                 e1.printStackTrace();
             }
@@ -113,7 +115,8 @@ public class ProxyClientITest {
         OioUrl url = url("TEST", UUID.randomUUID().toString(), UUID.randomUUID().toString());
         // proxy.createContainer(url);
         try {
-            ObjectInfo oinf = proxy.preparePutObject(url, 1024, new RequestContext());
+            ObjectInfo oinf = proxy.preparePutObject(url, 1024,
+                    null, null, new RequestContext());
             assertNotNull(oinf);
             assertNotNull(oinf.url());
             assertEquals(url.account(), oinf.url().account());
@@ -126,7 +129,7 @@ public class ProxyClientITest {
             Assert.assertNotNull(oinf.chunkMethod());
             Assert.assertNotNull(oinf.hashMethod());
         } finally {
-            proxy.deleteContainer(url);
+            proxy.deleteContainer(url, null);
         }
     }
 
@@ -134,25 +137,25 @@ public class ProxyClientITest {
     public void handleReference() {
         OioUrl url = url("TEST", UUID.randomUUID().toString());
         try {
-            proxy.createReference(url);
-            proxy.showReference(url);
-            proxy.deleteReference(url);
+            proxy.createReference(url, null);
+            proxy.showReference(url, null);
+            proxy.deleteReference(url, null);
         } catch (OioException e) {
             e.printStackTrace();
             Assert.fail();
         }
-        proxy.showReference(url);
+        proxy.showReference(url, null);
     }
 
     @Test
     public void link() {
         OioUrl url = url("TEST", UUID.randomUUID().toString());
         System.out.println(url);
-        proxy.createReference(url);
-        List<LinkedServiceInfo> l = proxy.linkService(url, "rawx");
+        proxy.createReference(url, null);
+        List<LinkedServiceInfo> l = proxy.linkService(url, "rawx", null);
         assertNotNull(l);
         assertTrue(0 < l.size());
-        List<LinkedServiceInfo> ref = proxy.listServices(url, "rawx");
+        List<LinkedServiceInfo> ref = proxy.listServices(url, "rawx", null);
         assertNotNull(ref);
         assertTrue(0 < ref.size());
     }
@@ -161,7 +164,7 @@ public class ProxyClientITest {
     public void percentNamedContainer() {
         OioUrl url = url("TEST", "test%percent" + System.currentTimeMillis(), UUID.randomUUID()
                 .toString());
-        proxy.createContainer(url);
-        proxy.deleteContainer(url);
+        proxy.createContainer(url, null, null, null);
+        proxy.deleteContainer(url, null);
     }
 }

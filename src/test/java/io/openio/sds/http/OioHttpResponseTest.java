@@ -45,7 +45,7 @@ public class OioHttpResponseTest {
 
 	@Test
 	public void simpleNoHeaders200() {
-		OioHttpResponse resp = testResponse(
+		testResponse(
 				"HTTP/1.1 200 OK\r\n\r\n",
 				200,
 				"OK",

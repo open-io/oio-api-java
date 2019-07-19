@@ -20,7 +20,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static io.openio.sds.common.IdGen.requestId;
 import static io.openio.sds.common.JsonUtils.gson;
 import static io.openio.sds.common.OioConstants.LIST_TRUNCATED_HEADER;
 import static org.junit.Assert.assertEquals;
@@ -112,26 +111,26 @@ public class ProxyClientTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void listContainerNullUrl() {
+    public void listObjectsNullUrl() {
 
         OioHttp http = Mockito.mock(OioHttp.class);
 
         ProxyClient proxy = newTestProxyClient(http);
-        proxy.listContainer(null, new ListOptions());
+        proxy.listObjects(null, new ListOptions(), null);
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void listContainerNullListOptions() {
+    public void listObjectsNullListOptions() {
 
         OioHttp http = Mockito.mock(OioHttp.class);
         ProxyClient proxy = newTestProxyClient(http);
 
         OioUrl url = newContainerOioUrl();
-        proxy.listContainer(url, null);
+        proxy.listObjects(url, null, null);
     }
 
     @Test
-    public void listContainer() {
+    public void listObjects() {
         ObjectList list = new ObjectList();
         ArrayList<String> p = new ArrayList<String>();
         p.add("prefix1");
@@ -177,7 +176,7 @@ public class ProxyClientTest {
     }
 
     @Test
-    public void listContainerTruncated() {
+    public void listObjectsTruncated() {
         HashMap<String, String> headers = new HashMap<String, String>();
         headers.put(LIST_TRUNCATED_HEADER, "true");
         TestSocketProvider socketProvider = newTestSocketProvider(200, "OK", "{}", headers);
@@ -185,7 +184,7 @@ public class ProxyClientTest {
         ProxyClient proxy = newTestProxyClient(http);
 
         OioUrl url = newContainerOioUrl();
-        ObjectList objectList = proxy.listContainer(url, new ListOptions());
+        ObjectList objectList = proxy.listObjects(url, new ListOptions(), null);
         Assert.assertTrue(objectList.truncated());
     }
 }

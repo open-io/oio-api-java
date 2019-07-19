@@ -1,6 +1,5 @@
 package io.openio.sds.storage.ecd;
 
-import static io.openio.sds.common.OioConstants.OIO_REQUEST_ID_HEADER;
 import static io.openio.sds.http.Verifiers.RAWX_VERIFIER;
 
 import java.io.IOException;

@@ -1,7 +1,6 @@
 package io.openio.sds;
 
 import static io.openio.sds.common.Check.checkArgument;
-import static io.openio.sds.common.IdGen.requestId;
 
 import java.io.File;
 import java.io.InputStream;
@@ -111,6 +110,7 @@ public class DefaultClient implements AdvancedClient {
     }
 
     @Override
+    @Deprecated
     public ObjectList listContainer(OioUrl url, ListOptions listOptions) {
         return this.listObjects(url, listOptions, new RequestContext());
     }

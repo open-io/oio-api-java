@@ -1,7 +1,6 @@
 package io.openio.sds.storage.ecd;
 
 import static io.openio.sds.common.Check.checkArgument;
-import static io.openio.sds.common.IdGen.requestId;
 import static io.openio.sds.common.OioConstants.CHUNK_META_CHUNK_POS;
 import static io.openio.sds.common.OioConstants.CHUNK_META_CONTAINER_ID;
 import static io.openio.sds.common.OioConstants.CHUNK_META_CONTENT_CHUNKSNB;
@@ -12,7 +11,6 @@ import static io.openio.sds.common.OioConstants.CHUNK_META_CONTENT_PATH;
 import static io.openio.sds.common.OioConstants.CHUNK_META_CONTENT_POLICY;
 import static io.openio.sds.common.OioConstants.CHUNK_META_CONTENT_SIZE;
 import static io.openio.sds.common.OioConstants.CHUNK_META_CONTENT_VERSION;
-import static io.openio.sds.common.OioConstants.OIO_REQUEST_ID_HEADER;
 import static io.openio.sds.http.Verifiers.RAWX_VERIFIER;
 
 import java.io.ByteArrayInputStream;
