@@ -16,6 +16,7 @@ import io.openio.sds.models.ContainerInfo;
 import io.openio.sds.models.ListOptions;
 import io.openio.sds.models.NamespaceInfo;
 import io.openio.sds.models.ObjectCreationOptions;
+import io.openio.sds.models.ObjectDeletionOptions;
 import io.openio.sds.models.ObjectInfo;
 import io.openio.sds.models.ObjectList;
 import io.openio.sds.models.OioUrl;
@@ -331,6 +332,7 @@ public interface AdvancedClient extends Client {
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
+    @Deprecated
     public ObjectInfo putObject(OioUrl url, Long size, InputStream data,
             Long version, Map<String, String> properties, RequestContext reqCtx)
             throws OioException;
@@ -383,6 +385,7 @@ public interface AdvancedClient extends Client {
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
+    @Deprecated
     public ObjectInfo putObject(OioUrl url, Long size, File data, Long version,
             Map<String, String> properties, RequestContext reqCtx)
             throws OioException;
@@ -465,7 +468,8 @@ public interface AdvancedClient extends Client {
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
-    public void deleteObject(OioUrl url, RequestContext reqCtx) throws OioException;
+    public void deleteObject(OioUrl url, RequestContext reqCtx)
+            throws OioException;
 
     /**
      * Delete the specified object.
@@ -484,7 +488,28 @@ public interface AdvancedClient extends Client {
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
-    public void deleteObject(OioUrl url, Long version, RequestContext reqCtx) throws OioException;
+    @Deprecated
+    public void deleteObject(OioUrl url, Long version, RequestContext reqCtx)
+            throws OioException;
+
+    /**
+     * Delete the specified object.
+     *
+     * @param url
+     *            the URL of the object to delete
+     * @param options
+     *            the options of object to delete
+     * @param reqCtx
+     *            common parameters to all requests
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws ObjectNotFoundException
+     *             if the specified object doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public void deleteObject(OioUrl url, ObjectDeletionOptions options,
+            RequestContext reqCtx) throws OioException;
 
     /**
      * Add properties to the specified object. The properties must be prefixed

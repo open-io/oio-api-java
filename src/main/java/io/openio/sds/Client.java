@@ -16,6 +16,7 @@ import io.openio.sds.models.ContainerInfo;
 import io.openio.sds.models.ListOptions;
 import io.openio.sds.models.NamespaceInfo;
 import io.openio.sds.models.ObjectCreationOptions;
+import io.openio.sds.models.ObjectDeletionOptions;
 import io.openio.sds.models.ObjectInfo;
 import io.openio.sds.models.ObjectList;
 import io.openio.sds.models.OioUrl;
@@ -344,6 +345,7 @@ public interface Client {
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
+    @Deprecated
     public ObjectInfo putObject(OioUrl url, Long size, File data,
             Map<String, String> properties) throws OioException;
 
@@ -364,6 +366,7 @@ public interface Client {
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
+    @Deprecated
     public ObjectInfo putObject(OioUrl url, Long size, File data, Long version)
             throws OioException;
 
@@ -388,6 +391,7 @@ public interface Client {
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
+    @Deprecated
     public ObjectInfo putObject(OioUrl url, Long size, File data, Long version,
             Map<String, String> properties) throws OioException;
 
@@ -452,6 +456,7 @@ public interface Client {
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
+    @Deprecated
     public ObjectInfo putObject(OioUrl url, Long size, InputStream data,
             Map<String, String> properties) throws OioException;
 
@@ -474,6 +479,7 @@ public interface Client {
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
+    @Deprecated
     public ObjectInfo putObject(OioUrl url, Long size, InputStream data,
             Long version) throws OioException;
 
@@ -500,6 +506,7 @@ public interface Client {
      * @throws OioSystemException
      *             if any error occurs during request execution
      */
+    @Deprecated
     public ObjectInfo putObject(OioUrl url, Long size, InputStream data,
             Long version, Map<String, String> properties) throws OioException;
 
@@ -629,7 +636,7 @@ public interface Client {
 
     /**
      * Deletes the specified object
-     * 
+     *
      * @param url
      *            the url of the object to delete
      * @throws ContainerNotFoundException
@@ -638,13 +645,12 @@ public interface Client {
      *             if the specified object doesn't exist
      * @throws OioSystemException
      *             if any error occurs during request execution
-     * 
      */
     public void deleteObject(OioUrl url) throws OioException;
 
     /**
      * Deletes the specified object
-     * 
+     *
      * @param url
      *            the url of the object to delete
      * @param version
@@ -656,9 +662,26 @@ public interface Client {
      *             if the specified object doesn't exist
      * @throws OioSystemException
      *             if any error occurs during request execution
-     * 
      */
+    @Deprecated
     public void deleteObject(OioUrl url, Long version) throws OioException;
+
+    /**
+     * Deletes the specified object
+     *
+     * @param url
+     *            the url of the object to delete
+     * @param options
+     *            the options of object to delete
+     * @throws ContainerNotFoundException
+     *             if the specified container doesn't exist
+     * @throws ObjectNotFoundException
+     *             if the specified object doesn't exist
+     * @throws OioSystemException
+     *             if any error occurs during request execution
+     */
+    public void deleteObject(OioUrl url, ObjectDeletionOptions options)
+            throws OioException;
 
     /**
      * Add properties to the specified object. The properties must be prefixed

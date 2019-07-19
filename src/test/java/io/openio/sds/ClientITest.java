@@ -35,6 +35,7 @@ import io.openio.sds.exceptions.OioException;
 import io.openio.sds.models.ContainerInfo;
 import io.openio.sds.models.NamespaceInfo;
 import io.openio.sds.models.ObjectCreationOptions;
+import io.openio.sds.models.ObjectDeletionOptions;
 import io.openio.sds.models.ObjectInfo;
 import io.openio.sds.models.OioUrl;
 import io.openio.sds.models.Range;
@@ -526,10 +527,13 @@ public class ClientITest {
                 .randomUUID().toString());
         Map<String, String> props = new HashMap<String, String>();
         props.put("key1", "val1");
+        ObjectCreationOptions creationOptions = new ObjectCreationOptions()
+                .properties(props);
         client.createContainer(url);
         try {
             client.putObject(url, 10L,
-                    new ByteArrayInputStream("0123456789".getBytes()), props);
+                    new ByteArrayInputStream("0123456789".getBytes()),
+                    creationOptions);
             try {
                 ObjectInfo oinf = client.getObjectInfo(url);
                 Assert.assertNotNull(oinf);
@@ -594,10 +598,14 @@ public class ClientITest {
         props.put("key1", "value1");
         props.put("key2", "value2");
         props.put("key3", "value3");
+        ObjectCreationOptions creationOptions = new ObjectCreationOptions()
+                .version(123456789L);
+        ObjectDeletionOptions deletionOptions = new ObjectDeletionOptions()
+                .version(123456789L);
         client.createContainer(url);
         try {
             client.putObject(url, 1024L, new ByteArrayInputStream(src),
-                    123456789L);
+                    creationOptions);
             try {
                 ObjectInfo oinf = client.getObjectInfo(url, 123456789L);
                 Assert.assertNotNull(oinf);
@@ -631,7 +639,7 @@ public class ClientITest {
                     assertEquals(e.getValue(), res.get(e.getKey()));
                 }
             } finally {
-                client.deleteObject(url, 123456789L);
+                client.deleteObject(url, deletionOptions);
             }
         } finally {
             client.deleteContainer(url);
@@ -648,15 +656,17 @@ public class ClientITest {
         props.put("key1", "value1");
         props.put("key2", "value2");
         props.put("key3", "value3");
-        ObjectCreationOptions options = new ObjectCreationOptions()
+        ObjectCreationOptions creationOptions = new ObjectCreationOptions()
                 .version(123456789L)
                 .policy("SINGLE")
                 .mimeType("test")
                 .properties(props);
+        ObjectDeletionOptions deletionOptions = new ObjectDeletionOptions()
+                .version(123456789L);
         client.createContainer(url);
         try {
             client.putObject(url, 1024L, new ByteArrayInputStream(src),
-                    options);
+                    creationOptions);
             try {
                 ObjectInfo oinf = client.getObjectInfo(url, 123456789L);
                 Assert.assertNotNull(oinf);
@@ -678,7 +688,7 @@ public class ClientITest {
                     assertEquals(e.getValue(), oinf.properties().get(e.getKey()));
                 }
             } finally {
-                client.deleteObject(url, 123456789L);
+                client.deleteObject(url, deletionOptions);
             }
         } finally {
             client.deleteContainer(url);
@@ -764,11 +774,13 @@ public class ClientITest {
         byte[] src = TestHelper.bytes(1024L);
         OioUrl url = url(testAccount(), UUID.randomUUID().toString(), UUID
                 .randomUUID().toString());
+        ObjectDeletionOptions deletionOptions = new ObjectDeletionOptions()
+                .version(123456789L);
         client.createContainer(url);
         try {
             client.putObject(url, 1024L, new ByteArrayInputStream(src));
             try {
-                client.deleteObject(url, 123456789L);
+                client.deleteObject(url, deletionOptions);
             } finally {
                 client.deleteObject(url);
             }

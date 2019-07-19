@@ -23,6 +23,7 @@ import static io.openio.sds.common.OioConstants.CS_GETSRV_FORMAT;
 import static io.openio.sds.common.OioConstants.CS_NSINFO_FORMAT;
 import static io.openio.sds.common.OioConstants.DELETE_CONTAINER_FORMAT;
 import static io.openio.sds.common.OioConstants.DELETE_OBJECT_FORMAT;
+import static io.openio.sds.common.OioConstants.DELETE_MARKER_PARAM;
 import static io.openio.sds.common.OioConstants.DELIMITER_PARAM;
 import static io.openio.sds.common.OioConstants.DIR_LINK_SRV_FORMAT;
 import static io.openio.sds.common.OioConstants.DIR_LIST_SRV_FORMAT;
@@ -32,9 +33,10 @@ import static io.openio.sds.common.OioConstants.DIR_REF_SHOW_FORMAT;
 import static io.openio.sds.common.OioConstants.DIR_UNLINK_SRV_FORMAT;
 import static io.openio.sds.common.OioConstants.FLUSH_PARAM;
 import static io.openio.sds.common.OioConstants.GET_BEANS_FORMAT;
-import static io.openio.sds.common.OioConstants.GET_BEANS_FORMAT_WITH_VERSION;
 import static io.openio.sds.common.OioConstants.GET_CONTAINER_INFO_FORMAT;
 import static io.openio.sds.common.OioConstants.GET_OBJECT_FORMAT;
+import static io.openio.sds.common.OioConstants.INVALID_OBJECT_INFO_MSG;
+import static io.openio.sds.common.OioConstants.INVALID_OPTIONS_MSG;
 import static io.openio.sds.common.OioConstants.INVALID_URL_MSG;
 import static io.openio.sds.common.OioConstants.LIST_MARKER_HEADER;
 import static io.openio.sds.common.OioConstants.LIST_OBJECTS_FORMAT;
@@ -56,6 +58,7 @@ import static io.openio.sds.common.OioConstants.PROP_HEADER_PREFIX;
 import static io.openio.sds.common.OioConstants.PROP_HEADER_PREFIX_LEN;
 import static io.openio.sds.common.OioConstants.PUT_OBJECT_FORMAT;
 import static io.openio.sds.common.OioConstants.SCHEMA_VERSION_HEADER;
+import static io.openio.sds.common.OioConstants.SIMULATE_VERSIONING_HEADER;
 import static io.openio.sds.common.OioConstants.TYPE_HEADER;
 import static io.openio.sds.common.OioConstants.USER_NAME_HEADER;
 import static io.openio.sds.common.OioConstants.VERSION_MAIN_ADMIN_HEADER;
@@ -89,6 +92,8 @@ import io.openio.sds.models.ContainerInfo;
 import io.openio.sds.models.LinkedServiceInfo;
 import io.openio.sds.models.ListOptions;
 import io.openio.sds.models.NamespaceInfo;
+import io.openio.sds.models.ObjectCreationOptions;
+import io.openio.sds.models.ObjectDeletionOptions;
 import io.openio.sds.models.ObjectInfo;
 import io.openio.sds.models.ObjectList;
 import io.openio.sds.models.OioUrl;
@@ -652,7 +657,8 @@ public class ProxyClient {
     @Deprecated
     public ObjectInfo preparePutObject(OioUrl url, long size,
             RequestContext reqCtx) throws OioException {
-        return preparePutObject(url, size, null, null, reqCtx);
+        ObjectCreationOptions options = new ObjectCreationOptions();
+        return this.preparePutObject(url, size, options, reqCtx);
     }
 
     /**
@@ -673,28 +679,48 @@ public class ProxyClient {
      * @throws OioException
      *             if any error occurs during request execution
      */
+    @Deprecated
     public ObjectInfo preparePutObject(OioUrl url, long size,
             String policy, Long version, RequestContext reqCtx)
             throws OioException {
-        checkArgument(null != url, INVALID_URL_MSG);
+        ObjectCreationOptions options = new ObjectCreationOptions()
+                .policy(policy)
+                .version(version);
+        return this.preparePutObject(url, size, options, reqCtx);
+    }
 
-        String uri;
-        if (version == null) {
-            uri = format(GET_BEANS_FORMAT, settings.url(), settings.ns(),
-                    Strings.urlEncode(url.account()),
-                    Strings.urlEncode(url.container()),
-                    Strings.urlEncode(url.object()));
-        } else {
-            uri = format(GET_BEANS_FORMAT_WITH_VERSION, settings.url(), settings.ns(),
-                    Strings.urlEncode(url.account()),
-                    Strings.urlEncode(url.container()),
-                    Strings.urlEncode(url.object()),
-                    version);
-        }
+    /**
+     * Prepares an object upload by asking some chunks available location.
+     *
+     * @param url
+     *            the URL of the future object to create
+     * @param size
+     *            the size of the future object
+     * @param options
+     *            the options of the future object
+     * @param reqCtx
+     *            Common parameters to all requests
+     * @return an {@link ObjectInfo} which contains all informations to upload
+     *         the object
+     * @throws OioException
+     *             if any error occurs during request execution
+     */
+    public ObjectInfo preparePutObject(OioUrl url, long size,
+            ObjectCreationOptions options, RequestContext reqCtx)
+            throws OioException {
+        checkArgument(url != null, INVALID_URL_MSG);
+        checkArgument(options != null, INVALID_OPTIONS_MSG);
         BeansRequest beansRequest = new BeansRequest()
                 .size(size)
-                .policy(policy);
-        OioHttpResponse resp = http.post(uri)
+                .policy(options.policy());
+        RequestBuilder request = http.post(
+                format(GET_BEANS_FORMAT, settings.url(), settings.ns(),
+                        Strings.urlEncode(url.account()),
+                        Strings.urlEncode(url.container()),
+                        Strings.urlEncode(url.object())));
+        if (options.version() != null)
+            request.query(VERSION_PARAM, options.version().toString());
+        OioHttpResponse resp = request
                 .header(ACTION_MODE_HEADER,
                         settings.autocreate() ? OioConstants.AUTOCREATE_ACTION_MODE : null)
                 .body(gson().toJson(beansRequest))
@@ -720,8 +746,9 @@ public class ProxyClient {
     @Deprecated
     public ObjectInfo putObject(ObjectInfo oinf, Long version,
             RequestContext reqCtx) throws OioException {
-        oinf.version(version);
-        return putObject(oinf, reqCtx);
+        ObjectCreationOptions options = new ObjectCreationOptions()
+                .version(version);
+        return this.putObject(oinf, options, reqCtx);
     }
 
     /**
@@ -736,14 +763,45 @@ public class ProxyClient {
      * @throws OioException
      *             if any error occurs during request execution
      */
+    @Deprecated
     public ObjectInfo putObject(ObjectInfo oinf, RequestContext reqCtx)
             throws OioException {
-        checkArgument(oinf != null, "Invalid objectInfo");
+        ObjectCreationOptions options = new ObjectCreationOptions();
+        return this.putObject(oinf, options, reqCtx);
+    }
+
+    /**
+     * Validate an object upload in the OpenIO-SDS namespace.
+     *
+     * @param oinf
+     *            the {@link ObjectInfo} containing informations about the
+     *            uploaded object
+     * @param options
+     *            the options of the object to upload
+     * @param reqCtx
+     *            Common parameters to all requests
+     * @return the validated object.
+     * @throws OioException
+     *             if any error occurs during request execution
+     */
+    public ObjectInfo putObject(ObjectInfo oinf, ObjectCreationOptions options,
+            RequestContext reqCtx) throws OioException {
+        checkArgument(oinf != null, INVALID_OBJECT_INFO_MSG);
+        checkArgument(options != null, INVALID_OPTIONS_MSG);
+        checkArgument(options.version() == null
+                || options.version().equals(oinf.version()), "Invalid version");
+        checkArgument(options.policy() == null
+                || options.policy().equals(oinf.policy()), "Invalid policy");
+
+        oinf.properties(options.properties());
+        if (options.mimeType() != null)
+            oinf.mimeType(options.mimeType());
+
         Map<String, String> props = oinf.properties();
         String body = format("{\"chunks\": %1$s, \"properties\": %2$s}",
                 gsonForObject().toJson(oinf.chunks()),
                 props != null ? gsonForObject().toJson(props) : "{}");
-        http.post(
+        RequestBuilder request = http.post(
                 format(PUT_OBJECT_FORMAT, settings.url(), settings.ns(),
                         Strings.urlEncode(oinf.url().account()),
                         Strings.urlEncode(oinf.url().container()),
@@ -755,8 +813,10 @@ public class ProxyClient {
                 .header(CONTENT_META_ID_HEADER, oinf.oid())
                 .header(CONTENT_META_MIME_TYPE_HEADER, oinf.mimeType())
                 .header(CONTENT_META_POLICY_HEADER, oinf.policy())
-                .header(CONTENT_META_VERSION_HEADER, oinf.version().toString())
-                .body(body)
+                .header(CONTENT_META_VERSION_HEADER, oinf.version().toString());
+        if (options.simulateVersioning())
+            request.header(SIMULATE_VERSIONING_HEADER, "1");
+        request.body(body)
                 .hosts(hosts).verifier(OBJECT_VERIFIER)
                 .withRequestContext(reqCtx).execute().close();
         return oinf;
@@ -873,7 +933,7 @@ public class ProxyClient {
 
     /**
      * Deletes an object from its container
-     * 
+     *
      * @param url
      *            the url of the object to delete
      * @throws OioException
@@ -881,12 +941,13 @@ public class ProxyClient {
      */
     @Deprecated
     public void deleteObject(OioUrl url) throws OioException {
-        deleteObject(url, null, new RequestContext());
+        ObjectDeletionOptions options = new ObjectDeletionOptions();
+        this.deleteObject(url, options, new RequestContext());
     }
 
     /**
      * Deletes an object from its container
-     * 
+     *
      * @param url
      *            the url of the object to delete
      * @param version
@@ -897,12 +958,14 @@ public class ProxyClient {
      */
     @Deprecated
     public void deleteObject(OioUrl url, Long version) throws OioException {
-        deleteObject(url, version, new RequestContext());
+        ObjectDeletionOptions options = new ObjectDeletionOptions()
+                .version(version);
+        this.deleteObject(url, options, new RequestContext());
     }
 
     /**
      * Deletes an object from its container
-     * 
+     *
      * @param url
      *            the url of the object to delete
      * @param version
@@ -913,16 +976,42 @@ public class ProxyClient {
      * @throws OioException
      *             if any error occurs during request execution
      */
+    @Deprecated
     public void deleteObject(OioUrl url, Long version, RequestContext reqCtx)
             throws OioException {
-        checkArgument(null != url, INVALID_URL_MSG);
+        ObjectDeletionOptions options = new ObjectDeletionOptions()
+                .version(version);
+        this.deleteObject(url, options, new RequestContext());
+    }
+
+    /**
+     * Deletes an object from its container
+     *
+     * @param url
+     *            the url of the object to delete
+     * @param options
+     *            the version to delete (could be {@code null} to delete latest
+     *            version)
+     * @param reqCtx
+     *            common paramters to all requests
+     * @throws OioException
+     *             if any error occurs during request execution
+     */
+    public void deleteObject(OioUrl url, ObjectDeletionOptions options,
+            RequestContext reqCtx) throws OioException {
+        checkArgument(url != null, INVALID_URL_MSG);
+        checkArgument(options != null, INVALID_OPTIONS_MSG);
         RequestBuilder request = http.post(
                 format(DELETE_OBJECT_FORMAT, settings.url(), settings.ns(),
                         Strings.urlEncode(url.account()),
                         Strings.urlEncode(url.container()),
                         Strings.urlEncode(url.object())));
-        if (version != null)
-            request.query(VERSION_PARAM, version.toString());
+        if (options.version() != null)
+            request.query(VERSION_PARAM, options.version().toString());
+        if (options.deleteMarker())
+            request.query(DELETE_MARKER_PARAM, "1");
+        if (options.simulateVersioning())
+            request.header(SIMULATE_VERSIONING_HEADER, "1");
         request.hosts(hosts).verifier(OBJECT_VERIFIER)
                 .withRequestContext(reqCtx).execute().close();
     }

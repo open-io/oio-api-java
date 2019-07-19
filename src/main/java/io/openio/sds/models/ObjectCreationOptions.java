@@ -8,6 +8,7 @@ public class ObjectCreationOptions {
     private Map<String, String> properties;
     private String policy;
     private String mimeType;
+    private boolean simulateVersioning = false;
 
     public Long version() {
         return version;
@@ -42,6 +43,15 @@ public class ObjectCreationOptions {
 
     public ObjectCreationOptions mimeType(String mimeType) {
         this.mimeType = mimeType;
+        return this;
+    }
+
+    public boolean simulateVersioning() {
+        return simulateVersioning;
+    }
+
+    public ObjectCreationOptions simulateVersioning(boolean simulateVersioning) {
+        this.simulateVersioning = simulateVersioning;
         return this;
     }
 

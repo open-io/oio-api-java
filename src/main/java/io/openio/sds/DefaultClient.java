@@ -13,6 +13,7 @@ import io.openio.sds.models.ContainerInfo;
 import io.openio.sds.models.ListOptions;
 import io.openio.sds.models.NamespaceInfo;
 import io.openio.sds.models.ObjectCreationOptions;
+import io.openio.sds.models.ObjectDeletionOptions;
 import io.openio.sds.models.ObjectInfo;
 import io.openio.sds.models.ObjectList;
 import io.openio.sds.models.OioUrl;
@@ -147,6 +148,7 @@ public class DefaultClient implements AdvancedClient {
     }
 
     @Override
+    @Deprecated
     public ObjectInfo putObject(OioUrl url, Long size, File data,
             Map<String, String> properties) throws OioException {
         ObjectCreationOptions options = new ObjectCreationOptions()
@@ -155,6 +157,7 @@ public class DefaultClient implements AdvancedClient {
     }
 
     @Override
+    @Deprecated
     public ObjectInfo putObject(OioUrl url, Long size, File data, Long version) {
         ObjectCreationOptions options = new ObjectCreationOptions()
                 .version(version);
@@ -162,6 +165,7 @@ public class DefaultClient implements AdvancedClient {
     }
 
     @Override
+    @Deprecated
     public ObjectInfo putObject(OioUrl url, Long size, File data, Long version,
             Map<String, String> properties) throws OioException {
         ObjectCreationOptions options = new ObjectCreationOptions()
@@ -171,6 +175,7 @@ public class DefaultClient implements AdvancedClient {
     }
 
     @Override
+    @Deprecated
     public ObjectInfo putObject(OioUrl url, Long size, File data, Long version,
             Map<String, String> properties, RequestContext reqCtx)
             throws OioException {
@@ -195,23 +200,18 @@ public class DefaultClient implements AdvancedClient {
         if (options == null)
             options = new ObjectCreationOptions();
         reqCtx.startTiming();
-        ObjectInfo oinf = proxy.preparePutObject(url, size, options.policy(),
-                options.version(), reqCtx);
+        ObjectInfo oinf = proxy.preparePutObject(url, size, options, reqCtx);
 
         // TODO(adu): To delete when oio-sds >= 4.4.0
         if (options.version() != null)
             oinf.version(options.version());
-
-        oinf.properties(options.properties());
-        if (options.mimeType() != null)
-            oinf.mimeType(options.mimeType());
 
         try {
             if (oinf.isEC())
                 ecd.uploadChunks(oinf, data, reqCtx);
             else
                 rawx.uploadChunks(oinf, data, reqCtx);
-            proxy.putObject(oinf, reqCtx);
+            proxy.putObject(oinf, options, reqCtx);
         } catch (OioException oioe) {
             // TODO improve by knowing which chunk is uploaded
             rawx.deleteChunks(oinf.chunks());
@@ -227,6 +227,7 @@ public class DefaultClient implements AdvancedClient {
     }
 
     @Override
+    @Deprecated
     public ObjectInfo putObject(OioUrl url, Long size, InputStream data,
             Map<String, String> properties) throws OioException {
         ObjectCreationOptions options = new ObjectCreationOptions()
@@ -235,6 +236,7 @@ public class DefaultClient implements AdvancedClient {
     }
 
     @Override
+    @Deprecated
     public ObjectInfo putObject(OioUrl url, Long size, InputStream data,
             Long version) throws OioException {
         ObjectCreationOptions options = new ObjectCreationOptions()
@@ -243,6 +245,7 @@ public class DefaultClient implements AdvancedClient {
     }
 
     @Override
+    @Deprecated
     public ObjectInfo putObject(OioUrl url, Long size, InputStream data,
             Long version, Map<String, String> properties) throws OioException {
         ObjectCreationOptions options = new ObjectCreationOptions()
@@ -252,6 +255,7 @@ public class DefaultClient implements AdvancedClient {
     }
 
     @Override
+    @Deprecated
     public ObjectInfo putObject(OioUrl url, Long size, InputStream data,
             Long version, Map<String, String> properties, RequestContext reqCtx)
             throws OioException {
@@ -277,23 +281,18 @@ public class DefaultClient implements AdvancedClient {
         if (options == null)
             options = new ObjectCreationOptions();
         reqCtx.startTiming();
-        ObjectInfo oinf = proxy.preparePutObject(url, size, options.policy(),
-                options.version(), reqCtx);
+        ObjectInfo oinf = proxy.preparePutObject(url, size, options, reqCtx);
 
         // TODO(adu): To delete when oio-sds >= 4.4.0
         if (options.version() != null)
             oinf.version(options.version());
-
-        oinf.properties(options.properties());
-        if (options.mimeType() != null)
-            oinf.mimeType(options.mimeType());
 
         try {
             if (oinf.isEC())
                 ecd.uploadChunks(oinf, data, reqCtx);
             else
                 rawx.uploadChunks(oinf, data, reqCtx);
-            proxy.putObject(oinf, reqCtx);
+            proxy.putObject(oinf, options, reqCtx);
         } catch (OioException oioe) {
             // TODO improve by knowing which chunk is uploaded
             rawx.deleteChunks(oinf.chunks());
@@ -357,25 +356,49 @@ public class DefaultClient implements AdvancedClient {
 
     @Override
     public void deleteObject(OioUrl url) {
-        this.deleteObject(url, null, new RequestContext());
+        ObjectDeletionOptions options = null;
+        this.deleteObject(url, options, new RequestContext());
     }
 
     @Override
-    public void deleteObject(OioUrl url, RequestContext reqCtx) throws OioException {
-        this.deleteObject(url, null, reqCtx);
+    public void deleteObject(OioUrl url, RequestContext reqCtx)
+            throws OioException {
+        ObjectDeletionOptions options = null;
+        this.deleteObject(url, options, reqCtx);
     }
 
     @Override
+    @Deprecated
     public void deleteObject(OioUrl url, Long version) {
-        this.deleteObject(url, version, new RequestContext());
+        ObjectDeletionOptions options = new ObjectDeletionOptions()
+            .version(version);
+        this.deleteObject(url, options, new RequestContext());
     }
 
     @Override
-    public void deleteObject(OioUrl url, Long version, RequestContext reqCtx) throws OioException {
+    @Deprecated
+    public void deleteObject(OioUrl url, Long version, RequestContext reqCtx)
+            throws OioException {
+        ObjectDeletionOptions options = new ObjectDeletionOptions()
+            .version(version);
+        this.deleteObject(url, options, reqCtx);
+    }
+
+    @Override
+    public void deleteObject(OioUrl url, ObjectDeletionOptions options)
+            throws OioException {
+        this.deleteObject(url, options, new RequestContext());
+    }
+
+    @Override
+    public void deleteObject(OioUrl url, ObjectDeletionOptions options,
+            RequestContext reqCtx) throws OioException {
         checkArgument(url != null, "url cannot be null");
         checkArgument(url.object() != null, "url object cannot be null");
+        if (options == null)
+            options = new ObjectDeletionOptions();
         reqCtx.startTiming();
-        proxy.deleteObject(url, version, reqCtx);
+        proxy.deleteObject(url, options, reqCtx);
     }
 
     @Override

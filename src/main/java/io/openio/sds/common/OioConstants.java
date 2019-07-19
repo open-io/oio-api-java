@@ -68,6 +68,7 @@ public class OioConstants {
 
     public static final String OIO_ACTION_MODE_HEADER = "X-oio-action-mode";
     public static final String OIO_REQUEST_ID_HEADER = "X-oio-req-id";
+    public static final String SIMULATE_VERSIONING_HEADER = "X-oio-simulate-versioning";
 
     public static final String RANGE_HEADER = "Range";
     public static final String OIO_TIMEOUT_HEADER = "X-oio-timeout";
@@ -104,6 +105,7 @@ public class OioConstants {
     public static final String DELIMITER_PARAM = "delimiter";
     public static final String MARKER_PARAM = "marker";
     public static final String FLUSH_PARAM = "flush";
+    public static final String DELETE_MARKER_PARAM = "delete_marker";
 
     /* -- URL String format -- */
 
@@ -127,7 +129,6 @@ public class OioConstants {
     public static final String LIST_OBJECTS_FORMAT = "%s/v3.0/%s/container/list?acct=%s&ref=%s";
     public static final String DELETE_CONTAINER_FORMAT = "%s/v3.0/%s/container/destroy?acct=%s&ref=%s";
     public static final String GET_BEANS_FORMAT = "%s/v3.0/%s/content/prepare?acct=%s&ref=%s&path=%s";
-    public static final String GET_BEANS_FORMAT_WITH_VERSION = "%s/v3.0/%s/content/prepare?acct=%s&ref=%s&path=%s&version=%d";
     public static final String PUT_OBJECT_FORMAT = "%s/v3.0/%s/content/create?acct=%s&ref=%s&path=%s";
     public static final String GET_OBJECT_FORMAT = "%s/v3.0/%s/content/show?acct=%s&ref=%s&path=%s";
     public static final String DELETE_OBJECT_FORMAT = "%s/v3.0/%s/content/delete?acct=%s&ref=%s&path=%s";
@@ -144,6 +145,8 @@ public class OioConstants {
     public static final String PROXY_ERROR_FORMAT = "(%d) %s";
 
     /* -- Common error messages -- */
+    public static final String INVALID_OBJECT_INFO_MSG = "Invalid object info";
+    public static final String INVALID_OPTIONS_MSG = "Invalid options";
     public static final String INVALID_URL_MSG = "Invalid url";
 
     public static final String USER_PROP_PREFIX = "user.";

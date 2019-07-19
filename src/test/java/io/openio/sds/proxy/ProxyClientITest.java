@@ -26,6 +26,7 @@ import io.openio.sds.models.ContainerInfo;
 import io.openio.sds.models.LinkedServiceInfo;
 import io.openio.sds.models.ListOptions;
 import io.openio.sds.models.NamespaceInfo;
+import io.openio.sds.models.ObjectCreationOptions;
 import io.openio.sds.models.ObjectInfo;
 import io.openio.sds.models.OioUrl;
 import io.openio.sds.models.ServiceInfo;
@@ -116,7 +117,7 @@ public class ProxyClientITest {
         // proxy.createContainer(url);
         try {
             ObjectInfo oinf = proxy.preparePutObject(url, 1024,
-                    null, null, new RequestContext());
+                    new ObjectCreationOptions(), new RequestContext());
             assertNotNull(oinf);
             assertNotNull(oinf.url());
             assertEquals(url.account(), oinf.url().account());
