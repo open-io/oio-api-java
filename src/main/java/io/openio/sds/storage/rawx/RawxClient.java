@@ -36,7 +36,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import static io.openio.sds.common.Check.checkArgument;
-import static io.openio.sds.common.IdGen.requestId;
 import static io.openio.sds.common.OioConstants.CHUNK_META_CHUNK_HASH;
 import static io.openio.sds.common.OioConstants.CHUNK_META_CHUNK_ID;
 import static io.openio.sds.common.OioConstants.CHUNK_META_CHUNK_POS;
@@ -51,7 +50,6 @@ import static io.openio.sds.common.OioConstants.CHUNK_META_CONTENT_SIZE;
 import static io.openio.sds.common.OioConstants.CHUNK_META_CONTENT_VERSION;
 import static io.openio.sds.common.OioConstants.CHUNK_META_FULL_PATH;
 import static io.openio.sds.common.OioConstants.CHUNK_META_OIO_VERSION;
-import static io.openio.sds.common.OioConstants.OIO_REQUEST_ID_HEADER;
 import static io.openio.sds.http.Verifiers.RAWX_VERIFIER;
 import static java.lang.String.format;
 import static java.nio.ByteBuffer.wrap;

@@ -28,7 +28,7 @@ public class OioHttpRequestTest {
 
 	@Test
 	public void simpleNoHeadersGet() {
-		OioHttpRequest req = testRequest(
+		testRequest(
 				"GET /test HTTP/1.1\r\n\r\n",
 				"GET",
 				"/test",

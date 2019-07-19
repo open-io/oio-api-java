@@ -5,7 +5,6 @@ import static io.openio.sds.common.OioConstants.OIO_CHARSET;
 import static io.openio.sds.common.Strings.nullOrEmpty;
 import io.openio.sds.common.Hash;
 import io.openio.sds.common.MoreObjects;
-import io.openio.sds.common.Strings;
 
 /**
  * 

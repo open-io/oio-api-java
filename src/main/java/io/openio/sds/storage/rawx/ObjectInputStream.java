@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
-import static io.openio.sds.common.OioConstants.OIO_REQUEST_ID_HEADER;
 import static io.openio.sds.http.Verifiers.RAWX_VERIFIER;
 import static java.lang.String.format;
 

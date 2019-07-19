@@ -16,8 +16,12 @@ repositories {
     }
 }
 
-task wrapper(type: Wrapper) {
-  gradleVersion = '4.10.2'
+tasks.withType(JavaCompile) {
+    options.compilerArgs << "-Xlint:all"
+}
+
+wrapper {
+    gradleVersion = '4.10.2'
 }
 
 group = 'io.openio.sds'
