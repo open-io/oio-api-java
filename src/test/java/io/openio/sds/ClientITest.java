@@ -526,6 +526,8 @@ public class ClientITest {
                 .randomUUID().toString());
         Map<String, String> props = new HashMap<String, String>();
         props.put("key1", "val1");
+        props.put("kéy2", "vâl2");
+        props.put("kêy3", "väl3");
         client.createContainer(url);
         try {
             client.putObject(url, 10L,
@@ -539,10 +541,7 @@ public class ClientITest {
                 Assert.assertNotNull(oinf.policy());
                 Assert.assertNotNull(oinf.chunkMethod());
                 Assert.assertNotNull(oinf.hashMethod());
-                Assert.assertNotNull(oinf.properties());
-                Assert.assertEquals(1, oinf.properties().size());
-                Assert.assertTrue(oinf.properties().containsKey("key1"));
-                Assert.assertEquals("val1", oinf.properties().get("key1"));
+                Assert.assertEquals(props, oinf.properties());
             } finally {
                 try {
                     client.deleteObject(url);

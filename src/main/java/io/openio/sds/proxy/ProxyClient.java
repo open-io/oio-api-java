@@ -52,8 +52,6 @@ import static io.openio.sds.common.OioConstants.OBJECT_SET_PROP;
 import static io.openio.sds.common.OioConstants.OIO_ACTION_MODE_HEADER;
 import static io.openio.sds.common.OioConstants.OIO_CHARSET;
 import static io.openio.sds.common.OioConstants.PREFIX_PARAM;
-import static io.openio.sds.common.OioConstants.PROP_HEADER_PREFIX;
-import static io.openio.sds.common.OioConstants.PROP_HEADER_PREFIX_LEN;
 import static io.openio.sds.common.OioConstants.PUT_OBJECT_FORMAT;
 import static io.openio.sds.common.OioConstants.SCHEMA_VERSION_HEADER;
 import static io.openio.sds.common.OioConstants.TYPE_HEADER;
@@ -96,7 +94,11 @@ import io.openio.sds.models.ReferenceInfo;
 import io.openio.sds.models.ServiceInfo;
 
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -111,6 +113,13 @@ import com.google.gson.stream.JsonReader;
  * https://github.com/open-io/oio-sds/wiki/OpenIO-Proxyd-API-Reference
  */
 public class ProxyClient {
+
+    private final static String CONTENT_HEADER_PREFIX = "x-oio-content-meta-";
+    private final static List<String> SYSMETA_KEYS = Arrays.asList(
+            "chunk-method", "ctime", "mtime", "deleted", "hash",
+            "hash-method", "id", "length", "mime-type", "name", "policy",
+            "size", "version");
+
     private OioHttp http;
     private ProxySettings settings;
     private List<InetSocketAddress> hosts = null;
@@ -864,10 +873,7 @@ public class ProxyClient {
             request.query(VERSION_PARAM, version.toString());
         OioHttpResponse resp = request.hosts(hosts).verifier(OBJECT_VERIFIER)
                 .withRequestContext(reqCtx).execute();
-        ObjectInfo info = objectShowObjectInfoAndClose(url, resp);
-        if (loadProperties) {
-            info.properties(getObjectProperties(url, reqCtx));
-        }
+        ObjectInfo info = objectShowObjectInfoAndClose(url, resp, loadProperties);
         return info;
     }
 
@@ -1542,7 +1548,7 @@ public class ProxyClient {
             OioHttpResponse resp) {
         boolean success = false;
         try {
-            ObjectInfo oinf = fillObjectInfo(url, resp);
+            ObjectInfo oinf = fillObjectInfo(url, resp, false);
             List<ChunkInfo> chunks = bodyChunk(resp);
             // check if we are using EC with ec daemon
             if (oinf.isEC()) {
@@ -1565,10 +1571,10 @@ public class ProxyClient {
     }
 
     private ObjectInfo objectShowObjectInfoAndClose(OioUrl url,
-            OioHttpResponse resp) {
+            OioHttpResponse resp, boolean loadProperties) {
         boolean success = false;
         try {
-            ObjectInfo oinf = fillObjectInfo(url, resp);
+            ObjectInfo oinf = fillObjectInfo(url, resp, loadProperties);
             List<ChunkInfo> chunks = bodyChunk(resp);
             // check if we are using EC with ecd
             if (oinf.chunkMethod().startsWith(OioConstants.EC_PREFIX)
@@ -1582,8 +1588,10 @@ public class ProxyClient {
         }
     }
 
-    private ObjectInfo fillObjectInfo(OioUrl url, OioHttpResponse r) {
-        return new ObjectInfo().url(url).oid(r.header(CONTENT_META_ID_HEADER))
+    private ObjectInfo fillObjectInfo(OioUrl url, OioHttpResponse r,
+            boolean loadProperties) {
+        ObjectInfo oinf = new ObjectInfo().url(url)
+                .oid(r.header(CONTENT_META_ID_HEADER))
                 .size(longHeader(r, CONTENT_META_LENGTH_HEADER))
                 .ctime(longHeader(r, CONTENT_META_CTIME_HEADER))
                 .chunkMethod(r.header(CONTENT_META_CHUNK_METHOD_HEADER))
@@ -1591,9 +1599,10 @@ public class ProxyClient {
                 .version(longHeader(r, CONTENT_META_VERSION_HEADER))
                 .hash(r.header(OioConstants.CONTENT_META_HASH_HEADER))
                 .hashMethod(r.header(CONTENT_META_HASH_METHOD_HEADER))
-                .mimeType(r.header(CONTENT_META_MIME_TYPE_HEADER))
-                .properties(propsFromHeaders(r.headers()))
-                .withRequestContext(r.requestContext());
+                .mimeType(r.header(CONTENT_META_MIME_TYPE_HEADER));
+        if (loadProperties)
+            oinf.properties(propsFromHeaders(r.headers()));
+        return oinf.withRequestContext(r.requestContext());
     }
 
     private List<ChunkInfo> bodyChunk(OioHttpResponse resp)
@@ -1642,12 +1651,22 @@ public class ProxyClient {
 
     private Map<String, String> propsFromHeaders(HashMap<String,
             String> headers) {
-        HashMap<String, String> res = new HashMap<String, String>();
-        for (Entry<String, String> e : headers.entrySet()) {
-            if (e.getKey().startsWith(PROP_HEADER_PREFIX))
-                res.put(e.getKey().substring(PROP_HEADER_PREFIX_LEN),
-                        e.getValue());
+        HashMap<String, String> props = new HashMap<String, String>();
+        for (Entry<String, String> header : headers.entrySet()) {
+            if (header.getKey().startsWith(CONTENT_HEADER_PREFIX)) {
+                String shortKey = header.getKey()
+                        .substring(CONTENT_HEADER_PREFIX.length());
+                if (shortKey.startsWith("x-")
+                        || !SYSMETA_KEYS.contains(shortKey)) {
+                    try {
+                        props.put(shortKey, URLDecoder.decode(header.getValue(),
+                                StandardCharsets.UTF_8.toString()));
+                    } catch (UnsupportedEncodingException e) {
+                        throw new RuntimeException(e.getCause());
+                    }
+                }
+            }
         }
-        return res;
+        return props;
     }
 }
