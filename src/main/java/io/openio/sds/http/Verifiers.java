@@ -9,6 +9,7 @@ import java.io.InputStreamReader;
 
 import com.google.gson.stream.JsonReader;
 
+import io.openio.sds.exceptions.AliasDeletedException;
 import io.openio.sds.exceptions.BadRequestException;
 import io.openio.sds.exceptions.ChunkNotFoundException;
 import io.openio.sds.exceptions.ContainerExistException;
@@ -95,6 +96,8 @@ public class Verifiers {
                 throw new ObjectNotFoundException(err.toString());
             case 421:
                 throw new ObjectExistException(err.toString());
+            case 426:
+                throw new AliasDeletedException(err.toString());
             case 500:
                 throw new OioSystemException(err.toString());
             default:
