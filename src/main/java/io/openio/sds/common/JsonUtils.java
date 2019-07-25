@@ -19,6 +19,10 @@ import com.google.gson.JsonSerializer;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 import io.openio.sds.models.Position;
 
 /**
@@ -28,6 +32,7 @@ public class JsonUtils {
 
     private static final GsonBuilder builder = new GsonBuilder()
             .registerTypeAdapter(Position.class, new PositionAdapter());
+    private static final ObjectMapper mapper = new ObjectMapper();
 
     private static final Type MAP_TYPE = new TypeToken<Map<String, String>>() {
     }.getType();
@@ -63,6 +68,16 @@ public class JsonUtils {
                 MAP_MAP_TYPE);
     }
 
+    public static String jsonFromMap(Map<String, String> map) {
+        try {
+            mapper.getFactory()
+                .configure(JsonGenerator.Feature.ESCAPE_NON_ASCII, true);
+            return mapper.writeValueAsString(map);
+        } catch (JsonProcessingException e) {
+            throw new IllegalArgumentException(e);
+        }
+    }
+
     private static final class PositionAdapter implements
             JsonSerializer<Position>, JsonDeserializer<Position> {
 
@@ -78,4 +93,5 @@ public class JsonUtils {
             return new JsonPrimitive(src.toString());
         }
     }
+
 }
