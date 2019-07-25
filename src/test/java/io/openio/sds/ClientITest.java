@@ -542,6 +542,8 @@ public class ClientITest {
                 Assert.assertNotNull(oinf.chunkMethod());
                 Assert.assertNotNull(oinf.hashMethod());
                 Assert.assertEquals(props, oinf.properties());
+                Map<String, String> properties = client.getObjectProperties(url);
+                Assert.assertEquals(properties, oinf.properties());
             } finally {
                 try {
                     client.deleteObject(url);

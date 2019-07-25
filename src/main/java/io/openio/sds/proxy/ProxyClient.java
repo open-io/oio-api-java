@@ -3,6 +3,7 @@ package io.openio.sds.proxy;
 import static io.openio.sds.common.Check.checkArgument;
 import static io.openio.sds.common.JsonUtils.gson;
 import static io.openio.sds.common.JsonUtils.gsonForObject;
+import static io.openio.sds.common.JsonUtils.jsonFromMap;
 import static io.openio.sds.common.OioConstants.ACCOUNT_HEADER;
 import static io.openio.sds.common.OioConstants.ACTION_MODE_HEADER;
 import static io.openio.sds.common.OioConstants.CONTAINER_DEL_PROP;
@@ -475,8 +476,8 @@ public class ProxyClient {
             throws OioException {
         checkArgument(null != url, INVALID_URL_MSG);
         String body = format("{\"properties\": %1$s, \"system\": %2$s}",
-                (properties == null) ? "{}" : gsonForObject().toJson(properties),
-                (system == null) ? "{}" : gsonForObject().toJson(system));
+                (properties == null) ? "{}" : jsonFromMap(properties),
+                (system == null) ? "{}" : jsonFromMap(system));
         OioHttpResponse resp = http.post(
                 format(CREATE_CONTAINER_FORMAT, settings.url(), settings.ns(),
                         Strings.urlEncode(url.account()),
@@ -751,7 +752,7 @@ public class ProxyClient {
         Map<String, String> props = oinf.properties();
         String body = format("{\"chunks\": %1$s, \"properties\": %2$s}",
                 gsonForObject().toJson(oinf.chunks()),
-                props != null ? gsonForObject().toJson(props) : "{}");
+                props != null ? jsonFromMap(props) : "{}");
         http.post(
                 format(PUT_OBJECT_FORMAT, settings.url(), settings.ns(),
                         Strings.urlEncode(oinf.url().account()),
@@ -1025,8 +1026,8 @@ public class ProxyClient {
         if (clear)
             request.query(FLUSH_PARAM, "1");
         String body = format("{\"properties\": %1$s, \"system\": %2$s}",
-                (properties == null) ? "{}" : gsonForObject().toJson(properties),
-                (system == null) ? "{}" : gsonForObject().toJson(system));
+                (properties == null) ? "{}" : jsonFromMap(properties),
+                (system == null) ? "{}" : jsonFromMap(system));
         request.body(body)
                 .hosts(hosts).verifier(CONTAINER_VERIFIER)
                 .withRequestContext(reqCtx).execute().close();
@@ -1289,7 +1290,7 @@ public class ProxyClient {
         checkArgument(null != url && null != url.object(), INVALID_URL_MSG);
         checkArgument(null != properties && properties.size() > 0, "Invalid properties");
         String body = format("{\"properties\": %1$s}",
-                gsonForObject().toJson(properties));
+                jsonFromMap(properties));
         RequestBuilder request = http.post(
                 format(OBJECT_SET_PROP, settings.url(), settings.ns(),
                         Strings.urlEncode(url.account()),
