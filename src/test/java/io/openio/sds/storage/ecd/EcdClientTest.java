@@ -84,7 +84,7 @@ public class EcdClientTest {
 		Mockito.when(mockedObject.url()).thenReturn(mockedUrl);
 		Mockito.when(mockedObject.size()).thenReturn(size);
 		Mockito.when(mockedObject.metachunksize(Mockito.anyInt()))
-		        .thenReturn(size.intValue());
+		        .thenReturn(size.longValue());
 		Mockito.when(mockedObject.oid()).thenReturn("B16B00B5CAFEBABE5962");
 		Mockito.when(mockedObject.version())
 		        .thenReturn(System.currentTimeMillis());
@@ -149,7 +149,7 @@ public class EcdClientTest {
 		Mockito.when(mockedObject.url()).thenReturn(mockedUrl);
 		Mockito.when(mockedObject.size()).thenReturn(size);
 		Mockito.when(mockedObject.metachunksize(Mockito.anyInt())).thenReturn(
-				size.intValue());
+				size.longValue());
 		Mockito.when(mockedObject.oid()).thenReturn("B16B00B5CAFEBABE5962");
 		Mockito.when(mockedObject.version()).thenReturn(
 				System.currentTimeMillis());
