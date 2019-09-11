@@ -112,4 +112,16 @@ public class TestHelper {
         }
         return out.toByteArray();
     }
+
+    public static boolean isSdsBranch(String sdsBranch) {
+        String currentSdsBranch = null;
+        try {
+            currentSdsBranch = System.getenv("SDS_BRANCH");
+        } catch (NullPointerException e) {
+        }
+        if (currentSdsBranch == null) {
+            currentSdsBranch = "master";
+        }
+        return currentSdsBranch.equals(sdsBranch);
+    }
 }

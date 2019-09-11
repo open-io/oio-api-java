@@ -129,7 +129,9 @@ public class ProxyClientITest {
             Assert.assertNotNull(oinf.chunkMethod());
             Assert.assertNotNull(oinf.hashMethod());
         } finally {
-            proxy.deleteContainer(url, null);
+            if (TestHelper.isSdsBranch("4.2.x") || TestHelper.isSdsBranch("4.x")) {
+                proxy.deleteContainer(url, null);
+            }
         }
     }
 
