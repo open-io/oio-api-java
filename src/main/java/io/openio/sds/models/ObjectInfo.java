@@ -195,11 +195,11 @@ public class ObjectInfo {
     	return null != ecinfo;
     }
 
-    public int metachunksize(int pos) {
+    public long metachunksize(int pos) {
         if (!isEC())
             return -1;
-        int maxmcsize = (int) (ecinfo.k() * sortedChunks.get(pos).get(0).size());
-        int remaining = (int) (size - (pos * maxmcsize));
+        long maxmcsize = ecinfo.k() * sortedChunks.get(pos).get(0).size();
+        long remaining = size - (pos * maxmcsize);
         return Math.min(maxmcsize, remaining);
     }
 
