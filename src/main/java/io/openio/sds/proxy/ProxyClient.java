@@ -823,7 +823,9 @@ public class ProxyClient {
                 .header(CONTENT_META_ID_HEADER, oinf.oid())
                 .header(CONTENT_META_MIME_TYPE_HEADER, oinf.mimeType())
                 .header(CONTENT_META_POLICY_HEADER, oinf.policy())
-                .header(CONTENT_META_VERSION_HEADER, oinf.version().toString());
+                .header(CONTENT_META_VERSION_HEADER, oinf.version().toString())
+                .header(ACTION_MODE_HEADER,
+                        settings.autocreate() ? OioConstants.AUTOCREATE_ACTION_MODE : null);
         if (options.simulateVersioning())
             request.header(SIMULATE_VERSIONING_HEADER, "1");
         request.body(body)
