@@ -32,6 +32,7 @@ import io.openio.sds.exceptions.ContainerExistException;
 import io.openio.sds.exceptions.ContainerNotFoundException;
 import io.openio.sds.exceptions.ObjectNotFoundException;
 import io.openio.sds.exceptions.OioException;
+import io.openio.sds.http.OioHttpSettings;
 import io.openio.sds.models.ContainerInfo;
 import io.openio.sds.models.NamespaceInfo;
 import io.openio.sds.models.ObjectCreationOptions;
@@ -160,7 +161,23 @@ public class ClientITest {
         } finally {
             client.deleteContainer(url);
         }
+    }
 
+    @Test
+    public void handleSizedObjectSmallBuffers() throws IOException,
+            NoSuchAlgorithmException {
+        Settings newSettings = TestHelper.settings();
+        newSettings.rawx().http().setSocketBufferSize(true).sendBufferSize(16384)
+                .receiveBufferSize(16384);
+        newSettings.proxy().http().setSocketBufferSize(true).sendBufferSize(8192)
+                .receiveBufferSize(8192);
+        Client prevClient = client;
+        client = ClientBuilder.newClient(newSettings);
+        try {
+            this.handleSizedObject();
+        } finally {
+            client = prevClient;
+        }
     }
 
     @Test

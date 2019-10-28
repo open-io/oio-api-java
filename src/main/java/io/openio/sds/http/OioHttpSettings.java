@@ -3,12 +3,14 @@ package io.openio.sds.http;
 /**
  * 
  * @author Christopher Dedeurwaerder
+ * @author Florent Vennetier
  *
  */
 public class OioHttpSettings {
 
-	private Integer sendBufferSize = 8192;
-	private Integer receiveBufferSize = 8192;
+	private Integer sendBufferSize = 131072;
+	private Integer receiveBufferSize = 131072;
+	private Boolean setSocketBufferSize = false;
 	private Integer connectTimeout = 30000;
 	private Integer readTimeout = 60000;
 	private String userAgent = "oio-http";
@@ -33,6 +35,33 @@ public class OioHttpSettings {
 		this.receiveBufferSize = receiveBufferSize;
 		return this;
 	}
+
+    /**
+     * Should the size of the socket buffers be explicitly set?
+     * When true, explicitly set the send buffer size (resp. receive buffer
+     * size) to {@link #sendBufferSize} (resp. {@link #receiveBufferSize}).
+     * When false, let the kernel adjust the size automatically.
+     *
+     * @return true when the API should set the socket buffer sizes,
+     *  false when it should let the kernel decide.
+     */
+    public Boolean setSocketBufferSize() {
+        return this.setSocketBufferSize;
+    }
+
+    /**
+     * Should the size of the socket buffers be explicitly set?
+     * When true, explicitly set the send buffer size (resp. receive buffer
+     * size) to {@link #sendBufferSize} (resp. {@link #receiveBufferSize}).
+     * When false, let the kernel adjust the size automatically.
+     *
+     * @param setSocketBufferSize
+     * @return this
+     */
+    public OioHttpSettings setSocketBufferSize(Boolean setSocketBufferSize) {
+        this.setSocketBufferSize = setSocketBufferSize;
+        return this;
+    }
 
 	public Integer connectTimeout() {
 		return connectTimeout;
@@ -60,5 +89,4 @@ public class OioHttpSettings {
         this.userAgent = userAgent;
         return this;
     }
-
 }

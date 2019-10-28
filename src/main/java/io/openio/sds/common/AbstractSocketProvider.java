@@ -17,7 +17,7 @@ import static io.openio.sds.common.Check.checkArgument;
 public abstract class AbstractSocketProvider implements SocketProvider {
 
     /**
-     * Configure an already create Socket with provided settings, and establish the connection.
+     * Configure an already created Socket with provided settings, and establish the connection.
      *
      * @param sock A Socket instance
      * @param target The address to connect the socket to
@@ -30,9 +30,11 @@ public abstract class AbstractSocketProvider implements SocketProvider {
         checkArgument(target != null, "'target' argument should not be null");
         checkArgument(http != null, "'http' argument should not be null");
         try {
-            sock.setSendBufferSize(http.sendBufferSize());
             sock.setReuseAddress(true);
-            sock.setReceiveBufferSize(http.receiveBufferSize());
+            if (http.setSocketBufferSize()) {
+                sock.setSendBufferSize(http.sendBufferSize());
+                sock.setReceiveBufferSize(http.receiveBufferSize());
+            }
             sock.setSoTimeout(http.readTimeout());
             sock.connect(target, http.connectTimeout());
         } catch (IOException e) {

@@ -30,9 +30,11 @@ public class SocketPool extends Pool<PooledSocket> {
     protected PooledSocket create() {
         try {
             PooledSocket sock = new PooledSocket(this);
-            sock.setSendBufferSize(settings.sendBufferSize());
             sock.setReuseAddress(true);
-            sock.setReceiveBufferSize(settings.receiveBufferSize());
+            if (settings.setSocketBufferSize()) {
+                sock.setSendBufferSize(settings.sendBufferSize());
+                sock.setReceiveBufferSize(settings.receiveBufferSize());
+            }
             sock.setSoTimeout(settings.readTimeout());
             sock.connect(target, settings.connectTimeout());
             return sock;
