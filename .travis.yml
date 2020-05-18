@@ -10,7 +10,7 @@ addons:
   apt:
     sources:
     - sourceline: 'deb http://archive.ubuntu.com/ubuntu xenial-backports main restricted universe multiverse'
-    - sourceline: 'deb http://mirror.openio.io/pub/repo/openio/sds/18.04/ubuntu/ xenial/'
+    - sourceline: 'deb http://mirror.openio.io/pub/repo/openio/sds/19.04/ubuntu/ xenial/'
       key_url: 'http://mirror.openio.io/pub/repo/openio/APT-GPG-KEY-OPENIO-0'
     update: true
 
@@ -35,12 +35,12 @@ env:
     - PATH=${GOPATH}/bin:${GOROOT}/bin:${PATH}
   matrix:
     - TEST_SUITE=EC
-    - TEST_SUITE=EC SDS_BRANCH=4.2.x
     - TEST_SUITE=EC SDS_BRANCH=4.x
+    - TEST_SUITE=EC SDS_BRANCH=5.x
     - TEST_SUITE=3COPIES-11RAWX
-    - TEST_SUITE=3COPIES-11RAWX SDS_BRANCH=4.2.x
     - TEST_SUITE=3COPIES-11RAWX SDS_BRANCH=4.x
-    - TEST_SUITE=3COPIES-11RAWX SDS_BRANCH=4.x OPTS=-U
+    - TEST_SUITE=3COPIES-11RAWX SDS_BRANCH=5.x
+    - TEST_SUITE=3COPIES-11RAWX SDS_BRANCH=5.x OPTS=-U
 script:
   - set -e
   - mkdir /tmp/oio
